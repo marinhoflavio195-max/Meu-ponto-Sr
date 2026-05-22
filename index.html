@@ -49,7 +49,7 @@
       font-weight: bold;
     }
 
-    /* Estilo do seletor de nomes */
+    /* Estilo do Seletor de Setor */
     select {
       width: 100%;
       padding: 12px;
@@ -65,6 +65,17 @@
 
     select:focus {
       border-color: #d32f2f;
+    }
+
+    /* Bloco dos Colaboradores (fica escondido até escolher o setor) */
+    #bloco-colaborador {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     button {
@@ -119,13 +130,25 @@
 
     <h1>MEU PONTO SR</h1>
 
-    <label for="funcionario">QUEM ESTÁ BATENDO O PONTO?</label>
-    <select id="funcionario">
-      <option value="">-- Selecione seu nome --</option>
-      <option value="Karine">Karine</option>
-      <option value="Eudes">Eudes</option>
-      <option value="Victor">Victor</option>
+    <label for="setor">1. SELECIONE O SETOR:</label>
+    <select id="setor" onchange="filtrarColaboradores()">
+      <option value="">-- Escolha o Setor --</option>
+      <option value="escritorio">ESCRITÓRIO / ADMINISTRAÇÃO</option>
+      <option value="rh">RH / DEPARTAMENTO PESSOAL</option>
+      <option value="tesouraria">TESOURARIA</option>
+      <option value="caixas">CAIXAS</option>
+      <option value="repositores">REPOSITORES</option>
+      <option value="almoxarifado">ALMOXARIFADO</option>
+      <option value="açougue">AÇOUGUE</option>
+      <option value="empacotadores">EMPACOTADORES</option>
+      <option value="terceirizados">TERCEIRIZADOS / SEGURANÇA</option>
     </select>
+
+    <div id="bloco-colaborador">
+      <label for="colaborador">2. SELECIONE SEU NOME:</label>
+      <select id="colaborador">
+        </select>
+    </div>
 
     <p id="status">Nenhum ponto registrado</p>
 
@@ -144,19 +167,72 @@
   </div>
 
   <script>
+    // BANCO DE DADOS DE FUNCIONÁRIOS (Altere os nomes aqui dentro)
+    const equipe = {
+      escritorio: ["Karine"],
+      rh: ["Colaborador RH 1", "Colaborador RH 2"],
+      tesouraria: ["Colaborador Tesouraria"],
+      caixas: ["Operador de Caixa 1", "Operador de Caixa 2", "Operador de Caixa 3"],
+      repositores: ["Eudes", "Repositor 2", "Repositor 3"],
+      almoxarifado: ["Conferente 1", "Conferente 2"],
+      açougue: ["Açougueiro 1", "Açougueiro 2"],
+      empacotadores: ["Victor", "Empacotador 2"],
+      terceirizados: ["Prestador 1", "Segurança 1"]
+    };
+
+    // Função que filtra os nomes de acordo com o setor clicado
+    function filtrarColaboradores() {
+      const setorSelecionado = document.getElementById("setor").value;
+      const blocoColaborador = document.getElementById("bloco-colaborador");
+      const seletorColaborador = document.getElementById("colaborador");
+
+      // Limpa os nomes antigos do campo
+      seletorColaborador.innerHTML = "";
+
+      // Se o usuário não escolheu nenhum setor, esconde o segundo campo
+      if (setorSelecionado === "") {
+        blocoColaborador.style.display = "none";
+        return;
+      }
+
+      // Pega a lista de funcionários do setor escolhido
+      const funcionariosDoSetor = equipe[setorSelecionado];
+
+      // Cria a opção padrão vazia
+      let opcaoInicial = document.createElement("option");
+      opcaoInicial.value = "";
+      opcaoInicial.text = "-- Escolha seu Nome --";
+      seletorColaborador.appendChild(opcaoInicial);
+
+      // Preenche o campo com os nomes corretos do setor
+      funcionariosDoSetor.forEach(function(nome) {
+        let opcao = document.createElement("option");
+        opcao.value = nome;
+        opcao.text = nome;
+        seletorColaborador.appendChild(opcao);
+      });
+
+      // Torna o campo de nomes visível com efeito visual suave
+      blocoColaborador.style.display = "block";
+    }
+
     let mapaObjeto = null;
 
+    // Função que bate o ponto e pega o GPS/Mapa
     function registrar(tipo) {
-      // Pega o nome selecionado na lista
-      let nomeFuncionario = document.getElementById("funcionario").value;
+      let setorTexto = document.getElementById("setor").options[document.getElementById("setor").selectedIndex].text;
+      let nomeFuncionario = document.getElementById("colaborador").value;
 
-      // Validação: Se não escolheu um nome, para o código aqui e avisa
+      // Validações obrigatórias
+      if (document.getElementById("setor").value === "") {
+        alert("Por favor, selecione primeiro o seu setor!");
+        return;
+      }
       if (nomeFuncionario === "") {
         alert("Por favor, selecione seu nome antes de registrar o ponto!");
         return;
       }
       
-      // Personaliza a mensagem com o nome de quem bateu o ponto
       document.getElementById("status").innerHTML = `${tipo} de <strong>${nomeFuncionario}</strong> registrado com sucesso!`;
       document.getElementById("localizacao").innerHTML = "Buscando localização exata...";
 
@@ -168,8 +244,9 @@
             let lon = posicao.coords.longitude;
 
             document.getElementById("localizacao").innerHTML = 
-              `<strong>GPS Capturado</strong><br>
+              `<strong>GPS Capturado com Sucesso</strong><br>
               Colaborador: ${nomeFuncionario}<br>
+              Setor: ${setorTexto}<br>
               Lat: ${lat.toFixed(6)} | Lon: ${lon.toFixed(6)}`;
 
             document.getElementById("mapa").style.display = "block";
