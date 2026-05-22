@@ -40,10 +40,37 @@
       letter-spacing: 1px;
     }
 
+    label {
+      display: block;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    /* Estilo do seletor de nomes */
+    select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    select:focus {
+      border-color: #d32f2f;
+    }
+
     button {
       width: 100%;
       padding: 15px;
-      margin-top: 15px;
+      margin-top: 12px;
       border: none;
       border-radius: 10px;
       background: #d32f2f;
@@ -76,14 +103,13 @@
       border: 1px solid #eee;
     }
 
-    /* Estilo do espaço do Mapa */
     #mapa {
       width: 100%;
       height: 200px;
       margin-top: 15px;
       border-radius: 10px;
       border: 2px solid #d32f2f;
-      display: none; /* Fica escondido até o ponto ser batido */
+      display: none;
     }
   </style>
 </head>
@@ -92,6 +118,14 @@
   <div class="container">
 
     <h1>MEU PONTO SR</h1>
+
+    <label for="funcionario">QUEM ESTÁ BATENDO O PONTO?</label>
+    <select id="funcionario">
+      <option value="">-- Selecione seu nome --</option>
+      <option value="Karine">Karine</option>
+      <option value="Eudes">Eudes</option>
+      <option value="Victor">Victor</option>
+    </select>
 
     <p id="status">Nenhum ponto registrado</p>
 
@@ -110,11 +144,20 @@
   </div>
 
   <script>
-    let mapaObjeto = null; // Guarda a instância do mapa para não duplicar
+    let mapaObjeto = null;
 
     function registrar(tipo) {
+      // Pega o nome selecionado na lista
+      let nomeFuncionario = document.getElementById("funcionario").value;
+
+      // Validação: Se não escolheu um nome, para o código aqui e avisa
+      if (nomeFuncionario === "") {
+        alert("Por favor, selecione seu nome antes de registrar o ponto!");
+        return;
+      }
       
-      document.getElementById("status").innerHTML = tipo + " registrado com sucesso!";
+      // Personaliza a mensagem com o nome de quem bateu o ponto
+      document.getElementById("status").innerHTML = `${tipo} de <strong>${nomeFuncionario}</strong> registrado com sucesso!`;
       document.getElementById("localizacao").innerHTML = "Buscando localização exata...";
 
       if (navigator.geolocation) {
@@ -124,35 +167,30 @@
             let lat = posicao.coords.latitude;
             let lon = posicao.coords.longitude;
 
-            // 1. Atualiza o texto das coordenadas
             document.getElementById("localizacao").innerHTML = 
               `<strong>GPS Capturado</strong><br>
+              Colaborador: ${nomeFuncionario}<br>
               Lat: ${lat.toFixed(6)} | Lon: ${lon.toFixed(6)}`;
 
-            // 2. Torna o bloco do mapa visível
             document.getElementById("mapa").style.display = "block";
 
-            // 3. Renderiza ou atualiza o mapa na tela
             if (mapaObjeto === null) {
-              // Cria o mapa focado na latitude e longitude do celular (Zoom 16)
               mapaObjeto = L.map('mapa').setView([lat, lon], 16);
 
-              // Carrega o design das ruas (OpenStreetMap)
               L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
               }).addTo(mapaObjeto);
 
-              // Adiciona o pino indicador no mapa
               L.marker([lat, lon]).addTo(mapaObjeto)
-                .bindPopup('Funcionário está aqui')
+                .bindPopup(`${nomeFuncionario} está aqui`)
                 .openPopup();
             } else {
-              // Se o mapa já existia (ex: bateu entrada e depois saída), só move o foco
               mapaObjeto.setView([lat, lon], 16);
-              L.marker([lat, lon]).addTo(mapaObjeto);
+              L.marker([lat, lon]).addTo(mapaObjeto)
+                .bindPopup(`${nomeFuncionario} está aqui`)
+                .openPopup();
             }
 
-            // Força o mapa a se ajustar ao tamanho correto da tela do celular
             setTimeout(() => { mapaObjeto.invalidateSize(); }, 400);
           },
           function(erro) {
