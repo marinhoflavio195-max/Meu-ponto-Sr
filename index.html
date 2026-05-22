@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -6,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu Ponto SR</title>
   
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     /* --- ESTILO DO APLICATIVO (CSS) --- */
     body {
@@ -23,11 +25,12 @@
       width: 90%;
       max-width: 400px;
       background: white;
-      padding: 30px;
+      padding: 25px;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       text-align: center;
       box-sizing: border-box;
+      margin: 20px auto;
     }
 
     h1 {
@@ -56,27 +59,36 @@
     }
 
     #status {
-      margin-top: 20px;
+      margin-top: 15px;
       font-size: 18px;
       color: #333;
-      font-weight: 500;
+      font-weight: bold;
     }
 
     #localizacao {
-      margin-top: 25px;
-      padding: 12px;
+      margin-top: 15px;
+      padding: 10px;
       background: #f9f9f9;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
       color: #555;
-      line-height: 1.5;
+      line-height: 1.4;
       border: 1px solid #eee;
+    }
+
+    /* Estilo do espaço do Mapa */
+    #mapa {
+      width: 100%;
+      height: 200px;
+      margin-top: 15px;
+      border-radius: 10px;
+      border: 2px solid #d32f2f;
+      display: none; /* Fica escondido até o ponto ser batido */
     }
   </style>
 </head>
 <body>
 
-  <!-- --- ESTRUTURA DA TELA (HTML) --- -->
   <div class="container">
 
     <h1>MEU PONTO SR</h1>
@@ -91,19 +103,20 @@
       Registrar Saída
     </button>
 
+    <div id="mapa"></div>
+
     <div id="localizacao">Aguardando registro...</div>
 
   </div>
 
-  <!-- --- LÓGICA DO GPS E BOTÕES (JAVASCRIPT) --- -->
   <script>
+    let mapaObjeto = null; // Guarda a instância do mapa para não duplicar
+
     function registrar(tipo) {
       
-      // Dá um feedback imediato na tela para o usuário
       document.getElementById("status").innerHTML = tipo + " registrado com sucesso!";
-      document.getElementById("localizacao").innerHTML = "Buscando satélite GPS...";
+      document.getElementById("localizacao").innerHTML = "Buscando localização exata...";
 
-      // Verifica se o celular/navegador tem suporte a localização
       if (navigator.geolocation) {
         
         navigator.geolocation.getCurrentPosition(
@@ -111,25 +124,49 @@
             let lat = posicao.coords.latitude;
             let lon = posicao.coords.longitude;
 
-            // Mostra as coordenadas formatadas na tela
+            // 1. Atualiza o texto das coordenadas
             document.getElementById("localizacao").innerHTML = 
-              `<strong>GPS Capturado com Sucesso</strong><br>
-              Lat: ${lat.toFixed(6)}<br>
-              Lon: ${lon.toFixed(6)}`;
+              `<strong>GPS Capturado</strong><br>
+              Lat: ${lat.toFixed(6)} | Lon: ${lon.toFixed(6)}`;
+
+            // 2. Torna o bloco do mapa visível
+            document.getElementById("mapa").style.display = "block";
+
+            // 3. Renderiza ou atualiza o mapa na tela
+            if (mapaObjeto === null) {
+              // Cria o mapa focado na latitude e longitude do celular (Zoom 16)
+              mapaObjeto = L.map('mapa').setView([lat, lon], 16);
+
+              // Carrega o design das ruas (OpenStreetMap)
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+              }).addTo(mapaObjeto);
+
+              // Adiciona o pino indicador no mapa
+              L.marker([lat, lon]).addTo(mapaObjeto)
+                .bindPopup('Funcionário está aqui')
+                .openPopup();
+            } else {
+              // Se o mapa já existia (ex: bateu entrada e depois saída), só move o foco
+              mapaObjeto.setView([lat, lon], 16);
+              L.marker([lat, lon]).addTo(mapaObjeto);
+            }
+
+            // Força o mapa a se ajustar ao tamanho correto da tela do celular
+            setTimeout(() => { mapaObjeto.invalidateSize(); }, 400);
           },
           function(erro) {
-            // Caso o GPS esteja desligado ou o navegador bloqueie
             document.getElementById("localizacao").innerHTML = "Erro ao capturar localização.";
-            alert("Erro ao pegar GPS. Ative a localização do celular e dê permissão nas configurações do navegador.");
+            alert("Ative o GPS do celular e dê permissão no navegador.");
           },
           {
-            enableHighAccuracy: true, // Força o celular a usar o GPS de alta precisão
-            timeout: 10000            // Aguarda até 10 segundos pelo sinal
+            enableHighAccuracy: true,
+            timeout: 10000
           }
         );
 
       } else {
-        alert("Seu navegador não suporta captura de GPS.");
+        alert("Seu navegador não suporta GPS.");
       }
     }
   </script>
