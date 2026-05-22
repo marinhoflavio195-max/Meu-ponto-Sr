@@ -49,7 +49,7 @@
       font-weight: bold;
     }
 
-    /* Estilo do Seletor de Setor */
+    /* Estilo dos Seletores */
     select {
       width: 100%;
       padding: 12px;
@@ -67,7 +67,6 @@
       border-color: #d32f2f;
     }
 
-    /* Bloco dos Colaboradores (fica escondido até escolher o setor) */
     #bloco-colaborador {
       display: none;
       animation: fadeIn 0.3s ease-in-out;
@@ -105,13 +104,14 @@
 
     #localizacao {
       margin-top: 15px;
-      padding: 10px;
+      padding: 12px;
       background: #f9f9f9;
       border-radius: 8px;
       font-size: 13px;
       color: #555;
-      line-height: 1.4;
+      line-height: 1.5;
       border: 1px solid #eee;
+      text-align: left; /* Alinhado à esquerda para facilitar a leitura dos dados */
     }
 
     #mapa {
@@ -167,44 +167,38 @@
   </div>
 
   <script>
-    // BANCO DE DADOS DE FUNCIONÁRIOS (Altere os nomes aqui dentro)
+    // LISTA DE COLABORADORES
     const equipe = {
       escritorio: ["Karine"],
-      rh: ["Colaborador RH 1", "Colaborador RH 2"],
+      rh: ["Colaborador RH 1"],
       tesouraria: ["Colaborador Tesouraria"],
-      caixas: ["Operador de Caixa 1", "Operador de Caixa 2", "Operador de Caixa 3"],
-      repositores: ["Eudes", "Repositor 2", "Repositor 3"],
-      almoxarifado: ["Conferente 1", "Conferente 2"],
-      açougue: ["Açougueiro 1", "Açougueiro 2"],
-      empacotadores: ["Victor", "Empacotador 2"],
-      terceirizados: ["Prestador 1", "Segurança 1"]
+      caixas: ["Operador de Caixa 1", "Operador de Caixa 2"],
+      repositores: ["Eudes", "Repositor 2"],
+      almoxarifado: ["Conferente 1"],
+      açougue: ["Açougueiro 1"],
+      empacotadores: ["Victor"],
+      terceirizados: ["Prestador 1"]
     };
 
-    // Função que filtra os nomes de acordo com o setor clicado
     function filtrarColaboradores() {
       const setorSelecionado = document.getElementById("setor").value;
       const blocoColaborador = document.getElementById("bloco-colaborador");
       const seletorColaborador = document.getElementById("colaborador");
 
-      // Limpa os nomes antigos do campo
       seletorColaborador.innerHTML = "";
 
-      // Se o usuário não escolheu nenhum setor, esconde o segundo campo
       if (setorSelecionado === "") {
         blocoColaborador.style.display = "none";
         return;
       }
 
-      // Pega a lista de funcionários do setor escolhido
       const funcionariosDoSetor = equipe[setorSelecionado];
 
-      // Cria a opção padrão vazia
       let opcaoInicial = document.createElement("option");
       opcaoInicial.value = "";
       opcaoInicial.text = "-- Escolha seu Nome --";
       seletorColaborador.appendChild(opcaoInicial);
 
-      // Preenche o campo com os nomes corretos do setor
       funcionariosDoSetor.forEach(function(nome) {
         let opcao = document.createElement("option");
         opcao.value = nome;
@@ -212,18 +206,15 @@
         seletorColaborador.appendChild(opcao);
       });
 
-      // Torna o campo de nomes visível com efeito visual suave
       blocoColaborador.style.display = "block";
     }
 
     let mapaObjeto = null;
 
-    // Função que bate o ponto e pega o GPS/Mapa
     function registrar(tipo) {
       let setorTexto = document.getElementById("setor").options[document.getElementById("setor").selectedIndex].text;
       let nomeFuncionario = document.getElementById("colaborador").value;
 
-      // Validações obrigatórias
       if (document.getElementById("setor").value === "") {
         alert("Por favor, selecione primeiro o seu setor!");
         return;
@@ -233,7 +224,12 @@
         return;
       }
       
-      document.getElementById("status").innerHTML = `${tipo} de <strong>${nomeFuncionario}</strong> registrado com sucesso!`;
+      // Captura a data e hora exata do clique do botão
+      let agora = new Date();
+      let dataFormatada = agora.toLocaleDateString('pt-BR');
+      let horaFormatada = agora.toLocaleTimeString('pt-BR');
+
+      document.getElementById("status").innerHTML = `${tipo} de <strong>${nomeFuncionario}</strong> registrado!`;
       document.getElementById("localizacao").innerHTML = "Buscando localização exata...";
 
       if (navigator.geolocation) {
@@ -243,11 +239,15 @@
             let lat = posicao.coords.latitude;
             let lon = posicao.coords.longitude;
 
+            // Mostra o relatório completo na caixinha cinza
             document.getElementById("localizacao").innerHTML = 
-              `<strong>GPS Capturado com Sucesso</strong><br>
-              Colaborador: ${nomeFuncionario}<br>
-              Setor: ${setorTexto}<br>
-              Lat: ${lat.toFixed(6)} | Lon: ${lon.toFixed(6)}`;
+              `⏰ <strong>REGISTRO REALIZADO:</strong><br>
+              <strong>Colaborador:</strong> ${nomeFuncionario}<br>
+              <strong>Setor:</strong> ${setorTexto}<br>
+              <strong>Tipo:</strong> ${tipo}<br>
+              <strong>Data:</strong> ${dataFormatada}<br>
+              <strong>Horário:</strong> ${horaFormatada}<br>
+              <strong>GPS:</strong> Lat ${lat.toFixed(6)} | Lon ${lon.toFixed(6)}`;
 
             document.getElementById("mapa").style.display = "block";
 
@@ -259,12 +259,12 @@
               }).addTo(mapaObjeto);
 
               L.marker([lat, lon]).addTo(mapaObjeto)
-                .bindPopup(`${nomeFuncionario} está aqui`)
+                .bindPopup(`${nomeFuncionario} - ${horaFormatada}`)
                 .openPopup();
             } else {
               mapaObjeto.setView([lat, lon], 16);
               L.marker([lat, lon]).addTo(mapaObjeto)
-                .bindPopup(`${nomeFuncionario} está aqui`)
+                .bindPopup(`${nomeFuncionario} - ${horaFormatada}`)
                 .openPopup();
             }
 
