@@ -68,7 +68,7 @@
       border-color: #d32f2f;
     }
 
-    #bloco-colaborador {
+    #bloco-colaborador, #bloco-botoes {
       display: none;
       animation: fadeIn 0.3s ease-in-out;
     }
@@ -78,29 +78,50 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    .grid-botoes {
+      display: block;
+      margin-top: 15px;
+    }
+
     button {
       width: 100%;
-      padding: 15px;
-      margin-top: 12px;
+      padding: 14px;
+      margin-top: 10px;
       border: none;
       border-radius: 10px;
-      background: #d32f2f;
       color: white;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.1s;
     }
 
     button:active {
-      background: #b71c1c;
+      transform: scale(0.98);
     }
+
+    /* Cores customizadas para cada tipo de ponto */
+    .btn-entrada { background: #2e7d32; } /* Verde */
+    .btn-entrada:active { background: #1b5e20; }
+
+    .btn-saida-almoco { background: #f57c00; } /* Laranja */
+    .btn-saida-almoco:active { background: #e65100; }
+
+    .btn-retorno-almoco { background: #0288d1; } /* Azul */
+    .btn-retorno-almoco:active { background: #01579b; }
+
+    .btn-saida { background: #c62828; } /* Vermelho */
+    .btn-saida:active { background: #a91b1b; }
 
     #status {
       margin-top: 15px;
-      font-size: 18px;
+      font-size: 16px;
       color: #333;
       font-weight: bold;
+      background: #fff3e0;
+      padding: 8px;
+      border-radius: 6px;
+      display: none;
     }
 
     .nuvem-status {
@@ -108,6 +129,7 @@
       color: #2e7d32;
       margin-top: 6px;
       display: none;
+      font-weight: bold;
     }
 
     #localizacao {
@@ -124,7 +146,7 @@
 
     #mapa {
       width: 100%;
-      height: 200px;
+      height: 180px;
       margin-top: 15px;
       border-radius: 10px;
       border: 2px solid #d32f2f;
@@ -153,22 +175,27 @@
 
     <div id="bloco-colaborador">
       <label for="colaborador">2. SELECIONE SEU NOME:</label>
-      <select id="colaborador">
+      <select id="colaborador" onchange="liberarBotoes()">
         </select>
     </div>
 
-    <p id="status">Nenhum ponto registrado</p>
-    <p id="nuvem" class="nuvem-status">☁️ Conectando ao Banco...</p>
+    <div id="bloco-botoes" class="grid-botoes">
+      <label style="text-align: center; margin-bottom: 5px; color: #333;">3. REGISTRE SEU PONTO:</label>
+      <button class="btn-entrada" onclick="registrar('Entrada Manhã')">🌅 Registrar Entrada</button>
+      <button class="btn-saida-almoco" onclick="registrar('Saída Almoço')">🥪 Saída p/ Almoço</button>
+      <button class="btn-retorno-almoco" onclick="registrar('Retorno Almoço')">☕ Retorno do Almoço</button>
+      <button class="btn-saida" onclick="registrar('Saída Expediente')">🛑 Saída Fim Expediente</button>
+    </div>
 
-    <button onclick="registrar('Entrada')">Registrar Entrada</button>
-    <button onclick="registrar('Saída')">Registrar Saída</button>
+    <p id="status"></p>
+    <p id="nuvem" class="nuvem-status">☁️ Conectando ao Banco...</p>
 
     <div id="mapa"></div>
     <div id="localizacao">Aguardando registro...</div>
   </div>
 
   <script>
-    // CONFIGURAÇÕES ATUALIZADAS PARA O PROJETO NOVO (MEU PONTO SR)
+    // Configurações do seu Firebase Realtime Database
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -179,11 +206,11 @@
       appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
     };
 
-    // Inicializa o Firebase e o Realtime Database
+    // Inicializa o Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // LISTA DE COLABORADORES
+    // Lista da sua equipe do Supermercado
     const equipe = {
       escritorio: ["Karine"],
       rh: ["Colaborador RH 1"],
@@ -200,8 +227,10 @@
       const setorSelecionado = document.getElementById("setor").value;
       const blocoColaborador = document.getElementById("bloco-colaborador");
       const seletorColaborador = document.getElementById("colaborador");
+      const blocoBotoes = document.getElementById("bloco-botoes");
 
       seletorColaborador.innerHTML = "";
+      blocoBotoes.style.display = "none"; 
 
       if (setorSelecionado === "") {
         blocoColaborador.style.display = "none";
@@ -225,42 +254,59 @@
       blocoColaborador.style.display = "block";
     }
 
+    function liberarBotoes() {
+      const colaborador = document.getElementById("colaborador").value;
+      const blocoBotoes = document.getElementById("bloco-botoes");
+      
+      if (colaborador !== "") {
+        blocoBotoes.style.display = "block";
+      } else {
+        blocoBotoes.style.display = "none";
+      }
+    }
+
     let mapaObjeto = null;
 
     function registrar(tipo) {
       let setorTexto = document.getElementById("setor").options[document.getElementById("setor").selectedIndex].text;
       let nomeFuncionario = document.getElementById("colaborador").value;
 
-      if (document.getElementById("setor").value === "") {
-        alert("Por favor, selecione primeiro o seu setor!");
-        return;
-      }
       if (nomeFuncionario === "") {
-        alert("Por favor, selecione seu nome antes de registrar o ponto!");
+        alert("Por favor, selecione seu nome antes de registrar!");
         return;
       }
       
       let agora = new Date();
-      let dataFormatada = agora.toLocaleDateString('pt-BR');
-      let horaFormatada = agora.toLocaleTimeString('pt-BR');
+      let dataFormatada = agora.toLocaleDateString('pt-BR'); // Ex: 24/05/2026
+      let horaFormatada = agora.toLocaleTimeString('pt-BR'); // Ex: 20:05:32
 
-      document.getElementById("status").innerHTML = `${tipo} de <strong>${nomeFuncionario}</strong> registrado!`;
-      document.getElementById("localizacao").innerHTML = "Buscando localização exata...";
+      // Cria uma chave organizada para busca no painel (ano-mes-dia)
+      let ano = agora.getFullYear();
+      let mes = String(agora.getMonth() + 1).padStart(2, '0');
+      let dia = String(agora.getDate()).padStart(2, '0');
+      let dataChave = `${ano}-${mes}-${dia}`;
+
+      const elementoStatus = document.getElementById("status");
+      elementoStatus.style.display = "block";
+      elementoStatus.innerHTML = `Processando <strong>${tipo}</strong> de <strong>${nomeFuncionario}</strong>...`;
+      
+      document.getElementById("localizacao").innerHTML = "Buscando localização exata via GPS...";
       document.getElementById("nuvem").style.display = "block";
       document.getElementById("nuvem").innerHTML = "☁️ Salvando no Realtime Database...";
 
       if (navigator.geolocation) {
-        
         navigator.geolocation.getCurrentPosition(
           function(posicao) {
             let lat = posicao.coords.latitude;
             let lon = posicao.coords.longitude;
 
+            elementoStatus.innerHTML = `<strong>${tipo}</strong> de <strong>${nomeFuncionario}</strong> gravado!`;
+            
             document.getElementById("localizacao").innerHTML = 
               `⏰ <strong>REGISTRO REALIZADO:</strong><br>
               <strong>Colaborador:</strong> ${nomeFuncionario}<br>
               <strong>Setor:</strong> ${setorTexto}<br>
-              <strong>Tipo:</strong> ${tipo}<br>
+              <strong>Movimento:</strong> ${tipo}<br>
               <strong>Data:</strong> ${dataFormatada}<br>
               <strong>Horário:</strong> ${horaFormatada}<br>
               <strong>GPS:</strong> Lat ${lat.toFixed(6)} | Lon ${lon.toFixed(6)}`;
@@ -272,15 +318,15 @@
               L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
               }).addTo(mapaObjeto);
-              L.marker([lat, lon]).addTo(mapaObjeto).bindPopup(`${nomeFuncionario}`).openPopup();
-            } else {
-              mapaObjeto.setView([lat, lon], 16);
-              L.marker([lat, lon]).addTo(mapaObjeto).bindPopup(`${nomeFuncionario}`).openPopup();
             }
+            
+            mapaObjeto.setView([lat, lon], 16);
+            L.marker([lat, lon]).addTo(mapaObjeto).bindPopup(`${nomeFuncionario} - ${tipo}`).openPopup();
+            
             setTimeout(() => { mapaObjeto.invalidateSize(); }, 400);
 
             // =========================================================
-            // GRAVAÇÃO DIRETA NO SEU NOVO REALTIME DATABASE
+            // GRAVAÇÃO ESTRUTURADA PARA O PAINEL DE CONTROLE
             // =========================================================
             let novoPontoRef = database.ref('pontos_registrados').push();
             novoPontoRef.set({
@@ -288,6 +334,7 @@
               setor: setorTexto,
               tipo: tipo,
               data: dataFormatada,
+              dataChave: dataChave, // Ajuda o painel administrativo a filtrar por data
               horario: horaFormatada,
               latitude: lat,
               longitude: lon,
@@ -305,11 +352,10 @@
           function(erro) {
             document.getElementById("localizacao").innerHTML = "Erro ao capturar localização.";
             document.getElementById("nuvem").style.display = "none";
-            alert("Ative o GPS do celular e dê permissão.");
+            alert("Por favor, ative o GPS do celular e dê permissão de localização.");
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
-
       } else {
         alert("Seu navegador não suporta GPS.");
       }
