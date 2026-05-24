@@ -9,10 +9,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <style>
-    /* --- ESTILO DO APLICATIVO (CSS) --- */
     body {
       margin: 0;
       padding: 0;
@@ -159,7 +158,7 @@
     </div>
 
     <p id="status">Nenhum ponto registrado</p>
-    <p id="nuvem" class="nuvem-status">☁️ Salvando na nuvem do São Raimundo...</p>
+    <p id="nuvem" class="nuvem-status">☁️ Conectando ao Meu Ponto SR...</p>
 
     <button onclick="registrar('Entrada')">Registrar Entrada</button>
     <button onclick="registrar('Saída')">Registrar Saída</button>
@@ -169,7 +168,7 @@
   </div>
 
   <script>
-    // Configurações exatas puxadas do seu painel do Firebase
+    // Configurações do Realtime Database puxadas do seu print
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "relat-e1bd3.firebaseapp.com",
@@ -183,7 +182,7 @@
 
     // Inicializa o Firebase
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const database = firebase.database();
 
     // LISTA DE COLABORADORES
     const equipe = {
@@ -249,7 +248,7 @@
       document.getElementById("status").innerHTML = `${tipo} de <strong>${nomeFuncionario}</strong> registrado!`;
       document.getElementById("localizacao").innerHTML = "Buscando localização exata...";
       document.getElementById("nuvem").style.display = "block";
-      document.getElementById("nuvem").innerHTML = "☁️ Conectando à nuvem...";
+      document.getElementById("nuvem").innerHTML = "☁️ Salvando na nuvem...";
 
       if (navigator.geolocation) {
         
@@ -258,7 +257,6 @@
             let lat = posicao.coords.latitude;
             let lon = posicao.coords.longitude;
 
-            // Mostra na tela do celular
             document.getElementById("localizacao").innerHTML = 
               `⏰ <strong>REGISTRO REALIZADO:</strong><br>
               <strong>Colaborador:</strong> ${nomeFuncionario}<br>
@@ -270,7 +268,6 @@
 
             document.getElementById("mapa").style.display = "block";
 
-            // Desenha o mapa
             if (mapaObjeto === null) {
               mapaObjeto = L.map('mapa').setView([lat, lon], 16);
               L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -284,9 +281,10 @@
             setTimeout(() => { mapaObjeto.invalidateSize(); }, 400);
 
             // =========================================================
-            // SALVANDO DIRETAMENTE NO SEU BANCO DE DADOS FIREBASE
+            // SALVANDO DIRETAMENTE NO SEU BANCO REALTIME DATABASE
             // =========================================================
-            db.collection("pontos_registrados").add({
+            let novoPontoRef = database.ref('pontos_registrados').push();
+            novoPontoRef.set({
               colaborador: nomeFuncionario,
               setor: setorTexto,
               tipo: tipo,
@@ -294,15 +292,14 @@
               horario: horaFormatada,
               latitude: lat,
               longitude: lon,
-              link_mapa: `https://www.google.com/maps?q=${lat},${lon}`,
-              timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(function() {
-              document.getElementById("nuvem").innerHTML = "✅ Sincronizado com a nuvem São Raimundo!";
-            })
-            .catch(function(error) {
-              console.error("Erro ao salvar:", error);
-              document.getElementById("nuvem").innerHTML = "❌ Erro ao salvar na nuvem.";
+              timestamp: firebase.database.ServerValue.TIMESTAMP
+            }, function(error) {
+              if (error) {
+                console.error("Erro ao salvar:", error);
+                document.getElementById("nuvem").innerHTML = "❌ Erro ao salvar na nuvem.";
+              } else {
+                document.getElementById("nuvem").innerHTML = "✅ Sincronizado com o Meu Ponto SR!";
+              }
             });
 
           },
