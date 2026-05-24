@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <style>
     /* --- ESTILO DO APLICATIVO (CSS) --- */
     body {
@@ -49,7 +52,6 @@
       font-weight: bold;
     }
 
-    /* Estilo dos Seletores */
     select {
       width: 100%;
       padding: 12px;
@@ -102,6 +104,13 @@
       font-weight: bold;
     }
 
+    .nuvem-status {
+      font-size: 12px;
+      color: #2e7d32;
+      margin-top: 4px;
+      display: none;
+    }
+
     #localizacao {
       margin-top: 15px;
       padding: 12px;
@@ -111,7 +120,7 @@
       color: #555;
       line-height: 1.5;
       border: 1px solid #eee;
-      text-align: left; /* Alinhado à esquerda para facilitar a leitura dos dados */
+      text-align: left;
     }
 
     #mapa {
@@ -127,7 +136,6 @@
 <body>
 
   <div class="container">
-
     <h1>MEU PONTO SR</h1>
 
     <label for="setor">1. SELECIONE O SETOR:</label>
@@ -151,22 +159,32 @@
     </div>
 
     <p id="status">Nenhum ponto registrado</p>
+    <p id="nuvem" class="nuvem-status">☁️ Salvando na nuvem do São Raimundo...</p>
 
-    <button onclick="registrar('Entrada')">
-      Registrar Entrada
-    </button>
-
-    <button onclick="registrar('Saída')">
-      Registrar Saída
-    </button>
+    <button onclick="registrar('Entrada')">Registrar Entrada</button>
+    <button onclick="registrar('Saída')">Registrar Saída</button>
 
     <div id="mapa"></div>
-
     <div id="localizacao">Aguardando registro...</div>
-
   </div>
 
   <script>
+    // Configurações exatas puxadas do seu painel do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
+      authDomain: "relat-e1bd3.firebaseapp.com",
+      databaseURL: "https://relat-e1bd3-default-rtdb.firebaseio.com",
+      projectId: "relat-e1bd3",
+      storageBucket: "relat-e1bd3.appspot.com",
+      messagingSenderId: "356930006135",
+      appId: "1:356930006135:web:90bc643a9cd39a38f02a72",
+      measurementId: "G-BTJ1BG3C64"
+    };
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     // LISTA DE COLABORADORES
     const equipe = {
       escritorio: ["Karine"],
@@ -224,13 +242,14 @@
         return;
       }
       
-      // Captura a data e hora exata do clique do botão
       let agora = new Date();
       let dataFormatada = agora.toLocaleDateString('pt-BR');
       let horaFormatada = agora.toLocaleTimeString('pt-BR');
 
       document.getElementById("status").innerHTML = `${tipo} de <strong>${nomeFuncionario}</strong> registrado!`;
       document.getElementById("localizacao").innerHTML = "Buscando localização exata...";
+      document.getElementById("nuvem").style.display = "block";
+      document.getElementById("nuvem").innerHTML = "☁️ Conectando à nuvem...";
 
       if (navigator.geolocation) {
         
@@ -239,7 +258,7 @@
             let lat = posicao.coords.latitude;
             let lon = posicao.coords.longitude;
 
-            // Mostra o relatório completo na caixinha cinza
+            // Mostra na tela do celular
             document.getElementById("localizacao").innerHTML = 
               `⏰ <strong>REGISTRO REALIZADO:</strong><br>
               <strong>Colaborador:</strong> ${nomeFuncionario}<br>
@@ -251,33 +270,48 @@
 
             document.getElementById("mapa").style.display = "block";
 
+            // Desenha o mapa
             if (mapaObjeto === null) {
               mapaObjeto = L.map('mapa').setView([lat, lon], 16);
-
               L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
               }).addTo(mapaObjeto);
-
-              L.marker([lat, lon]).addTo(mapaObjeto)
-                .bindPopup(`${nomeFuncionario} - ${horaFormatada}`)
-                .openPopup();
+              L.marker([lat, lon]).addTo(mapaObjeto).bindPopup(`${nomeFuncionario}`).openPopup();
             } else {
               mapaObjeto.setView([lat, lon], 16);
-              L.marker([lat, lon]).addTo(mapaObjeto)
-                .bindPopup(`${nomeFuncionario} - ${horaFormatada}`)
-                .openPopup();
+              L.marker([lat, lon]).addTo(mapaObjeto).bindPopup(`${nomeFuncionario}`).openPopup();
             }
-
             setTimeout(() => { mapaObjeto.invalidateSize(); }, 400);
+
+            // =========================================================
+            // SALVANDO DIRETAMENTE NO SEU BANCO DE DADOS FIREBASE
+            // =========================================================
+            db.collection("pontos_registrados").add({
+              colaborador: nomeFuncionario,
+              setor: setorTexto,
+              tipo: tipo,
+              data: dataFormatada,
+              horario: horaFormatada,
+              latitude: lat,
+              longitude: lon,
+              link_mapa: `https://www.google.com/maps?q=${lat},${lon}`,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(function() {
+              document.getElementById("nuvem").innerHTML = "✅ Sincronizado com a nuvem São Raimundo!";
+            })
+            .catch(function(error) {
+              console.error("Erro ao salvar:", error);
+              document.getElementById("nuvem").innerHTML = "❌ Erro ao salvar na nuvem.";
+            });
+
           },
           function(erro) {
             document.getElementById("localizacao").innerHTML = "Erro ao capturar localização.";
-            alert("Ative o GPS do celular e dê permissão no navegador.");
+            document.getElementById("nuvem").style.display = "none";
+            alert("Ative o GPS do celular e dê permissão.");
           },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000
-          }
+          { enableHighAccuracy: true, timeout: 10000 }
         );
 
       } else {
