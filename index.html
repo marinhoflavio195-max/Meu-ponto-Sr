@@ -168,16 +168,15 @@
   </div>
 
   <script>
-    // Configurações puxadas diretamente do seu projeto
+    // CONFIGURAÇÕES ATUALIZADAS PARA O PROJETO NOVO (MEU PONTO SR)
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
-      authDomain: "relat-e1bd3.firebaseapp.com",
-      databaseURL: "https://relat-e1bd3-default-rtdb.firebaseio.com",
-      projectId: "relat-e1bd3",
-      storageBucket: "relat-e1bd3.appspot.com",
+      authDomain: "meu-ponto-sr.firebaseapp.com",
+      databaseURL: "https://meu-ponto-sr-default-rtdb.firebaseio.com",
+      projectId: "meu-ponto-sr",
+      storageBucket: "meu-ponto-sr.appspot.com",
       messagingSenderId: "356930006135",
-      appId: "1:356930006135:web:90bc643a9cd39a38f02a72",
-      measurementId: "G-BTJ1BG3C64"
+      appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
     };
 
     // Inicializa o Firebase e o Realtime Database
@@ -281,7 +280,7 @@
             setTimeout(() => { mapaObjeto.invalidateSize(); }, 400);
 
             // =========================================================
-            // GRAVAÇÃO DIRETA NO REALTIME DATABASE
+            // GRAVAÇÃO DIRETA NO SEU NOVO REALTIME DATABASE
             // =========================================================
             let novoPontoRef = database.ref('pontos_registrados').push();
             novoPontoRef.set({
