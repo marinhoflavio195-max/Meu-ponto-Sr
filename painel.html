@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo - Meu Ponto SR</title>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    .painel-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      color: #d32f2f;
+      margin-top: 0;
+      border-bottom: 3px solid #d32f2f;
+      padding-bottom: 10px;
+      font-size: 26px;
+    }
+
+    .filtros-topo {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+      background: #fdf2f2;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ffcdd2;
+    }
+
+    .campo-filtro {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .campo-filtro label {
+      display: block;
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    .campo-filtro select, .campo-filtro input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+      background: white;
+      box-sizing: border-box;
+    }
+
+    .botoes-acoes {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      transition: background 0.2s;
+    }
+
+    .btn-filtrar { background-color: #d32f2f; }
+    .btn-filtrar:hover { background-color: #b71c1c; }
+
+    .btn-excel { background-color: #2e7d32; }
+    .btn-excel:hover { background-color: #1b5e20; }
+
+    .btn-pdf { background-color: #1565c0; }
+    .btn-pdf:hover { background-color: #0d47a1; }
+
+    .tabela-responsiva {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #d32f2f;
+      color: white;
+      padding: 12px;
+      text-align: left;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .link-gps {
+      color: #1565c0;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .link-gps:hover {
+      text-decoration: underline;
+    }
+
+    .sem-dados {
+      text-align: center;
+      padding: 30px;
+      color: #888;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="painel-container">
+    <h1>MEU PONTO SR - PAINEL ADMINISTRATIVO</h1>
+
+    <div class="filtros-topo">
+      <div class="campo-filtro">
+        <label for="filtroColaborador">FUNCIONÁRIO:</label>
+        <select id="filtroColaborador">
+          <option value="TODOS">-- Todos os Funcionários --</option>
+          <option value="Karine">Karine</option>
+          <option value="Eudes">Eudes</option>
+          <option value="Victor">Victor</option>
+          <option value="Colaborador RH 1">Colaborador RH 1</option>
+          <option value="Colaborador Tesouraria">Colaborador Tesouraria</option>
+          <option value="Operador de Caixa 1">Operador de Caixa 1</option>
+          <option value="Operador de Caixa 2">Operador de Caixa 2</option>
+          <option value="Repositor 2">Repositor 2</option>
+          <option value="Conferente 1">Conferente 1</option>
+          <option value="Açougueiro 1">Açougueiro 1</option>
+          <option value="Prestador 1">Prestador 1</option>
+        </select>
+      </div>
+
+      <div class="campo-filtro">
+        <label for="filtroMes">MÊS DE CONSULTA:</label>
+        <input type="month" id="filtroMes">
+      </div>
+    </div>
+
+    <div class="botoes-acoes">
+      <button class="btn btn-filtrar" onclick="carregarDadosDoBanco()">🔍 Consultar Período</button>
+      <button class="btn btn-excel" onclick="exportarParaExcel()">📊 Baixar Excel</button>
+      <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF</button>
+    </div>
+
+    <div class="tabela-responsiva">
+      <table id="tabelaPontos">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Colaborador</th>
+            <th>Setor</th>
+            <th>Entrada Manhã</th>
+            <th>Saída Almoço</th>
+            <th>Retorno Almoço</th>
+            <th>Saída Fim</th>
+            <th>GPS</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela">
+          <tr>
+            <td colspan="8" class="sem-dados">Escolha os filtros acima e clique em "Consultar Período".</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Configurações do seu Firebase vinculadas ao Meu Ponto SR
+    const firebaseConfig = {
+      apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
+      authDomain: "meu-ponto-sr.firebaseapp.com",
+      databaseURL: "https://meu-ponto-sr-default-rtdb.firebaseio.com",
+      projectId: "meu-ponto-sr",
+      storageBucket: "meu-ponto-sr.appspot.com",
+      messagingSenderId: "356930006135",
+      appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Define o mês atual como padrão no campo de data ao abrir a tela
+    let hoje = new Date();
+    let mesAtualString = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
+    document.getElementById('filtroMes').value = mesAtualString;
+
+    let registrosProcessadosGlobais = [];
+
+    function carregarDadosDoBanco() {
+      const colaboradorSelecionado = document.getElementById('filtroColaborador').value;
+      const mesSelecionado = document.getElementById('filtroMes').value; // Formato: "YYYY-MM"
+      
+      if (!mesSelecionado) {
+        alert("Por favor, escolha um mês de consulta!");
+        return;
+      }
+
+      const corpoTabela = document.getElementById('corpoTabela');
+      corpoTabela.innerHTML = `<tr><td colspan="8" class="sem-dados">Buscando dados na nuvem...</td></tr>`;
+
+      database.ref('pontos_registrados').once('value').then(function(snapshot) {
+        let dadosAgrupados = {};
+
+        snapshot.forEach(function(item) {
+          let ponto = item.val();
+          
+          // Filtro por Mês (usando o campo dataChave criado no app)
+          if (ponto.dataChave && ponto.dataChave.startsWith(mesSelecionado)) {
+            
+            // Filtro por Colaborador
+            if (colaboradorSelecionado === "TODOS" || ponto.colaborador === colaboradorSelecionado) {
+              
+              // Cria uma chave única por dia e por funcionário para agrupar as batidas na mesma linha
+              let chaveDiaFuncionario = `${ponto.dataChave}_${ponto.colaborador}`;
+              
+              if (!dadosAgrupados[chaveDiaFuncionario]) {
+                dadosAgrupados[chaveDiaFuncionario] = {
+                  data: ponto.data,
+                  dataChave: ponto.dataChave,
+                  colaborador: ponto.colaborador,
+                  setor: ponto.setor || "Não Informado",
+                  entradaManha: "--:--:--",
+                  saidaAlmoço: "--:--:--",
+                  retornoAlmoço: "--:--:--",
+                  saidaExpediente: "--:--:--",
+                  coordenadas: ""
+                };
+              }
+
+              // Distribui o horário na coluna certa baseado no tipo da batida
+              if (ponto.tipo === "Entrada Manhã" || ponto.tipo === "Entrada") dadosAgrupados[chaveDiaFuncionario].entradaManha = ponto.horario;
+              if (ponto.tipo === "Saída Almoço") dadosAgrupados[chaveDiaFuncionario].saidaAlmoço = ponto.horario;
+              if (ponto.tipo === "Retorno Almoço") dadosAgrupados[chaveDiaFuncionario].retornoAlmoço = ponto.horario;
+              if (ponto.tipo === "Saída Expediente" || ponto.tipo === "Saída") dadosAgrupados[chaveDiaFuncionario].saidaExpediente = ponto.horario;
+              
+              if (ponto.latitude && ponto.longitude) {
+                dadosAgrupados[chaveDiaFuncionario].coordenadas = `${ponto.latitude},${ponto.longitude}`;
+              }
+            }
+          }
+        });
+
+        // Transforma o objeto agrupado em uma lista ordenada por data
+        registrosProcessadosGlobais = Object.values(dadosAgrupados);
+        registrosProcessadosGlobais.sort((a, b) => a.dataChave.localeCompare(b.dataChave));
+
+        exibirTabela();
+      }).catch(function(error) {
+        console.error(error);
+        corpoTabela.innerHTML = `<tr><td colspan="8" class="sem-dados">Erro ao carregar dados do banco de dados.</td></tr>`;
+      });
+    }
+
+    function exibirTabela() {
+      const corpoTabela = document.getElementById('corpoTabela');
+      corpoTabela.innerHTML = "";
+
+      if (registrosProcessadosGlobais.length === 0) {
+        corpoTabela.innerHTML = `<tr><td colspan="8" class="sem-dados">Nenhum registro de ponto encontrado para este filtro.</td></tr>`;
+        return;
+      }
+
+      registrosProcessadosGlobais.forEach(function(reg) {
+        let tr = document.createElement('tr');
+        
+        let botaoGps = "Não disponível";
+        if (reg.coordenadas) {
+          botaoGps = `<a class="link-gps" href="https://www.google.com/maps/search/?api=1&query=${reg.coordenadas}" target="_blank">🗺️ Ver Mapa</a>`;
+        }
+
+        tr.innerHTML = `
+          <td><strong>${reg.data}</strong></td>
+          <td>${reg.colaborador}</td>
+          <td>${reg.setor}</td>
+          <td style="color: #2e7d32; font-weight: bold;">${reg.entradaManha}</td>
+          <td style="color: #f57c00; font-weight: bold;">${reg.saidaAlmoço}</td>
+          <td style="color: #0288d1; font-weight: bold;">${reg.retornoAlmoço}</td>
+          <td style="color: #c62828; font-weight: bold;">${reg.saidaExpediente}</td>
+          <td>${botaoGps}</td>
+        `;
+        corpoTabela.appendChild(tr);
+      });
+    }
+
+    // Geração Inteligente do Relatório em EXCEL
+    function exportarParaExcel() {
+      if (registrosProcessadosGlobais.length === 0) {
+        alert("Não há dados na tabela para exportar! Faça uma consulta primeiro.");
+        return;
+      }
+
+      let cabecalho = [["Data", "Colaborador", "Setor", "Entrada Manhã", "Saída Almoço", "Retorno Almoço", "Saída Fim Expediente"]];
+      
+      registrosProcessadosGlobais.forEach(function(r) {
+        cabecalho.push([r.data, r.colaborador, r.setor, r.entradaManha, r.saidaAlmoço, r.retornoAlmoço, r.saidaExpediente]);
+      });
+
+      let wb = XLSX.utils.book_new();
+      let ws = XLSX.utils.aoa_to_sheet(cabecalho);
+      XLSX.utils.book_append_sheet(wb, ws, "Fechamento de Pontos");
+      
+      let mesRef = document.getElementById('filtroMes').value;
+      XLSX.writeFile(wb, `Folha_Ponto_SR_${mesRef}.xlsx`);
+    }
+
+    // Geração Inteligente e Organizada do Relatório em PDF para Impressão
+    function exportarParaPDF() {
+      if (registrosProcessadosGlobais.length === 0) {
+        alert("Não há dados na tabela para exportar! Faça uma consulta primeiro.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      let doc = new jsPDF();
+      
+      let mesRef = document.getElementById('filtroMes').value;
+
+      // Cabeçalho institucional do documento administrativo
+      doc.setFont("Arial", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(211, 47, 47);
+      doc.text("SÃO RAIMUNDO SUPERMERCADO", 14, 20);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Espelho Mensal de Ponto Eletrônico - Ref: ${mesRef}`, 14, 28);
+      doc.line(14, 32, 196, 32);
+
+      let colunas = ["Data", "Funcionário", "Setor", "Entrada", "S. Almoço", "R. Almoço", "Saída Fim"];
+      let linhas = [];
+
+      registrosProcessadosGlobais.forEach(function(r) {
+        linhas.push([r.data, r.colaborador, r.setor, r.entradaManha, r.saidaAlmoço, r.retornoAlmoço, r.saidaExpediente]);
+      });
+
+      doc.autoTable({
+        startY: 38,
+        head: [colunas],
+        body: linhas,
+        theme: 'striped',
+        headStyles: { fillColor: [211, 47, 47] },
+        styles: { fontSize: 10, cellPadding: 3 }
+      });
+
+      // Bloco final de rodapé para colher assinatura física do funcionário para a folha
+      let finalY = doc.lastAutoTable.finalY + 30;
+      if (finalY > 250) { doc.addPage(); finalY = 40; }
+
+      doc.line(14, finalY, 90, finalY);
+      doc.text("Assinatura do Colaborador", 14, finalY + 6);
+
+      doc.line(120, finalY, 196, finalY);
+      doc.text("Assinatura do Gerente Geral", 120, finalY + 6);
+
+      doc.save(`Relatorio_Ponto_SR_${mesRef}.pdf`);
+    }
+  </script>
+
+</body>
+</html>
