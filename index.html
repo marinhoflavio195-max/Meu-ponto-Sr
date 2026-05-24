@@ -9,7 +9,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <style>
     body {
@@ -158,7 +158,7 @@
     </div>
 
     <p id="status">Nenhum ponto registrado</p>
-    <p id="nuvem" class="nuvem-status">☁️ Conectando ao Firestore...</p>
+    <p id="nuvem" class="nuvem-status">☁️ Conectando ao Banco...</p>
 
     <button onclick="registrar('Entrada')">Registrar Entrada</button>
     <button onclick="registrar('Saída')">Registrar Saída</button>
@@ -168,10 +168,11 @@
   </div>
 
   <script>
-    // Configurações do seu Firebase
+    // Configurações puxadas diretamente do seu projeto
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "relat-e1bd3.firebaseapp.com",
+      databaseURL: "https://relat-e1bd3-default-rtdb.firebaseio.com",
       projectId: "relat-e1bd3",
       storageBucket: "relat-e1bd3.appspot.com",
       messagingSenderId: "356930006135",
@@ -179,11 +180,9 @@
       measurementId: "G-BTJ1BG3C64"
     };
 
-    // Inicializa o Firebase
+    // Inicializa o Firebase e o Realtime Database
     firebase.initializeApp(firebaseConfig);
-    
-    // ATIVA O CLOUD FIRESTORE
-    const db = firebase.firestore();
+    const database = firebase.database();
 
     // LISTA DE COLABORADORES
     const equipe = {
@@ -249,7 +248,7 @@
       document.getElementById("status").innerHTML = `${tipo} de <strong>${nomeFuncionario}</strong> registrado!`;
       document.getElementById("localizacao").innerHTML = "Buscando localização exata...";
       document.getElementById("nuvem").style.display = "block";
-      document.getElementById("nuvem").innerHTML = "☁️ Salvando no Firestore...";
+      document.getElementById("nuvem").innerHTML = "☁️ Salvando no Realtime Database...";
 
       if (navigator.geolocation) {
         
@@ -282,9 +281,10 @@
             setTimeout(() => { mapaObjeto.invalidateSize(); }, 400);
 
             // =========================================================
-            // SALVANDO DIRETAMENTE NO SEU CLOUD FIRESTORE NOVO
+            // GRAVAÇÃO DIRETA NO REALTIME DATABASE
             // =========================================================
-            db.collection("pontos_registrados").add({
+            let novoPontoRef = database.ref('pontos_registrados').push();
+            novoPontoRef.set({
               colaborador: nomeFuncionario,
               setor: setorTexto,
               tipo: tipo,
@@ -292,14 +292,14 @@
               horario: horaFormatada,
               latitude: lat,
               longitude: lon,
-              timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(function() {
-              document.getElementById("nuvem").innerHTML = "✅ Sincronizado com o Meu Ponto SR!";
-            })
-            .catch(function(error) {
-              console.error("Erro ao salvar:", error);
-              document.getElementById("nuvem").innerHTML = "❌ Erro ao salvar na nuvem.";
+              timestamp: firebase.database.ServerValue.TIMESTAMP
+            }, function(error) {
+              if (error) {
+                console.error("Erro ao salvar:", error);
+                document.getElementById("nuvem").innerHTML = "❌ Erro ao salvar na nuvem.";
+              } else {
+                document.getElementById("nuvem").innerHTML = "✅ Sincronizado com o Meu Ponto SR!";
+              }
             });
 
           },
