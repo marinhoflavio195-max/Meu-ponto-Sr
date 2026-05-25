@@ -42,7 +42,8 @@
         <label for="filtroColaborador">SELECIONE O FUNCIONÁRIO PARA FILTRAR:</label>
         <select id="filtroColaborador">
           <option value="TODOS">-- Todos os Funcionários --</option>
-          <option value="Ezequiel Ruan">Ezequiel Ruan</option>
+          <option value="Ezequiel">Ezequiel</option>
+          <option value="Ruan">Ruan</option>
           <option value="André">André</option>
           <option value="hilária">Hilária</option>
           <option value="Flávio">Flávio</option>
@@ -139,9 +140,9 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Lista completa interna para cruzar faltas no relatório geral
+    // Lista interna corrigida para cruzamento de faltas automáticas do relatório geral
     const todosFuncionariosLista = [
-      "Ezequiel Ruan", "André", "hilária", "Flávio", "Altemar", "Inês", "Irene", "Karine", "Marta", 
+      "Ezequiel", "Ruan", "André", "hilária", "Flávio", "Altemar", "Inês", "Irene", "Karine", "Marta", 
       "Daiane", "Jaqueline", "Rita", "Patrícia", "railma", "adrissa", "Erisva", "Débora", "talice", 
       "Samira", "Rosimar", "Victor mix", "Raiana", "dulce", "ediete Vinícius", "Henrique", "Alisson", 
       "Gabriel", "levir", "Netinho", "Denilson", "Thalles", "thalisson", "Flávia", "keverson", 
@@ -163,17 +164,14 @@
       let mes = parseInt(mesRef.split('-')[1]) - 1;
       let totalDias = new Date(ano, mes + 1, 0).getDate();
 
-      // Define quem vamos analisar baseado na seleção
       let listaParaProcessar = funcSelecionado === "TODOS" ? todosFuncionariosLista : [funcSelecionado];
 
       database.ref('pontos_registrados').once('value', snapshot => {
         let batidasDoBanco = {};
         
-        // Mapeia os dados existentes na nuvem
         snapshot.forEach(child => {
           let p = child.val();
           if (p.dataChave && p.dataChave.startsWith(mesRef)) {
-            // Cria uma chave única por data e nome do funcionário
             let chaveAgrupada = `${p.dataChave}_${p.colaborador}`;
             
             if (!batidasDoBanco[chaveAgrupada]) {
@@ -189,7 +187,6 @@
         relatorioFinal = [];
         corpo.innerHTML = "";
 
-        // Roda o calendário cruzando os dias do mês com a lista de funcionários ativos
         for (let d = 1; d <= totalDias; d++) {
           let dataCorrente = new Date(ano, mes, d);
           let diaStr = String(d).padStart(2, '0');
@@ -223,7 +220,6 @@
           });
         }
 
-        // Ordena o relatório final por Data para ficar mais intuitivo na tela
         relatorioFinal.sort((a, b) => a.chaveData.localeCompare(b.chaveData));
 
         if (relatorioFinal.length === 0) {
