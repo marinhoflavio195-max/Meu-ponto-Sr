@@ -12,7 +12,7 @@
 
   <style>
     body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-    .painel-container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+    .painel-container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
     h1 { color: #d32f2f; margin-top: 0; border-bottom: 3px solid #d32f2f; padding-bottom: 10px; font-size: 26px; }
     .filtros-topo { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #fdf2f2; padding: 15px; border-radius: 8px; border: 1px solid #ffcdd2; }
     .campo-filtro { flex: 1; min-width: 200px; }
@@ -23,13 +23,25 @@
     .btn-filtrar { background-color: #d32f2f; }
     .btn-excel { background-color: #2e7d32; }
     .btn-pdf { background-color: #1565c0; }
+    
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
     th { background-color: #d32f2f; color: white; padding: 10px; text-align: left; }
-    td { padding: 10px; border-bottom: 1px solid #e0e0e0; }
+    td { padding: 10px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
     tr:hover { background-color: #f9f9f9; }
+    
     .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 3px 6px; border-radius: 4px; }
     .status-folga { color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 3px 6px; border-radius: 4px; }
     .status-atraso { color: #e65100; font-weight: bold; }
+    
+    .btn-foto { background: #673ab7; color: white; border: none; padding: 5px 9px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
+    .btn-foto:hover { background: #512da8; }
+    .sem-foto { color: #999; font-style: italic; }
+
+    /* Modal / Janela Flutuante para Ver a Selfie */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    .modal-content { background-color: white; padding: 20px; border-radius: 12px; max-width: 350px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-content img { width: 100%; border-radius: 8px; border: 2px solid #d32f2f; margin-bottom: 15px; }
+    .btn-fechar-modal { background: #d32f2f; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; }
   </style>
 </head>
 <body>
@@ -116,14 +128,22 @@
             <th>S. Almoço</th>
             <th>R. Almoço</th>
             <th>Saída Fim</th>
-            <th>Atraso (Minutos)</th>
-            <th>Status do Dia</th>
+            <th>Atraso</th>
+            <th>Status / Fotos</th>
           </tr>
         </thead>
         <tbody id="corpoTabela">
           <tr><td colspan="8" style="text-align:center; padding:20px;">Selecione os parâmetros e clique em Consultar.</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div id="modalFoto" class="modal">
+    <div class="modal-content">
+      <h3 id="modalTitulo" style="margin-top:0; color:#673ab7;">Selfie de Verificação</h3>
+      <img id="modalImg" src="" alt="Selfie do Funcionário">
+      <button class="btn-fechar-modal" onclick="fecharModal()">Fechar Visualização</button>
     </div>
   </div>
 
@@ -140,7 +160,6 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Lista interna corrigida para cruzamento de faltas automáticas do relatório geral
     const todosFuncionariosLista = [
       "Ezequiel", "Ruan", "André", "hilária", "Flávio", "Altemar", "Inês", "Irene", "Karine", "Marta", 
       "Daiane", "Jaqueline", "Rita", "Patrícia", "railma", "adrissa", "Erisva", "Débora", "talice", 
@@ -153,12 +172,13 @@
     document.getElementById('filtroMes').value = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
 
     let relatorioFinal = [];
+    let mapaFotosMemoria = {}; // Guarda os binários indexados para abertura ágil
 
     function processarFechamentoMensal() {
       const funcSelecionado = document.getElementById('filtroColaborador').value;
       const mesRef = document.getElementById('filtroMes').value; 
       const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Processando auditoria de escala...</td></tr>";
+      corpo.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Processando auditoria e carregando mídia...</td></tr>";
 
       let ano = parseInt(mesRef.split('-')[0]);
       let mes = parseInt(mesRef.split('-')[1]) - 1;
@@ -168,6 +188,7 @@
 
       database.ref('pontos_registrados').once('value', snapshot => {
         let batidasDoBanco = {};
+        mapaFotosMemoria = {};
         
         snapshot.forEach(child => {
           let p = child.val();
@@ -177,10 +198,30 @@
             if (!batidasDoBanco[chaveAgrupada]) {
               batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
             }
-            if (p.tipo === "Entrada Manhã") { batidasDoBanco[chaveAgrupada].entrada = p.horario; batidasDoBanco[chaveAgrupada].atraso = p.atrasoMinutos || 0; }
-            if (p.tipo === "Saída Almoço") batidasDoBanco[chaveAgrupada].saidaAlm = p.horario;
-            if (p.tipo === "Retorno Almoço") batidasDoBanco[chaveAgrupada].retAlm = p.horario;
-            if (p.tipo === "Saída Expediente") batidasDoBanco[chaveAgrupada].saidaFim = p.horario;
+            
+            // Registra os horários e armazena os códigos das imagens associados ao ID único do ponto
+            let idFoto = `${child.key}`;
+            if(p.fotoSelfie) {
+              mapaFotosMemoria[idFoto] = p.fotoSelfie;
+            }
+
+            if (p.tipo === "Entrada Manhã") { 
+              batidasDoBanco[chaveAgrupada].entrada = p.horario; 
+              batidasDoBanco[chaveAgrupada].atraso = p.atrasoMinutos || 0;
+              if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto;
+            }
+            if (p.tipo === "Saída Almoço") {
+              batidasDoBanco[chaveAgrupada].saidaAlm = p.horario;
+              if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto;
+            }
+            if (p.tipo === "Retorno Almoço") {
+              batidasDoBanco[chaveAgrupada].retAlm = p.horario;
+              if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto;
+            }
+            if (p.tipo === "Saída Expediente") {
+              batidasDoBanco[chaveAgrupada].saidaFim = p.horario;
+              if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto;
+            }
           }
         });
 
@@ -203,19 +244,15 @@
             let diaBtd = batidasDoBanco[chaveBusca] || { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
 
             if (diaBtd.entrada === "--" && diaBtd.saidaFim === "--") {
-              if (diaSemana === 0) {
-                statusDia = "FOLGA DOMINGO";
-                classStatus = "status-folga";
-              } else {
-                statusDia = "FALTA";
-                classStatus = "status-falta";
-              }
+              if (diaSemana === 0) { statusDia = "FOLGA DOMINGO"; classStatus = "status-folga"; } 
+              else { statusDia = "FALTA"; classStatus = "status-falta"; }
             }
 
             relatorioFinal.push({
               data: dataFormatadaExibir, func: f,
               entrada: diaBtd.entrada, saidaAlm: diaBtd.saidaAlm, retAlm: diaBtd.retAlm, saidaFim: diaBtd.saidaFim,
-              atraso: diaBtd.atraso, statusDia, classStatus, chaveData
+              atraso: diaBtd.atraso, statusDia, classStatus, chaveData,
+              imgE: diaBtd.idFotoEntrada, imgSA: diaBtd.idFotoSaidaAlm, imgRA: diaBtd.idFotoRetAlm, imgSF: diaBtd.idFotoSaidaFim
             });
           });
         }
@@ -229,6 +266,18 @@
 
         relatorioFinal.forEach(r => {
           let tr = document.createElement('tr');
+          
+          // Construtor dinâmico de botões de visualização rápida das mídias
+          let containerFotos = "";
+          if (r.classStatus !== "") {
+            containerFotos = `<span class="${r.classStatus}">${r.statusDia}</span>`;
+          } else {
+            containerFotos += r.imgE ? `<button class="btn-foto" onclick="abrirModal('${r.imgE}', '${r.func} - Entrada')">🖼️ E</button> ` : '<span class="sem-foto">-</span> ';
+            containerFotos += r.imgSA ? `<button class="btn-foto" onclick="abrirModal('${r.imgSA}', '${r.func} - S.Almço')">🖼️ S</button> ` : '<span class="sem-foto">-</span> ';
+            containerFotos += r.imgRA ? `<button class="btn-foto" onclick="abrirModal('${r.imgRA}', '${r.func} - R.Almço')">🖼️ R</button> ` : '<span class="sem-foto">-</span> ';
+            containerFotos += r.imgSF ? `<button class="btn-foto" onclick="abrirModal('${r.imgSF}', '${r.func} - Saída')">🖼️ F</button>` : '<span class="sem-foto">-</span>';
+          }
+
           tr.innerHTML = `
             <td><strong>${r.data}</strong></td>
             <td>${r.func}</td>
@@ -237,11 +286,25 @@
             <td>${r.retAlm}</td>
             <td>${r.saidaFim}</td>
             <td class="status-atraso">${r.atraso > 0 ? r.atraso + ' min' : '0'}</td>
-            <td><span class="${r.classStatus}">${r.statusDia}</span></td>
+            <td>${containerFotos}</td>
           `;
           corpo.appendChild(tr);
         });
       });
+    }
+
+    function abrirModal(idFoto, titulo) {
+      if(mapaFotosMemoria[idFoto]) {
+        document.getElementById("modalTitulo").innerHTML = titulo;
+        document.getElementById("modalImg").src = mapaFotosMemoria[idFoto];
+        document.getElementById("modalFoto").style.display = "flex";
+      } else {
+        alert("Mídia não localizada ou corrompida.");
+      }
+    }
+
+    function fecharModal() {
+      document.getElementById("modalFoto").style.display = "none";
     }
 
     function baixarExcel() {
