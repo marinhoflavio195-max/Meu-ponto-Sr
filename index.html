@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu Ponto SR</title>
+  <title>Meu Ponto SR - Colaborador</title>
   
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
@@ -17,17 +15,26 @@
     label { display: block; margin-top: 15px; font-size: 14px; color: #666; text-align: left; font-weight: bold; }
     select { width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 10px; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; background: #fff; outline: none; box-sizing: border-box; }
     select:focus { border-color: #d32f2f; }
-    #bloco-colaborador, #bloco-botoes { display: none; }
-    button { width: 100%; padding: 14px; margin-top: 10px; border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; display: none; }
-    .btn-entrada { background: #2e7d32; display: block; }
-    .btn-saida-almoco { background: #f57c00; display: block; }
-    .btn-retorno-almoco { background: #0288d1; display: block; }
-    .btn-saida { background: #c62828; display: block; }
+    #bloco-colaborador, #bloco-botoes, #bloco-camera { display: none; }
+    
+    /* Estilos de botões */
+    button { width: 100%; padding: 14px; margin-top: 10px; border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .btn-entrada { background: #2e7d32; }
+    .btn-saida-almoco { background: #f57c00; }
+    .btn-retorno-almoco { background: #0288d1; }
+    .btn-saida { background: #c62828; }
+    .btn-capturar { background: #673ab7; margin-top: 15px; }
+    .btn-cancelar { background: #757575; margin-top: 8px; }
+    
     #status { margin-top: 15px; font-size: 15px; color: #333; font-weight: bold; background: #fff3e0; padding: 10px; border-radius: 6px; display: none; }
     .nuvem-status { font-size: 14px; color: #2e7d32; margin-top: 6px; display: none; font-weight: bold; }
     #localizacao { margin-top: 15px; padding: 12px; background: #f9f9f9; border-radius: 8px; font-size: 13px; color: #555; border: 1px solid #eee; text-align: left; }
-    #mapa { width: 100%; height: 180px; margin-top: 15px; border-radius: 10px; border: 2px solid #d32f2f; display: none; }
     .btn-wpp { background: #25d366; color: white; margin-top: 10px; text-decoration: none; display: inline-block; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; font-weight: bold; }
+    
+    /* Área de Câmera */
+    video { width: 100%; max-height: 250px; background: #000; border-radius: 10px; margin-top: 10px; transform: scaleX(-1); /* Efeito Espelho para Selfie */ }
+    canvas { display: none; }
+    .preview-foto { width: 100%; max-height: 250px; border-radius: 10px; margin-top: 10px; display: none; border: 2px solid #2e7d32; }
   </style>
 </head>
 <body>
@@ -57,18 +64,26 @@
 
     <div id="bloco-botoes">
       <label style="text-align: center; margin-bottom: 5px; color: #333;">3. REGISTRE SEU PONTO:</label>
-      <button id="btnEntrada" class="btn-entrada" onclick="validarEProcurarGPS('Entrada Manhã')">🌅 Registrar Entrada</button>
-      <button id="btnSaidaAlmoco" class="btn-saida-almoco" onclick="validarEProcurarGPS('Saída Almoço')">🥪 Saída p/ Almoço</button>
-      <button id="btnRetornoAlmoco" class="btn-retorno-almoco" onclick="validarEProcurarGPS('Retorno Almoço')">☕ Retorno do Almoço</button>
-      <button id="btnSaidaFim" class="btn-saida" onclick="validarEProcurarGPS('Saída Expediente')">🛑 Saída Fim Expediente</button>
+      <button id="btnEntrada" class="btn-entrada" style="display:none;" onclick="iniciarFluxoFoto('Entrada Manhã')">🌅 Registrar Entrada</button>
+      <button id="btnSaidaAlmoco" class="btn-saida-almoco" style="display:none;" onclick="iniciarFluxoFoto('Saída Almoço')">🥪 Saída p/ Almoço</button>
+      <button id="btnRetornoAlmoco" class="btn-retorno-almoco" style="display:none;" onclick="iniciarFluxoFoto('Retorno Almoço')">☕ Retorno do Almoço</button>
+      <button id="btnSaidaFim" class="btn-saida" style="display:none;" onclick="iniciarFluxoFoto('Saída Expediente')">🛑 Saída Fim Expediente</button>
+    </div>
+
+    <div id="bloco-camera">
+      <label id="tituloCamera" style="text-align: center; color: #673ab7;"></label>
+      <video id="video" autoplay playsinline></video>
+      <img id="preview" class="preview-foto" alt="Sua Selfie">
+      <button class="btn-capturar" onclick="tirarFotoEValidarPonto()">📸 Tirar Foto e Confirmar</button>
+      <button class="btn-cancelar" onclick="cancelarFluxoFoto()">Voltar</button>
     </div>
 
     <p id="status"></p>
     <div id="notificacaoWpp"></div>
     <p id="nuvem" class="nuvem-status">☁️ Conectando ao Banco...</p>
 
-    <div id="mapa"></div>
     <div id="localizacao">Aguardando seleção...</div>
+    <canvas id="canvas"></canvas>
   </div>
 
   <script>
@@ -85,10 +100,9 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Coordenadas fixas do São Raimundo Supermercado
     const MERCADO_LAT = -4.451406;
     const MERCADO_LON = -43.876278;
-    const DISTANCIA_MAX_METROS = 30; // 🎯 Atualizado de 5 para 30 metros para evitar erros de sinal
+    const DISTANCIA_MAX_METROS = 30; // 30 metros para evitar instabilidades de sinal
 
     const equipe = {
       escritorio: ["Ezequiel", "Ruan", "André", "hilária"],
@@ -102,6 +116,9 @@
       terceirizados: ["Roberto", "Acrísio", "graça", "novato mix"]
     };
 
+    let streamCamera = null;
+    let tipoPontoAtual = "";
+
     function filtrarColaboradores() {
       const setor = document.getElementById("setor").value;
       const blocoColaborador = document.getElementById("bloco-colaborador");
@@ -110,6 +127,7 @@
       seletor.innerHTML = "";
       document.getElementById("bloco-botoes").style.display = "none";
       document.getElementById("status").style.display = "none";
+      cancelarFluxoFoto();
 
       if (!setor) { blocoColaborador.style.display = "none"; return; }
 
@@ -133,6 +151,7 @@
       document.getElementById("btnRetornoAlmoco").style.display = "none";
       document.getElementById("btnSaidaFim").style.display = "none";
       document.getElementById("notificacaoWpp").innerHTML = "";
+      cancelarFluxoFoto();
 
       if (!nome) { blocoBotoes.style.display = "none"; return; }
 
@@ -175,6 +194,65 @@
         });
     }
 
+    // Fluxo da câmera de selfie
+    function iniciarFluxoFoto(tipo) {
+      tipoPontoAtual = tipo;
+      document.getElementById("bloco-botoes").style.display = "none";
+      document.getElementById("bloco-camera").style.display = "block";
+      document.getElementById("tituloCamera").innerHTML = `POSICIONE A CÂMERA FRONTAL PARA: <br><strong>${tipo.toUpperCase()}</strong>`;
+      
+      document.getElementById("video").style.display = "block";
+      document.getElementById("preview").style.display = "none";
+
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" }, // Força a câmera frontal (selfie)
+        audio: false
+      }).then(stream => {
+        streamCamera = stream;
+        document.getElementById("video").srcObject = stream;
+      }).catch(err => {
+        alert("Erro ao acessar a câmera frontal. Verifique as permissões do seu navegador.");
+        cancelarFluxoFoto();
+      });
+    }
+
+    function cancelarFluxoFoto() {
+      if(streamCamera) {
+        streamCamera.getTracks().forEach(track => track.stop());
+        streamCamera = null;
+      }
+      document.getElementById("bloco-camera").style.display = "none";
+      if(document.getElementById("colaborador").value) {
+        document.getElementById("bloco-botoes").style.display = "block";
+      }
+    }
+
+    function tirarFotoEValidarPonto() {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Define o tamanho da foto baseado no fluxo do vídeo
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // Desenha e espelha de volta para a foto ficar normal
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Converte para Base64 leve (JPEG compactado) para não estourar o banco
+      const fotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
+
+      // Desliga a câmera
+      if(streamCamera) {
+        streamCamera.getTracks().forEach(track => track.stop());
+      }
+
+      document.getElementById("bloco-camera").style.display = "none";
+      validarEProcurarGPS(tipoPontoAtual, fotoBase64);
+    }
+
     function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
       const R = 6371e3;
       const φ1 = lat1 * Math.PI/180;
@@ -186,11 +264,11 @@
       return R * c;
     }
 
-    function validarEProcurarGPS(tipo) {
+    function validarEProcurarGPS(tipo, fotoData) {
       if (!navigator.geolocation) { alert("Seu navegador não possui suporte a GPS."); return; }
       
       document.getElementById("status").style.display = "block";
-      document.getElementById("status").innerHTML = "Verificando Cerca Virtual de Segurança via GPS...";
+      document.getElementById("status").innerHTML = "Validando localização de Cerca Virtual via GPS...";
 
       navigator.geolocation.getCurrentPosition(
         pos => {
@@ -201,19 +279,21 @@
           if (distancia > DISTANCIA_MAX_METROS) {
             document.getElementById("status").innerHTML = "❌ <strong>ACESSO BLOQUEADO POR DISTÂNCIA!</strong>";
             alert(`Bloqueado: Você precisa estar no supermercado para registrar o ponto (Distância atual: ${distancia.toFixed(1)} metros).`);
+            verificarFluxoPontoDoDia();
             return;
           }
 
-          gravarPonto(tipo, lat, lon);
+          gravarPonto(tipo, lat, lon, fotoData);
         },
         err => {
           alert("GPS Desativado. Ative a localização de alta precisão do seu smartphone.");
+          verificarFluxoPontoDoDia();
         },
         { enableHighAccuracy: true, timeout: 12000 }
       );
     }
 
-    function gravarPonto(tipo, lat, lon) {
+    function gravarPonto(tipo, lat, lon, fotoData) {
       let nome = document.getElementById("colaborador").value;
       let setorTexto = document.getElementById("setor").options[document.getElementById("setor").selectedIndex].text;
       
@@ -230,9 +310,9 @@
 
       if (tipo === "Entrada Manhã") {
         if (totalMinutosDia < 510) { 
-          if (totalMinutosDia > 425) minutosAtraso = totalMinutosDia - 420; // 07:00
+          if (totalMinutosDia > 425) minutosAtraso = totalMinutosDia - 420; // Escala 07:00
         } else { 
-          if (totalMinutosDia > 605) minutosAtraso = totalMinutosDia - 600; // 10:00
+          if (totalMinutosDia > 605) minutosAtraso = totalMinutosDia - 600; // Escala 10:00
         }
       }
 
@@ -242,7 +322,7 @@
         document.getElementById("notificacaoWpp").innerHTML = `<a href="https://api.whatsapp.com/send?text=${textoWpp}" target="_blank" class="btn-wpp">📲 Enviar Notificação de Atraso para a Gerência</a>`;
       }
 
-      document.getElementById("status").innerHTML = `<strong>${tipo}</strong> gravado!<br><span style="color:red">${mensagemAtraso}</span>`;
+      document.getElementById("status").innerHTML = `<strong>${tipo}</strong> gravado com sucesso!`;
       document.getElementById("nuvem").style.display = "block";
 
       let novoPonto = database.ref('pontos_registrados').push();
@@ -255,7 +335,8 @@
         horario: horaFormatada,
         latitude: lat,
         longitude: lon,
-        atrasoMinutos: minutosAtraso
+        atrasoMinutos: minutosAtraso,
+        fotoSelfie: fotoData // Salvando a string da imagem no registro correspondente
       }, function(error) {
         if (!error) {
           document.getElementById("nuvem").innerHTML = "✅ Sincronizado com o Meu Ponto SR!";
