@@ -4,143 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel Administrativo - Meu Ponto SR</title>
-
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-
-    .painel-container {
-      max-width: 1000px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    }
-
-    h1 {
-      color: #d32f2f;
-      margin-top: 0;
-      border-bottom: 3px solid #d32f2f;
-      padding-bottom: 10px;
-      font-size: 26px;
-    }
-
-    .filtros-topo {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 25px;
-      background: #fdf2f2;
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #ffcdd2;
-    }
-
-    .campo-filtro {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .campo-filtro label {
-      display: block;
-      font-weight: bold;
-      font-size: 13px;
-      margin-bottom: 5px;
-      color: #555;
-    }
-
-    .campo-filtro select, .campo-filtro input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 15px;
-      background: white;
-      box-sizing: border-box;
-    }
-
-    .botoes-acoes {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .btn {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      color: white;
-      transition: background 0.2s;
-    }
-
+    body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+    .painel-container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+    h1 { color: #d32f2f; margin-top: 0; border-bottom: 3px solid #d32f2f; padding-bottom: 10px; font-size: 26px; }
+    .filtros-topo { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #fdf2f2; padding: 15px; border-radius: 8px; border: 1px solid #ffcdd2; }
+    .campo-filtro { flex: 1; min-width: 200px; }
+    .campo-filtro label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #555; }
+    .campo-filtro select, .campo-filtro input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; box-sizing: border-box; }
+    .botoes-acoes { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn { padding: 12px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: background 0.2s; }
     .btn-filtrar { background-color: #d32f2f; }
-    .btn-filtrar:hover { background-color: #b71c1c; }
-
     .btn-excel { background-color: #2e7d32; }
-    .btn-excel:hover { background-color: #1b5e20; }
-
     .btn-pdf { background-color: #1565c0; }
-    .btn-pdf:hover { background-color: #0d47a1; }
-
-    .tabela-responsiva {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 14px;
-    }
-
-    th {
-      background-color: #d32f2f;
-      color: white;
-      padding: 12px;
-      text-align: left;
-    }
-
-    td {
-      padding: 12px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    tr:hover {
-      background-color: #f9f9f9;
-    }
-
-    .link-gps {
-      color: #1565c0;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .link-gps:hover {
-      text-decoration: underline;
-    }
-
-    .sem-dados {
-      text-align: center;
-      padding: 30px;
-      color: #888;
-      font-style: italic;
-    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    th { background-color: #d32f2f; color: white; padding: 10px; text-align: left; }
+    td { padding: 10px; border-bottom: 1px solid #e0e0e0; }
+    tr:hover { background-color: #f9f9f9; }
+    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 3px 6px; border-radius: 4px; }
+    .status-folga { color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 3px 6px; border-radius: 4px; }
+    .status-atraso { color: #e65100; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -150,60 +39,93 @@
 
     <div class="filtros-topo">
       <div class="campo-filtro">
-        <label for="filtroColaborador">FUNCIONÁRIO:</label>
+        <label for="filtroColaborador">SELECIONE O FUNCIONÁRIO PARA FILTRAR:</label>
         <select id="filtroColaborador">
-          <option value="TODOS">-- Todos os Funcionários --</option>
+          <option value="Ezequiel Ruan">Ezequiel Ruan</option>
+          <option value="André">André</option>
+          <option value="hilária">Hilária</option>
+          <option value="Flávio">Flávio</option>
+          <option value="Altemar">Altemar</option>
+          <option value="Inês">Inês</option>
+          <option value="Irene">Irene</option>
           <option value="Karine">Karine</option>
-          <option value="Eudes">Eudes</option>
-          <option value="Victor">Victor</option>
-          <option value="Colaborador RH 1">Colaborador RH 1</option>
-          <option value="Colaborador Tesouraria">Colaborador Tesouraria</option>
-          <option value="Operador de Caixa 1">Operador de Caixa 1</option>
-          <option value="Operador de Caixa 2">Operador de Caixa 2</option>
-          <option value="Repositor 2">Repositor 2</option>
-          <option value="Conferente 1">Conferente 1</option>
-          <option value="Açougueiro 1">Açougueiro 1</option>
-          <option value="Prestador 1">Prestador 1</option>
+          <option value="Marta">Marta</option>
+          <option value="Daiane">Daiane</option>
+          <option value="Jaqueline">Jaqueline</option>
+          <option value="Rita">Rita</option>
+          <option value="Patrícia">Patrícia</option>
+          <option value="railma">Railma</option>
+          <option value="adrissa">Adrissa</option>
+          <option value="Erisva">Erisva</option>
+          <option value="Débora">Débora</option>
+          <option value="talice">Talice</option>
+          <option value="Samira">Samira</option>
+          <option value="Rosimar">Rosimar</option>
+          <option value="Victor mix">Victor mix</option>
+          <option value="Raiana">Raiana</option>
+          <option value="dulce">Dulce</option>
+          <option value="ediete Vinícius">Ediete Vinícius</option>
+          <option value="Henrique">Henrique</option>
+          <option value="Alisson">Alisson</option>
+          <option value="Gabriel">Gabriel</option>
+          <option value="levir">Levir</option>
+          <option value="Netinho">Netinho</option>
+          <option value="Denilson">Denilson</option>
+          <option value="Thalles">Thalles</option>
+          <option value="thalisson">Thalisson</option>
+          <option value="Flávia">Flávia</option>
+          <option value="keverson">Keverson</option>
+          <option value="Marcelo">Marcelo</option>
+          <option value="Alan">Alan</option>
+          <option value="Vilson">Vilson</option>
+          <option value="Carlos">Carlos</option>
+          <option value="Francisca">Francisca</option>
+          <option value="Alice">Alice</option>
+          <option value="Érica">Érica</option>
+          <option value="Suely">Suely</option>
+          <option value="Felipe">Felipe</option>
+          <option value="Edmilson">Edmilson</option>
+          <option value="Raimundo Queiroz">Raimundo Queiroz</option>
+          <option value="Roberto">Roberto</option>
+          <option value="Acrísio">Acrísio</option>
+          <option value="graça">Graça</option>
+          <option value="novato mix">Novato mix</option>
         </select>
       </div>
-
       <div class="campo-filtro">
-        <label for="filtroMes">MÊS DE CONSULTA:</label>
+        <label for="filtroMes">MÊS DE FECHAMENTO:</label>
         <input type="month" id="filtroMes">
       </div>
     </div>
 
     <div class="botoes-acoes">
-      <button class="btn btn-filtrar" onclick="carregarDadosDoBanco()">🔍 Consultar Período</button>
-      <button class="btn btn-excel" onclick="exportarParaExcel()">📊 Baixar Excel</button>
-      <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF</button>
+      <button class="btn btn-filtrar" onclick="processarFechamentoMensal()">🔍 Consultar Período</button>
+      <button class="btn btn-excel" onclick="baixarExcel()">📊 Baixar Excel</button>
+      <button class="btn btn-pdf" onclick="baixarPDF()">📄 Gerar PDF</button>
     </div>
 
-    <div class="tabela-responsiva">
-      <table id="tabelaPontos">
+    <div style="overflow-x:auto;">
+      <table id="tabelaFechamento">
         <thead>
           <tr>
             <th>Data</th>
-            <th>Colaborador</th>
-            <th>Setor</th>
-            <th>Entrada Manhã</th>
-            <th>Saída Almoço</th>
-            <th>Retorno Almoço</th>
+            <th>Funcionário</th>
+            <th>Entrada</th>
+            <th>S. Almoço</th>
+            <th>R. Almoço</th>
             <th>Saída Fim</th>
-            <th>GPS</th>
+            <th>Atraso (Minutos)</th>
+            <th>Status do Dia</th>
           </tr>
         </thead>
         <tbody id="corpoTabela">
-          <tr>
-            <td colspan="8" class="sem-dados">Escolha os filtros acima e clique em "Consultar Período".</td>
-          </tr>
+          <tr><td colspan="8" style="text-align:center; padding:20px;">Selecione os parâmetros e clique em Consultar.</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
   <script>
-    // Configurações do seu Firebase vinculadas ao Meu Ponto SR
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -213,186 +135,112 @@
       messagingSenderId: "356930006135",
       appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
     };
-
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Define o mês atual como padrão no campo de data ao abrir a tela
-    let hoje = new Date();
-    let mesAtualString = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
-    document.getElementById('filtroMes').value = mesAtualString;
+    document.getElementById('filtroMes').value = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
 
-    let registrosProcessadosGlobais = [];
+    let relatorioFinal = [];
 
-    function carregarDadosDoBanco() {
-      const colaboradorSelecionado = document.getElementById('filtroColaborador').value;
-      const mesSelecionado = document.getElementById('filtroMes').value; // Formato: "YYYY-MM"
-      
-      if (!mesSelecionado) {
-        alert("Por favor, escolha um mês de consulta!");
-        return;
-      }
+    function processarFechamentoMensal() {
+      const func = document.getElementById('filtroColaborador').value;
+      const mesRef = document.getElementById('filtroMes').value; // "YYYY-MM"
+      const corpo = document.getElementById('corpoTabela');
+      corpo.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Processando auditoria...</td></tr>";
 
-      const corpoTabela = document.getElementById('corpoTabela');
-      corpoTabela.innerHTML = `<tr><td colspan="8" class="sem-dados">Buscando dados na nuvem...</td></tr>`;
+      let ano = parseInt(mesRef.split('-')[0]);
+      let mes = parseInt(mesRef.split('-')[1]) - 1;
+      let totalDias = new Date(ano, mes + 1, 0).getDate();
 
-      database.ref('pontos_registrados').once('value').then(function(snapshot) {
-        let dadosAgrupados = {};
-
-        snapshot.forEach(function(item) {
-          let ponto = item.val();
-          
-          // Filtro por Mês (usando o campo dataChave criado no app)
-          if (ponto.dataChave && ponto.dataChave.startsWith(mesSelecionado)) {
-            
-            // Filtro por Colaborador
-            if (colaboradorSelecionado === "TODOS" || ponto.colaborador === colaboradorSelecionado) {
-              
-              // Cria uma chave única por dia e por funcionário para agrupar as batidas na mesma linha
-              let chaveDiaFuncionario = `${ponto.dataChave}_${ponto.colaborador}`;
-              
-              if (!dadosAgrupados[chaveDiaFuncionario]) {
-                dadosAgrupados[chaveDiaFuncionario] = {
-                  data: ponto.data,
-                  dataChave: ponto.dataChave,
-                  colaborador: ponto.colaborador,
-                  setor: ponto.setor || "Não Informado",
-                  entradaManha: "--:--:--",
-                  saidaAlmoço: "--:--:--",
-                  retornoAlmoço: "--:--:--",
-                  saidaExpediente: "--:--:--",
-                  coordenadas: ""
-                };
-              }
-
-              // Distribui o horário na coluna certa baseado no tipo da batida
-              if (ponto.tipo === "Entrada Manhã" || ponto.tipo === "Entrada") dadosAgrupados[chaveDiaFuncionario].entradaManha = ponto.horario;
-              if (ponto.tipo === "Saída Almoço") dadosAgrupados[chaveDiaFuncionario].saidaAlmoço = ponto.horario;
-              if (ponto.tipo === "Retorno Almoço") dadosAgrupados[chaveDiaFuncionario].retornoAlmoço = ponto.horario;
-              if (ponto.tipo === "Saída Expediente" || ponto.tipo === "Saída") dadosAgrupados[chaveDiaFuncionario].saidaExpediente = ponto.horario;
-              
-              if (ponto.latitude && ponto.longitude) {
-                dadosAgrupados[chaveDiaFuncionario].coordenadas = `${ponto.latitude},${ponto.longitude}`;
-              }
+      database.ref('pontos_registrados').once('value', snapshot => {
+        let batidasDoBanco = {};
+        
+        snapshot.forEach(child => {
+          let p = child.val();
+          if (p.colaborador === func && p.dataChave && p.dataChave.startsWith(mesRef)) {
+            if (!batidasDoBanco[p.dataChave]) {
+              batidasDoBanco[p.dataChave] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
             }
+            if (p.tipo === "Entrada Manhã") { batidasDoBanco[p.dataChave].entrada = p.horario; batidasDoBanco[p.dataChave].atraso = p.atrasoMinutos || 0; }
+            if (p.tipo === "Saída Almoço") batidasDoBanco[p.dataChave].saidaAlm = p.horario;
+            if (p.tipo === "Retorno Almoço") batidasDoBanco[p.dataChave].retAlm = p.horario;
+            if (p.tipo === "Saída Expediente") batidasDoBanco[p.dataChave].saidaFim = p.horario;
           }
         });
 
-        // Transforma o objeto agrupado em uma lista ordenada por data
-        registrosProcessadosGlobais = Object.values(dadosAgrupados);
-        registrosProcessadosGlobais.sort((a, b) => a.dataChave.localeCompare(b.dataChave));
+        relatorioFinal = [];
+        corpo.innerHTML = "";
 
-        exibirTabela();
-      }).catch(function(error) {
-        console.error(error);
-        corpoTabela.innerHTML = `<tr><td colspan="8" class="sem-dados">Erro ao carregar dados do banco de dados.</td></tr>`;
-      });
-    }
+        // Loop por todos os dias reais do mês para encontrar Faltas Automáticas e Domingos (Folgas)
+        for (let d = 1; d <= totalDias; d++) {
+          let dataCorrente = new Date(ano, mes, d);
+          let diaStr = String(d).padStart(2, '0');
+          let mesStr = String(mes + 1).padStart(2, '0');
+          let chaveData = `${ano}-${mesStr}-${diaStr}`;
+          let dataFormatadaExibir = `${diaStr}/${mesStr}/${ano}`;
 
-    function exibirTabela() {
-      const corpoTabela = document.getElementById('corpoTabela');
-      corpoTabela.innerHTML = "";
+          let diaSemana = dataCorrente.getDay(); // 0 = Domingo
+          let statusDia = "Regular";
+          let classStatus = "";
+          
+          let diaBtd = batidasDoBanco[chaveData] || { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
 
-      if (registrosProcessadosGlobais.length === 0) {
-        corpoTabela.innerHTML = `<tr><td colspan="8" class="sem-dados">Nenhum registro de ponto encontrado para este filtro.</td></tr>`;
-        return;
-      }
+          if (diaBtd.entrada === "--" && diaBtd.saidaFim === "--") {
+            if (diaSemana === 0) {
+              statusDia = "FOLGA DOMINGO";
+              classStatus = "status-folga";
+            } else {
+              statusDia = "FALTA";
+              classStatus = "status-falta";
+            }
+          }
 
-      registrosProcessadosGlobais.forEach(function(reg) {
-        let tr = document.createElement('tr');
-        
-        let botaoGps = "Não disponível";
-        if (reg.coordenadas) {
-          botaoGps = `<a class="link-gps" href="https://www.google.com/maps/search/?api=1&query=${reg.coordenadas}" target="_blank">🗺️ Ver Mapa</a>`;
+          relatorioFinal.push({
+            data: dataFormatadaExibir, func,
+            entrada: diaBtd.entrada, saidaAlm: diaBtd.saidaAlm, retAlm: diaBtd.retAlm, saidaFim: diaBtd.saidaFim,
+            atraso: diaBtd.atraso, statusDia, classStatus
+          });
         }
 
-        tr.innerHTML = `
-          <td><strong>${reg.data}</strong></td>
-          <td>${reg.colaborador}</td>
-          <td>${reg.setor}</td>
-          <td style="color: #2e7d32; font-weight: bold;">${reg.entradaManha}</td>
-          <td style="color: #f57c00; font-weight: bold;">${reg.saidaAlmoço}</td>
-          <td style="color: #0288d1; font-weight: bold;">${reg.retornoAlmoço}</td>
-          <td style="color: #c62828; font-weight: bold;">${reg.saidaExpediente}</td>
-          <td>${botaoGps}</td>
-        `;
-        corpoTabela.appendChild(tr);
+        relatorioFinal.forEach(r => {
+          let tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${r.data}</strong></td>
+            <td>${r.func}</td>
+            <td>${r.entrada}</td>
+            <td>${r.saidaAlm}</td>
+            <td>${r.retAlm}</td>
+            <td>${r.saidaFim}</td>
+            <td class="status-atraso">${r.atraso > 0 ? r.atraso + ' min' : '0'}</td>
+            <td><span class="${r.classStatus}">${r.statusDia}</span></td>
+          `;
+          corpo.appendChild(tr);
+        });
       });
     }
 
-    // Geração Inteligente do Relatório em EXCEL
-    function exportarParaExcel() {
-      if (registrosProcessadosGlobais.length === 0) {
-        alert("Não há dados na tabela para exportar! Faça uma consulta primeiro.");
-        return;
-      }
-
-      let cabecalho = [["Data", "Colaborador", "Setor", "Entrada Manhã", "Saída Almoço", "Retorno Almoço", "Saída Fim Expediente"]];
-      
-      registrosProcessadosGlobais.forEach(function(r) {
-        cabecalho.push([r.data, r.colaborador, r.setor, r.entradaManha, r.saidaAlmoço, r.retornoAlmoço, r.saidaExpediente]);
-      });
-
-      let wb = XLSX.utils.book_new();
-      let ws = XLSX.utils.aoa_to_sheet(cabecalho);
-      XLSX.utils.book_append_sheet(wb, ws, "Fechamento de Pontos");
-      
-      let mesRef = document.getElementById('filtroMes').value;
-      XLSX.writeFile(wb, `Folha_Ponto_SR_${mesRef}.xlsx`);
+    function baixarExcel() {
+      let dados = [["Data", "Funcionário", "Entrada", "Saída Almoço", "Retorno Almoço", "Saída Termo", "Minutos Atraso", "Status do Dia"]];
+      relatorioFinal.forEach(r => dados.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, r.atraso, r.statusDia]));
+      let sheet = XLSX.utils.aoa_to_sheet(dados);
+      let book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "Auditoria");
+      XLSX.writeFile(book, `Fechamento_SR_${document.getElementById('filtroMes').value}.xlsx`);
     }
 
-    // Geração Inteligente e Organizada do Relatório em PDF para Impressão
-    function exportarParaPDF() {
-      if (registrosProcessadosGlobais.length === 0) {
-        alert("Não há dados na tabela para exportar! Faça uma consulta primeiro.");
-        return;
-      }
-
+    function baixarPDF() {
       const { jsPDF } = window.jspdf;
       let doc = new jsPDF();
+      doc.setFontSize(16); doc.text("SÃO RAIMUNDO SUPERMERCADO - CONTROLE DE PONTO", 14, 15);
+      doc.setFontSize(11); doc.text(`Fechamento Mensal - Ref: ${document.getElementById('filtroMes').value}`, 14, 22);
       
-      let mesRef = document.getElementById('filtroMes').value;
-
-      // Cabeçalho institucional do documento administrativo
-      doc.setFont("Arial", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(211, 47, 47);
-      doc.text("SÃO RAIMUNDO SUPERMERCADO", 14, 20);
+      let col = ["Data", "Funcionário", "Entrada", "S. Almoço", "R. Almoço", "Saída", "Atraso", "Status"];
+      let rows = [];
+      relatorioFinal.forEach(r => rows.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, r.atraso + " min", r.statusDia]));
       
-      doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Espelho Mensal de Ponto Eletrônico - Ref: ${mesRef}`, 14, 28);
-      doc.line(14, 32, 196, 32);
-
-      let colunas = ["Data", "Funcionário", "Setor", "Entrada", "S. Almoço", "R. Almoço", "Saída Fim"];
-      let linhas = [];
-
-      registrosProcessadosGlobais.forEach(function(r) {
-        linhas.push([r.data, r.colaborador, r.setor, r.entradaManha, r.saidaAlmoço, r.retornoAlmoço, r.saidaExpediente]);
-      });
-
-      doc.autoTable({
-        startY: 38,
-        head: [colunas],
-        body: linhas,
-        theme: 'striped',
-        headStyles: { fillColor: [211, 47, 47] },
-        styles: { fontSize: 10, cellPadding: 3 }
-      });
-
-      // Bloco final de rodapé para colher assinatura física do funcionário para a folha
-      let finalY = doc.lastAutoTable.finalY + 30;
-      if (finalY > 250) { doc.addPage(); finalY = 40; }
-
-      doc.line(14, finalY, 90, finalY);
-      doc.text("Assinatura do Colaborador", 14, finalY + 6);
-
-      doc.line(120, finalY, 196, finalY);
-      doc.text("Assinatura do Gerente Geral", 120, finalY + 6);
-
-      doc.save(`Relatorio_Ponto_SR_${mesRef}.pdf`);
+      doc.autoTable({ startY: 28, head: [col], body: rows, theme: 'grid' });
+      doc.save(`Fechamento_SR_${document.getElementById('filtroMes').value}.pdf`);
     }
   </script>
-
 </body>
 </html>
