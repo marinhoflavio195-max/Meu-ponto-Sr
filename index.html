@@ -17,7 +17,6 @@
     select:focus { border-color: #d32f2f; }
     #bloco-colaborador, #bloco-botoes, #bloco-camera { display: none; }
     
-    /* Estilos de botões */
     button { width: 100%; padding: 14px; margin-top: 10px; border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
     .btn-entrada { background: #2e7d32; }
     .btn-saida-almoco { background: #f57c00; }
@@ -31,8 +30,7 @@
     #localizacao { margin-top: 15px; padding: 12px; background: #f9f9f9; border-radius: 8px; font-size: 13px; color: #555; border: 1px solid #eee; text-align: left; }
     .btn-wpp { background: #25d366; color: white; margin-top: 10px; text-decoration: none; display: inline-block; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; font-weight: bold; }
     
-    /* Área de Câmera */
-    video { width: 100%; max-height: 250px; background: #000; border-radius: 10px; margin-top: 10px; transform: scaleX(-1); /* Efeito Espelho para Selfie */ }
+    video { width: 100%; max-height: 250px; background: #000; border-radius: 10px; margin-top: 10px; transform: scaleX(-1); }
     canvas { display: none; }
     .preview-foto { width: 100%; max-height: 250px; border-radius: 10px; margin-top: 10px; display: none; border: 2px solid #2e7d32; }
   </style>
@@ -102,7 +100,7 @@
 
     const MERCADO_LAT = -4.451406;
     const MERCADO_LON = -43.876278;
-    const DISTANCIA_MAX_METROS = 30; // 30 metros para evitar instabilidades de sinal
+    const DISTANCIA_MAX_METROS = 50; // 🎯 Atualizado para 50 metros para máxima estabilidade na loja
 
     const equipe = {
       escritorio: ["Ezequiel", "Ruan", "André", "hilária"],
@@ -194,7 +192,6 @@
         });
     }
 
-    // Fluxo da câmera de selfie
     function iniciarFluxoFoto(tipo) {
       tipoPontoAtual = tipo;
       document.getElementById("bloco-botoes").style.display = "none";
@@ -205,7 +202,7 @@
       document.getElementById("preview").style.display = "none";
 
       navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" }, // Força a câmera frontal (selfie)
+        video: { facingMode: "user" },
         audio: false
       }).then(stream => {
         streamCamera = stream;
@@ -232,19 +229,15 @@
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
 
-      // Define o tamanho da foto baseado no fluxo do vídeo
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       
-      // Desenha e espelha de volta para a foto ficar normal
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Converte para Base64 leve (JPEG compactado) para não estourar o banco
       const fotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
 
-      // Desliga a câmera
       if(streamCamera) {
         streamCamera.getTracks().forEach(track => track.stop());
       }
@@ -302,7 +295,7 @@
       let horaFormatada = agora.toLocaleTimeString('pt-BR');
       let dataChave = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
 
-      let minutosAtraso = 0;
+      let minutesAtraso = 0;
       let mensagemAtraso = "";
       let hora = agora.getHours();
       let minuto = agora.getMinutes();
@@ -310,15 +303,15 @@
 
       if (tipo === "Entrada Manhã") {
         if (totalMinutosDia < 510) { 
-          if (totalMinutosDia > 425) minutosAtraso = totalMinutosDia - 420; // Escala 07:00
+          if (totalMinutosDia > 425) minutesAtraso = totalMinutosDia - 420;
         } else { 
-          if (totalMinutosDia > 605) minutosAtraso = totalMinutosDia - 600; // Escala 10:00
+          if (totalMinutosDia > 605) minutesAtraso = totalMinutosDia - 600;
         }
       }
 
-      if (minutosAtraso > 0) {
-        mensagemAtraso = `⚠️ PONTO REGISTRADO COM ATRASO DE ${minutosAtraso} MINUTOS!`;
-        let textoWpp = encodeURIComponent(`🚨 *Notificação Meu Ponto SR*:\nO colaborador *${nome}* (${setorTexto}) registrou a *Entrada* hoje às ${horaFormatada} com *${minutosAtraso} minutos de atraso*.`);
+      if (minutesAtraso > 0) {
+        mensagemAtraso = `⚠️ PONTO REGISTRADO COM ATRASO DE ${minutesAtraso} MINUTOS!`;
+        let textoWpp = encodeURIComponent(`🚨 *Notificação Meu Ponto SR*:\nO colaborador *${nome}* (${setorTexto}) registrou a *Entrada* hoje às ${horaFormatada} com *${minutesAtraso} minutos de atraso*.`);
         document.getElementById("notificacaoWpp").innerHTML = `<a href="https://api.whatsapp.com/send?text=${textoWpp}" target="_blank" class="btn-wpp">📲 Enviar Notificação de Atraso para a Gerência</a>`;
       }
 
@@ -335,8 +328,8 @@
         horario: horaFormatada,
         latitude: lat,
         longitude: lon,
-        atrasoMinutos: minutosAtraso,
-        fotoSelfie: fotoData // Salvando a string da imagem no registro correspondente
+        atrasoMinutos: minutesAtraso,
+        fotoSelfie: fotoData
       }, function(error) {
         if (!error) {
           document.getElementById("nuvem").innerHTML = "✅ Sincronizado com o Meu Ponto SR!";
