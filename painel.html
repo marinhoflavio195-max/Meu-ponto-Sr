@@ -41,6 +41,7 @@
       <div class="campo-filtro">
         <label for="filtroColaborador">SELECIONE O FUNCIONÁRIO PARA FILTRAR:</label>
         <select id="filtroColaborador">
+          <option value="TODOS">-- Todos os Funcionários --</option>
           <option value="Ezequiel Ruan">Ezequiel Ruan</option>
           <option value="André">André</option>
           <option value="hilária">Hilária</option>
@@ -138,68 +139,96 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // Lista completa interna para cruzar faltas no relatório geral
+    const todosFuncionariosLista = [
+      "Ezequiel Ruan", "André", "hilária", "Flávio", "Altemar", "Inês", "Irene", "Karine", "Marta", 
+      "Daiane", "Jaqueline", "Rita", "Patrícia", "railma", "adrissa", "Erisva", "Débora", "talice", 
+      "Samira", "Rosimar", "Victor mix", "Raiana", "dulce", "ediete Vinícius", "Henrique", "Alisson", 
+      "Gabriel", "levir", "Netinho", "Denilson", "Thalles", "thalisson", "Flávia", "keverson", 
+      "Marcelo", "Alan", "Vilson", "Carlos", "Francisca", "Alice", "Érica", "Suely", "Felipe", 
+      "Edmilson", "Raimundo Queiroz", "Roberto", "Acrísio", "graça", "novato mix"
+    ];
+
     document.getElementById('filtroMes').value = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
 
     let relatorioFinal = [];
 
     function processarFechamentoMensal() {
-      const func = document.getElementById('filtroColaborador').value;
-      const mesRef = document.getElementById('filtroMes').value; // "YYYY-MM"
+      const funcSelecionado = document.getElementById('filtroColaborador').value;
+      const mesRef = document.getElementById('filtroMes').value; 
       const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Processando auditoria...</td></tr>";
+      corpo.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Processando auditoria de escala...</td></tr>";
 
       let ano = parseInt(mesRef.split('-')[0]);
       let mes = parseInt(mesRef.split('-')[1]) - 1;
       let totalDias = new Date(ano, mes + 1, 0).getDate();
 
+      // Define quem vamos analisar baseado na seleção
+      let listaParaProcessar = funcSelecionado === "TODOS" ? todosFuncionariosLista : [funcSelecionado];
+
       database.ref('pontos_registrados').once('value', snapshot => {
         let batidasDoBanco = {};
         
+        // Mapeia os dados existentes na nuvem
         snapshot.forEach(child => {
           let p = child.val();
-          if (p.colaborador === func && p.dataChave && p.dataChave.startsWith(mesRef)) {
-            if (!batidasDoBanco[p.dataChave]) {
-              batidasDoBanco[p.dataChave] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
+          if (p.dataChave && p.dataChave.startsWith(mesRef)) {
+            // Cria uma chave única por data e nome do funcionário
+            let chaveAgrupada = `${p.dataChave}_${p.colaborador}`;
+            
+            if (!batidasDoBanco[chaveAgrupada]) {
+              batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
             }
-            if (p.tipo === "Entrada Manhã") { batidasDoBanco[p.dataChave].entrada = p.horario; batidasDoBanco[p.dataChave].atraso = p.atrasoMinutos || 0; }
-            if (p.tipo === "Saída Almoço") batidasDoBanco[p.dataChave].saidaAlm = p.horario;
-            if (p.tipo === "Retorno Almoço") batidasDoBanco[p.dataChave].retAlm = p.horario;
-            if (p.tipo === "Saída Expediente") batidasDoBanco[p.dataChave].saidaFim = p.horario;
+            if (p.tipo === "Entrada Manhã") { batidasDoBanco[chaveAgrupada].entrada = p.horario; batidasDoBanco[chaveAgrupada].atraso = p.atrasoMinutos || 0; }
+            if (p.tipo === "Saída Almoço") batidasDoBanco[chaveAgrupada].saidaAlm = p.horario;
+            if (p.tipo === "Retorno Almoço") batidasDoBanco[chaveAgrupada].retAlm = p.horario;
+            if (p.tipo === "Saída Expediente") batidasDoBanco[chaveAgrupada].saidaFim = p.horario;
           }
         });
 
         relatorioFinal = [];
         corpo.innerHTML = "";
 
-        // Loop por todos os dias reais do mês para encontrar Faltas Automáticas e Domingos (Folgas)
+        // Roda o calendário cruzando os dias do mês com a lista de funcionários ativos
         for (let d = 1; d <= totalDias; d++) {
           let dataCorrente = new Date(ano, mes, d);
           let diaStr = String(d).padStart(2, '0');
           let mesStr = String(mes + 1).padStart(2, '0');
           let chaveData = `${ano}-${mesStr}-${diaStr}`;
           let dataFormatadaExibir = `${diaStr}/${mesStr}/${ano}`;
+          let diaSemana = dataCorrente.getDay(); 
 
-          let diaSemana = dataCorrente.getDay(); // 0 = Domingo
-          let statusDia = "Regular";
-          let classStatus = "";
-          
-          let diaBtd = batidasDoBanco[chaveData] || { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
+          listaParaProcessar.forEach(f => {
+            let chaveBusca = `${chaveData}_${f}`;
+            let statusDia = "Regular";
+            let classStatus = "";
+            
+            let diaBtd = batidasDoBanco[chaveBusca] || { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
 
-          if (diaBtd.entrada === "--" && diaBtd.saidaFim === "--") {
-            if (diaSemana === 0) {
-              statusDia = "FOLGA DOMINGO";
-              classStatus = "status-folga";
-            } else {
-              statusDia = "FALTA";
-              classStatus = "status-falta";
+            if (diaBtd.entrada === "--" && diaBtd.saidaFim === "--") {
+              if (diaSemana === 0) {
+                statusDia = "FOLGA DOMINGO";
+                classStatus = "status-folga";
+              } else {
+                statusDia = "FALTA";
+                classStatus = "status-falta";
+              }
             }
-          }
 
-          relatorioFinal.push({
-            data: dataFormatadaExibir, func,
-            entrada: diaBtd.entrada, saidaAlm: diaBtd.saidaAlm, retAlm: diaBtd.retAlm, saidaFim: diaBtd.saidaFim,
-            atraso: diaBtd.atraso, statusDia, classStatus
+            relatorioFinal.push({
+              data: dataFormatadaExibir, func: f,
+              entrada: diaBtd.entrada, saidaAlm: diaBtd.saidaAlm, retAlm: diaBtd.retAlm, saidaFim: diaBtd.saidaFim,
+              atraso: diaBtd.atraso, statusDia, classStatus, chaveData
+            });
           });
+        }
+
+        // Ordena o relatório final por Data para ficar mais intuitivo na tela
+        relatorioFinal.sort((a, b) => a.chaveData.localeCompare(b.chaveData));
+
+        if (relatorioFinal.length === 0) {
+          corpo.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Nenhum dado encontrado para o período.</td></tr>";
+          return;
         }
 
         relatorioFinal.forEach(r => {
@@ -220,26 +249,26 @@
     }
 
     function baixarExcel() {
-      let dados = [["Data", "Funcionário", "Entrada", "Saída Almoço", "Retorno Almoço", "Saída Termo", "Minutos Atraso", "Status do Dia"]];
+      let dados = [["Data", "Funcionário", "Entrada", "Saída Almoço", "Retorno Almoço", "Saída Fim", "Minutos Atraso", "Status do Dia"]];
       relatorioFinal.forEach(r => dados.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, r.atraso, r.statusDia]));
       let sheet = XLSX.utils.aoa_to_sheet(dados);
       let book = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(book, sheet, "Auditoria");
-      XLSX.writeFile(book, `Fechamento_SR_${document.getElementById('filtroMes').value}.xlsx`);
+      XLSX.utils.book_append_sheet(book, sheet, "Auditoria Geral");
+      XLSX.writeFile(book, `Fechamento_Geral_SR_${document.getElementById('filtroMes').value}.xlsx`);
     }
 
     function baixarPDF() {
       const { jsPDF } = window.jspdf;
       let doc = new jsPDF();
-      doc.setFontSize(16); doc.text("SÃO RAIMUNDO SUPERMERCADO - CONTROLE DE PONTO", 14, 15);
-      doc.setFontSize(11); doc.text(`Fechamento Mensal - Ref: ${document.getElementById('filtroMes').value}`, 14, 22);
+      doc.setFontSize(16); doc.text("SÃO RAIMUNDO SUPERMERCADO - AUDITORIA DE PONTO", 14, 15);
+      doc.setFontSize(11); doc.text(`Relatório Consolidado - Ref: ${document.getElementById('filtroMes').value}`, 14, 22);
       
       let col = ["Data", "Funcionário", "Entrada", "S. Almoço", "R. Almoço", "Saída", "Atraso", "Status"];
       let rows = [];
       relatorioFinal.forEach(r => rows.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, r.atraso + " min", r.statusDia]));
       
-      doc.autoTable({ startY: 28, head: [col], body: rows, theme: 'grid' });
-      doc.save(`Fechamento_SR_${document.getElementById('filtroMes').value}.pdf`);
+      doc.autoTable({ startY: 28, head: [col], body: rows, theme: 'grid', styles: { fontSize: 8 } });
+      doc.save(`Fechamento_Geral_SR_${document.getElementById('filtroMes').value}.pdf`);
     }
   </script>
 </body>
