@@ -88,11 +88,11 @@
     // Cordenadas do São Raimundo Supermercado obtidas no Google Maps
     const MERCADO_LAT = -4.451406;
     const MERCADO_LON = -43.876278;
-    const DISTANCIA_MAX_METROS = 5; // Limite restrito pedido de 5 metros
+    const DISTANCIA_MAX_METROS = 5; // Cerca virtual restrita de 5 metros
 
-    // Lista Completa e Oficial Atualizada de Funcionários por Setor
+    // Lista Oficial com Correção de Separação (Ezequiel e Ruan)
     const equipe = {
-      escritorio: ["Ezequiel", Ruan", "André", "hilária"],
+      escritorio: ["Ezequiel", "Ruan", "André", "hilária"],
       rh: ["Flávio", "Altemar"],
       tesouraria: ["Inês"],
       caixas: ["Irene", "Karine", "Marta", "Daiane", "Jaqueline", "Rita", "Patrícia", "railma", "adrissa", "Erisva", "Débora"],
@@ -125,12 +125,10 @@
       blocoColaborador.style.display = "block";
     }
 
-    // Função de Inteligência e Sequência Dinâmica de Botões
     function verificarFluxoPontoDoDia() {
       const nome = document.getElementById("colaborador").value;
       const blocoBotoes = document.getElementById("bloco-botoes");
       
-      // Oculta todos por padrão
       document.getElementById("btnEntrada").style.display = "none";
       document.getElementById("btnSaidaAlmoco").style.display = "none";
       document.getElementById("btnRetornoAlmoco").style.display = "none";
@@ -142,7 +140,6 @@
       let agora = new Date();
       let dataChave = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
 
-      // Consulta os pontos existentes do funcionário no dia atual
       database.ref('pontos_registrados')
         .orderByChild('colaborador')
         .equalTo(nome)
@@ -161,7 +158,7 @@
 
           blocoBotoes.style.display = "block";
 
-          // Regra Sequencial: Libera estritamente apenas a próxima batida lógica
+          // Liberação encadeada e sequencial 
           if (!batidas.entrada) {
             document.getElementById("btnEntrada").style.display = "block";
             document.getElementById("localizacao").innerHTML = "Status: Aguardando registro de <strong>Entrada</strong>.";
@@ -180,7 +177,6 @@
         });
     }
 
-    // Calcula a distância exata em metros com base na curvatura terrestre (Fórmula de Haversine)
     function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
       const R = 6371e3;
       const φ1 = lat1 * Math.PI/180;
@@ -204,14 +200,12 @@
           let lon = pos.coords.longitude;
           let distancia = calcularDistanciaMetros(lat, lon, MERCADO_LAT, MERCADO_LON);
 
-          // Cerca Virtual Restrita: Bloqueia imediatamente se ultrapassar os 5 metros
           if (distancia > DISTANCIA_MAX_METROS) {
             document.getElementById("status").innerHTML = "❌ <strong>ACESSO BLOQUEADO POR DISTÂNCIA!</strong>";
-            alert(`Bloqueado: Você está fora do limite de 5 metros do supermercado (Distância atual: ${distancia.toFixed(1)} metros).`);
+            alert(`Bloqueado: Você precisa estar no supermercado para registrar o ponto (Distância atual: ${distancia.toFixed(1)} metros).`);
             return;
           }
 
-          // Se estiver dentro do perímetro, efetua a gravação do ponto
           gravarPonto(tipo, lat, lon);
         },
         err => {
@@ -230,7 +224,6 @@
       let horaFormatada = agora.toLocaleTimeString('pt-BR');
       let dataChave = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
 
-      // LÓGICA DE DETECÇÃO DE ATRASO BASEADO NA ESCALA CLT (TOLERÂNCIA 5 MIN)
       let minutosAtraso = 0;
       let mensagemAtraso = "";
       let hora = agora.getHours();
@@ -238,17 +231,15 @@
       let totalMinutosDia = (hora * 60) + minuto;
 
       if (tipo === "Entrada Manhã") {
-        // Se entrar no meio do dia, é a escala das 10:00 (600 min). Se for cedo, é 07:00 (420 min)
-        if (totalMinutosDia < 510) { // Referência Turno 1 (07:00)
-          if (totalMinutosDia > 425) minutosAtraso = totalMinutosDia - 420;
-        } else { // Referência Turno 2 (10:00)
-          if (totalMinutosDia > 605) minutosAtraso = totalMinutosDia - 600;
+        if (totalMinutosDia < 510) { 
+          if (totalMinutosDia > 425) minutosAtraso = totalMinutosDia - 420; // Escala 07:00 (Tolerância +5 min)
+        } else { 
+          if (totalMinutosDia > 605) minutosAtraso = totalMinutosDia - 600; // Escala 10:00 (Tolerância +5 min)
         }
       }
 
       if (minutosAtraso > 0) {
         mensagemAtraso = `⚠️ PONTO REGISTRADO COM ATRASO DE ${minutosAtraso} MINUTOS!`;
-        // Monta o link do WhatsApp para notificação manual do gerente sem custos adicionais
         let textoWpp = encodeURIComponent(`🚨 *Notificação Meu Ponto SR*:\nO colaborador *${nome}* (${setorTexto}) registrou a *Entrada* hoje às ${horaFormatada} com *${minutosAtraso} minutos de atraso*.`);
         document.getElementById("notificacaoWpp").innerHTML = `<a href="https://api.whatsapp.com/send?text=${textoWpp}" target="_blank" class="btn-wpp">📲 Enviar Notificação de Atraso para a Gerência</a>`;
       }
@@ -256,7 +247,6 @@
       document.getElementById("status").innerHTML = `<strong>${tipo}</strong> gravado!<br><span style="color:red">${mensagemAtraso}</span>`;
       document.getElementById("nuvem").style.display = "block";
 
-      // Gravação estruturada para o banco
       let novoPonto = database.ref('pontos_registrados').push();
       novoPonto.set({
         colaborador: nome,
@@ -271,7 +261,7 @@
       }, function(error) {
         if (!error) {
           document.getElementById("nuvem").innerHTML = "✅ Sincronizado com o Meu Ponto SR!";
-          verificarFluxoPontoDoDia(); // Executa o bloqueio de fluxo imediato na tela
+          verificarFluxoPontoDoDia(); 
         }
       });
     }
