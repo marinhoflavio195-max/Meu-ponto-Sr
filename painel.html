@@ -12,36 +12,44 @@
 
   <style>
     body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-    .painel-container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-    h1 { color: #d32f2f; margin-top: 0; border-bottom: 3px solid #d32f2f; padding-bottom: 10px; font-size: 26px; }
-    .filtros-topo { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #fdf2f2; padding: 15px; border-radius: 8px; border: 1px solid #ffcdd2; }
-    .campo-filtro { flex: 1; min-width: 200px; }
-    .campo-filtro label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #555; }
-    .campo-filtro select, .campo-filtro input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; box-sizing: border-box; }
-    .botoes-acoes { display: flex; gap: 10px; margin-bottom: 20px; }
-    .btn { padding: 12px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: background 0.2s; }
+    
+    /* 🖥️ Ajustado para ocupar 98% da tela do computador, eliminando as bordas cinzas gigantes */
+    .painel-container { width: 98%; max-width: 100%; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); box-sizing: border-radius; }
+    
+    h1 { color: #d32f2f; margin-top: 0; border-bottom: 3px solid #d32f2f; padding-bottom: 10px; font-size: 28px; letter-spacing: 1px; }
+    
+    /* Filtros ocupando melhor o espaço horizontal */
+    .filtros-topo { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; background: #fdf2f2; padding: 20px; border-radius: 8px; border: 1px solid #ffcdd2; }
+    .campo-filtro { flex: 1; min-width: 280px; }
+    .campo-filtro label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #555; }
+    .campo-filtro select, .campo-filtro input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+    
+    .botoes-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
+    .btn { padding: 14px 25px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; color: white; transition: background 0.2s; }
     .btn-filtrar { background-color: #d32f2f; }
     .btn-excel { background-color: #2e7d32; }
     .btn-pdf { background-color: #1565c0; }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-    th { background-color: #d32f2f; color: white; padding: 10px; text-align: left; }
-    td { padding: 10px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
-    tr:hover { background-color: #f9f9f9; }
+    /* 📊 Tabela expandida com letras maiores para leitura perfeita no monitor */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
+    th { background-color: #d32f2f; color: white; padding: 14px 10px; text-align: left; font-size: 15px; }
+    td { padding: 14px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
+    tr:hover { background-color: #f5f5f5; }
     
-    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 3px 6px; border-radius: 4px; }
-    .status-folga { color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 3px 6px; border-radius: 4px; }
+    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 5px 10px; border-radius: 4px; font-size: 13px; }
+    .status-folga { color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 5px 10px; border-radius: 4px; font-size: 13px; }
     .status-atraso { color: #e65100; font-weight: bold; }
     
-    .btn-foto { background: #673ab7; color: white; border: none; padding: 5px 9px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
+    /* 📸 Botões das fotos maiores e mais fáceis de clicar no mouse */
+    .btn-foto { background: #673ab7; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
     .btn-foto:hover { background: #512da8; }
-    .sem-foto { color: #999; font-style: italic; }
+    .sem-foto { color: #aaa; font-style: italic; font-size: 14px; }
 
-    /* Modal / Janela Flutuante para Ver a Selfie */
+    /* Modal / Janela Flutuante da Selfie */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
-    .modal-content { background-color: white; padding: 20px; border-radius: 12px; max-width: 350px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .modal-content img { width: 100%; border-radius: 8px; border: 2px solid #d32f2f; margin-bottom: 15px; }
-    .btn-fechar-modal { background: #d32f2f; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; }
+    .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-content img { width: 100%; border-radius: 8px; border: 3px solid #d32f2f; margin-bottom: 15px; }
+    .btn-fechar-modal { background: #d32f2f; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
   </style>
 </head>
 <body>
@@ -133,7 +141,7 @@
           </tr>
         </thead>
         <tbody id="corpoTabela">
-          <tr><td colspan="8" style="text-align:center; padding:20px;">Selecione os parâmetros e clique em Consultar.</td></tr>
+          <tr><td colspan="8" style="text-align:center; padding:30px; font-size: 16px;">Selecione os parâmetros e clique em Consultar.</td></tr>
         </tbody>
       </table>
     </div>
@@ -141,7 +149,7 @@
 
   <div id="modalFoto" class="modal">
     <div class="modal-content">
-      <h3 id="modalTitulo" style="margin-top:0; color:#673ab7;">Selfie de Verificação</h3>
+      <h3 id="modalTitulo" style="margin-top:0; color:#673ab7; font-size: 18px;">Selfie de Verificação</h3>
       <img id="modalImg" src="" alt="Selfie do Funcionário">
       <button class="btn-fechar-modal" onclick="fecharModal()">Fechar Visualização</button>
     </div>
@@ -172,13 +180,13 @@
     document.getElementById('filtroMes').value = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
 
     let relatorioFinal = [];
-    let mapaFotosMemoria = {}; // Guarda os binários indexados para abertura ágil
+    let mapaFotosMemoria = {};
 
     function processarFechamentoMensal() {
       const funcSelecionado = document.getElementById('filtroColaborador').value;
       const mesRef = document.getElementById('filtroMes').value; 
       const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Processando auditoria e carregando mídia...</td></tr>";
+      corpo.innerHTML = "<tr><td colspan='8' style='text-align:center; padding:25px;'>Processando auditoria e carregando mídias...</td></tr>";
 
       let ano = parseInt(mesRef.split('-')[0]);
       let mes = parseInt(mesRef.split('-')[1]) - 1;
@@ -199,7 +207,6 @@
               batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
             }
             
-            // Registra os horários e armazena os códigos das imagens associados ao ID único do ponto
             let idFoto = `${child.key}`;
             if(p.fotoSelfie) {
               mapaFotosMemoria[idFoto] = p.fotoSelfie;
@@ -260,22 +267,21 @@
         relatorioFinal.sort((a, b) => a.chaveData.localeCompare(b.chaveData));
 
         if (relatorioFinal.length === 0) {
-          corpo.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Nenhum dado encontrado para o período.</td></tr>";
+          corpo.innerHTML = "<tr><td colspan='8' style='text-align:center; padding:20px;'>Nenhum dado encontrado para o período.</td></tr>";
           return;
         }
 
         relatorioFinal.forEach(r => {
           let tr = document.createElement('tr');
           
-          // Construtor dinâmico de botões de visualização rápida das mídias
           let containerFotos = "";
           if (r.classStatus !== "") {
             containerFotos = `<span class="${r.classStatus}">${r.statusDia}</span>`;
           } else {
-            containerFotos += r.imgE ? `<button class="btn-foto" onclick="abrirModal('${r.imgE}', '${r.func} - Entrada')">🖼️ E</button> ` : '<span class="sem-foto">-</span> ';
-            containerFotos += r.imgSA ? `<button class="btn-foto" onclick="abrirModal('${r.imgSA}', '${r.func} - S.Almço')">🖼️ S</button> ` : '<span class="sem-foto">-</span> ';
-            containerFotos += r.imgRA ? `<button class="btn-foto" onclick="abrirModal('${r.imgRA}', '${r.func} - R.Almço')">🖼️ R</button> ` : '<span class="sem-foto">-</span> ';
-            containerFotos += r.imgSF ? `<button class="btn-foto" onclick="abrirModal('${r.imgSF}', '${r.func} - Saída')">🖼️ F</button>` : '<span class="sem-foto">-</span>';
+            containerFotos += r.imgE ? `<button class="btn-foto" onclick="abrirModal('${r.imgE}', '${r.func} - Entrada')">📸 Entrada</button> ` : '<span class="sem-foto">-</span> ';
+            containerFotos += r.imgSA ? `<button class="btn-foto" onclick="abrirModal('${r.imgSA}', '${r.func} - Almoço')">📸 Almoço</button> ` : '<span class="sem-foto">-</span> ';
+            containerFotos += r.imgRA ? `<button class="btn-foto" onclick="abrirModal('${r.imgRA}', '${r.func} - Retorno')">📸 Retorno</button> ` : '<span class="sem-foto">-</span> ';
+            containerFotos += r.imgSF ? `<button class="btn-foto" onclick="abrirModal('${r.imgSF}', '${r.func} - Saída')">📸 Saída</button>` : '<span class="sem-foto">-</span>';
           }
 
           tr.innerHTML = `
