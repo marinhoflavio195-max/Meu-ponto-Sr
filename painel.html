@@ -12,25 +12,18 @@
 
   <style>
     body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-    
-    /* 🖥️ Ajustado para ocupar 98% da tela do computador, eliminando as bordas cinzas gigantes */
-    .painel-container { width: 98%; max-width: 100%; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); box-sizing: border-radius; }
-    
+    .painel-container { width: 98%; max-width: 100%; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); box-sizing: border-box; }
     h1 { color: #d32f2f; margin-top: 0; border-bottom: 3px solid #d32f2f; padding-bottom: 10px; font-size: 28px; letter-spacing: 1px; }
-    
-    /* Filtros ocupando melhor o espaço horizontal */
     .filtros-topo { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; background: #fdf2f2; padding: 20px; border-radius: 8px; border: 1px solid #ffcdd2; }
     .campo-filtro { flex: 1; min-width: 280px; }
     .campo-filtro label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #555; }
     .campo-filtro select, .campo-filtro input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-    
     .botoes-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
     .btn { padding: 14px 25px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; color: white; transition: background 0.2s; }
     .btn-filtrar { background-color: #d32f2f; }
     .btn-excel { background-color: #2e7d32; }
     .btn-pdf { background-color: #1565c0; }
     
-    /* 📊 Tabela expandida com letras maiores para leitura perfeita no monitor */
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
     th { background-color: #d32f2f; color: white; padding: 14px 10px; text-align: left; font-size: 15px; }
     td { padding: 14px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
@@ -38,14 +31,16 @@
     
     .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 5px 10px; border-radius: 4px; font-size: 13px; }
     .status-folga { color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 5px 10px; border-radius: 4px; font-size: 13px; }
-    .status-atraso { color: #e65100; font-weight: bold; }
     
-    /* 📸 Botões das fotos maiores e mais fáceis de clicar no mouse */
+    /* Cores das colunas calculadas do banco */
+    .col-atraso { color: #c62828; font-weight: bold; background-color: #fff5f5; }
+    .col-extra { color: #2e7d32; font-weight: bold; background-color: #f4fbf4; }
+    .col-incompleto { color: #757575; font-style: italic; }
+    
     .btn-foto { background: #673ab7; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
     .btn-foto:hover { background: #512da8; }
     .sem-foto { color: #aaa; font-style: italic; font-size: 14px; }
 
-    /* Modal / Janela Flutuante da Selfie */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
     .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     .modal-content img { width: 100%; border-radius: 8px; border: 3px solid #d32f2f; margin-bottom: 15px; }
@@ -136,12 +131,13 @@
             <th>S. Almoço</th>
             <th>R. Almoço</th>
             <th>Saída Fim</th>
-            <th>Atraso</th>
+            <th>Atraso / Débito</th>
+            <th>Hora Extra</th>
             <th>Status / Fotos</th>
           </tr>
         </thead>
         <tbody id="corpoTabela">
-          <tr><td colspan="8" style="text-align:center; padding:30px; font-size: 16px;">Selecione os parâmetros e clique em Consultar.</td></tr>
+          <tr><td colspan="9" style="text-align:center; padding:30px; font-size: 16px;">Selecione os parâmetros e clique em Consultar.</td></tr>
         </tbody>
       </table>
     </div>
@@ -182,11 +178,29 @@
     let relatorioFinal = [];
     let mapaFotosMemoria = {};
 
+    // Função auxiliar para converter "HH:MM:SS" ou "HH:MM" para minutos totais desde a meia-noite
+    function converterParaMinutos(horarioStr) {
+      if (!horarioStr || horarioStr === "--") return null;
+      let partes = horarioStr.split(':');
+      return (parseInt(partes[0]) * 60) + parseInt(partes[1]);
+    }
+
+    // Função para converter minutos em formato legível "X h Y min" ou "Y min"
+    function formatarMinutosLegivel(minutosTotais) {
+      if (minutosTotais <= 0) return "0";
+      let horas = Math.floor(minutosTotais / 60);
+      let mins = minutosTotais % 60;
+      if (horas > 0) {
+        return `${horas}h ${mins}min`;
+      }
+      return `${mins} min`;
+    }
+
     function processarFechamentoMensal() {
       const funcSelecionado = document.getElementById('filtroColaborador').value;
       const mesRef = document.getElementById('filtroMes').value; 
       const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = "<tr><td colspan='8' style='text-align:center; padding:25px;'>Processando auditoria e carregando mídias...</td></tr>";
+      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Processando auditoria e calculando horas CLT...</td></tr>";
 
       let ano = parseInt(mesRef.split('-')[0]);
       let mes = parseInt(mesRef.split('-')[1]) - 1;
@@ -204,7 +218,7 @@
             let chaveAgrupada = `${p.dataChave}_${p.colaborador}`;
             
             if (!batidasDoBanco[chaveAgrupada]) {
-              batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
+              batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
             }
             
             let idFoto = `${child.key}`;
@@ -214,7 +228,6 @@
 
             if (p.tipo === "Entrada Manhã") { 
               batidasDoBanco[chaveAgrupada].entrada = p.horario; 
-              batidasDoBanco[chaveAgrupada].atraso = p.atrasoMinutos || 0;
               if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto;
             }
             if (p.tipo === "Saída Almoço") {
@@ -248,17 +261,50 @@
             let statusDia = "Regular";
             let classStatus = "";
             
-            let diaBtd = batidasDoBanco[chaveBusca] || { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--", atraso: 0 };
+            let diaBtd = batidasDoBanco[chaveBusca] || { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
+
+            let totalAtrasoExibir = "0";
+            let totalExtraExibir = "0";
+
+            // 🧮 Lógica de Cálculo de Jornada CLT (Base de 8 Horas Diárias = 480 minutos)
+            if (diaBtd.entrada !== "--" || diaBtd.saidaAlm !== "--" || diaBtd.retAlm !== "--" || diaBtd.saidaFim !== "--") {
+              
+              // Verifica se o ciclo de batidas do dia está completo para poder fechar a conta
+              if (diaBtd.entrada !== "--" && diaBtd.saidaAlm !== "--" && diaBtd.retAlm !== "--" && diaBtd.saidaFim !== "--") {
+                let mEntrada = converterParaMinutos(diaBtd.entrada);
+                let mSaidaAlm = converterParaMinutos(diaBtd.saidaAlm);
+                let mRetAlm = converterParaMinutos(diaBtd.retAlm);
+                let mSaidaFim = converterParaMinutos(diaBtd.saidaFim);
+
+                let minutosTrabalhadosManha = mSaidaAlm - mEntrada;
+                let minutosTrabalhadosTarde = mSaidaFim - mRetAlm;
+                let totalTrabalhadoNoDia = minutosTrabalhadosManha + minutosTrabalhadosTarde;
+
+                let jornadaPadrao = 480; // 8 horas em minutos
+
+                if (totalTrabalhadoNoDia < jornadaPadrao) {
+                  let diferencaAtraso = jornadaPadrao - totalTrabalhadoNoDia;
+                  totalAtrasoExibir = formatarMinutosLegivel(diferencaAtraso);
+                } else if (totalTrabalhadoNoDia > jornadaPadrao) {
+                  let diferencaExtra = totalTrabalhadoNoDia - jornadaPadrao;
+                  totalExtraExibir = formatarMinutosLegivel(diferencaExtra);
+                }
+              } else {
+                // Caso falte alguma batida no dia, avisa o administrador para não dar cálculo errado
+                totalAtrasoExibir = "<span class='col-incompleto'>Incompleto</span>";
+                totalExtraExibir = "<span class='col-incompleto'>Incompleto</span>";
+              }
+            }
 
             if (diaBtd.entrada === "--" && diaBtd.saidaFim === "--") {
-              if (diaSemana === 0) { statusDia = "FOLGA DOMINGO"; classStatus = "status-folga"; } 
-              else { statusDia = "FALTA"; classStatus = "status-falta"; }
+              if (diaSemana === 0) { statusDia = "FOLGA DOMINGO"; classStatus = "status-folga"; totalAtrasoExibir = "0"; totalExtraExibir = "0"; } 
+              else { statusDia = "FALTA"; classStatus = "status-falta"; totalAtrasoExibir = "8h 0min"; totalExtraExibir = "0"; }
             }
 
             relatorioFinal.push({
               data: dataFormatadaExibir, func: f,
               entrada: diaBtd.entrada, saidaAlm: diaBtd.saidaAlm, retAlm: diaBtd.retAlm, saidaFim: diaBtd.saidaFim,
-              atraso: diaBtd.atraso, statusDia, classStatus, chaveData,
+              atraso: totalAtrasoExibir, extra: totalExtraExibir, statusDia, classStatus, chaveData,
               imgE: diaBtd.idFotoEntrada, imgSA: diaBtd.idFotoSaidaAlm, imgRA: diaBtd.idFotoRetAlm, imgSF: diaBtd.idFotoSaidaFim
             });
           });
@@ -267,7 +313,7 @@
         relatorioFinal.sort((a, b) => a.chaveData.localeCompare(b.chaveData));
 
         if (relatorioFinal.length === 0) {
-          corpo.innerHTML = "<tr><td colspan='8' style='text-align:center; padding:20px;'>Nenhum dado encontrado para o período.</td></tr>";
+          corpo.innerHTML = "<tr><td colspan='9' style='text-align:center;'>Nenhum dado encontrado para o período.</td></tr>";
           return;
         }
 
@@ -275,7 +321,9 @@
           let tr = document.createElement('tr');
           
           let containerFotos = "";
-          if (r.classStatus !== "") {
+          if (r.classStatus !== "" && r.statusDia !== "FALTA") {
+            containerFotos = `<span class="${r.classStatus}">${r.statusDia}</span>`;
+          } else if (r.statusDia === "FALTA") {
             containerFotos = `<span class="${r.classStatus}">${r.statusDia}</span>`;
           } else {
             containerFotos += r.imgE ? `<button class="btn-foto" onclick="abrirModal('${r.imgE}', '${r.func} - Entrada')">📸 Entrada</button> ` : '<span class="sem-foto">-</span> ';
@@ -284,6 +332,10 @@
             containerFotos += r.imgSF ? `<button class="btn-foto" onclick="abrirModal('${r.imgSF}', '${r.func} - Saída')">📸 Saída</button>` : '<span class="sem-foto">-</span>';
           }
 
+          // Define as classes dinâmicas para colorir atrasos de vermelho e extras de verde
+          let tdAtrasoClass = (r.atraso !== "0" && r.atraso !== "<span class='col-incompleto'>Incompleto</span>") ? "class='col-atraso'" : "";
+          let tdExtraClass = (r.extra !== "0" && r.extra !== "<span class='col-incompleto'>Incompleto</span>") ? "class='col-extra'" : "";
+
           tr.innerHTML = `
             <td><strong>${r.data}</strong></td>
             <td>${r.func}</td>
@@ -291,7 +343,8 @@
             <td>${r.saidaAlm}</td>
             <td>${r.retAlm}</td>
             <td>${r.saidaFim}</td>
-            <td class="status-atraso">${r.atraso > 0 ? r.atraso + ' min' : '0'}</td>
+            <td ${tdAtrasoClass}>${r.atraso}</td>
+            <td ${tdExtraClass}>${r.extra}</td>
             <td>${containerFotos}</td>
           `;
           corpo.appendChild(tr);
@@ -314,26 +367,36 @@
     }
 
     function baixarExcel() {
-      let dados = [["Data", "Funcionário", "Entrada", "Saída Almoço", "Retorno Almoço", "Saída Fim", "Minutos Atraso", "Status do Dia"]];
-      relatorioFinal.forEach(r => dados.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, r.atraso, r.statusDia]));
+      let dados = [["Data", "Funcionário", "Entrada", "Saída Almoço", "Retorno Almoço", "Saída Fim", "Atraso / Débito", "Hora Extra", "Status"]];
+      relatorioFinal.forEach(r => {
+        // Remove tags HTML antes de exportar
+        let atrClean = r.atraso.includes("Incompleto") ? "Incompleto" : r.atraso;
+        let extClean = r.extra.includes("Incompleto") ? "Incompleto" : r.extra;
+        dados.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, atrClean, extClean, r.statusDia]);
+      });
       let sheet = XLSX.utils.aoa_to_sheet(dados);
       let book = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(book, sheet, "Auditoria Geral");
-      XLSX.writeFile(book, `Fechamento_Geral_SR_${document.getElementById('filtroMes').value}.xlsx`);
+      XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "Auditoria CLT");
+      XLSX.writeFile(book, `Fechamento_CLT_SR_${document.getElementById('filtroMes').value}.xlsx`);
     }
 
     function baixarPDF() {
       const { jsPDF } = window.jspdf;
       let doc = new jsPDF();
       doc.setFontSize(16); doc.text("SÃO RAIMUNDO SUPERMERCADO - AUDITORIA DE PONTO", 14, 15);
-      doc.setFontSize(11); doc.text(`Relatório Consolidado - Ref: ${document.getElementById('filtroMes').value}`, 14, 22);
+      doc.setFontSize(11); doc.text(`Relatório Consolidado CLT - Ref: ${document.getElementById('filtroMes').value}`, 14, 22);
       
-      let col = ["Data", "Funcionário", "Entrada", "S. Almoço", "R. Almoço", "Saída", "Atraso", "Status"];
+      let col = ["Data", "Funcionário", "Entrada", "S. Alm.", "R. Alm.", "Saída", "Débito", "Extra", "Status"];
       let rows = [];
-      relatorioFinal.forEach(r => rows.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, r.atraso + " min", r.statusDia]));
+      relatorioFinal.forEach(r => {
+        let atrClean = r.atraso.includes("Incompleto") ? "Incompleto" : r.atraso;
+        let extClean = r.extra.includes("Incompleto") ? "Incompleto" : r.extra;
+        rows.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, atrClean, extClean, r.statusDia]);
+      });
       
       doc.autoTable({ startY: 28, head: [col], body: rows, theme: 'grid', styles: { fontSize: 8 } });
-      doc.save(`Fechamento_Geral_SR_${document.getElementById('filtroMes').value}.pdf`);
+      doc.save(`Fechamento_CLT_SR_${document.getElementById('filtroMes').value}.pdf`);
     }
   </script>
 </body>
