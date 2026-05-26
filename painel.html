@@ -32,14 +32,22 @@
     .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 5px 10px; border-radius: 4px; font-size: 13px; }
     .status-folga { color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 5px 10px; border-radius: 4px; font-size: 13px; }
     
-    /* Cores das colunas calculadas do banco */
     .col-atraso { color: #c62828; font-weight: bold; background-color: #fff5f5; }
     .col-extra { color: #2e7d32; font-weight: bold; background-color: #f4fbf4; }
     .col-incompleto { color: #757575; font-style: italic; }
     
-    .btn-foto { background: #673ab7; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+    /* Bloco que agrupa os botões de ação do ponto */
+    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #f0f0f5; padding: 6px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; min-width: 85px; }
+    .titulo-acao-btd { font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px; text-transform: uppercase; }
+    
+    .btn-foto { background: #673ab7; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 3px; }
     .btn-foto:hover { background: #512da8; }
-    .sem-foto { color: #aaa; font-style: italic; font-size: 14px; }
+    
+    /* 📍 Botão do Mapa */
+    .btn-mapa { background: #0288d1; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
+    .btn-mapa:hover { background: #01579b; }
+    
+    .sem-foto { color: #aaa; font-style: italic; font-size: 13px; display: inline-block; margin: 10px; }
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
     .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
@@ -133,7 +141,7 @@
             <th>Saída Fim</th>
             <th>Atraso / Débito</th>
             <th>Hora Extra</th>
-            <th>Status / Fotos</th>
+            <th>Auditoria (Fotos e Mapas)</th>
           </tr>
         </thead>
         <tbody id="corpoTabela">
@@ -178,21 +186,17 @@
     let relatorioFinal = [];
     let mapaFotosMemoria = {};
 
-    // Função auxiliar para converter "HH:MM:SS" ou "HH:MM" para minutos totais desde a meia-noite
     function converterParaMinutos(horarioStr) {
       if (!horarioStr || horarioStr === "--") return null;
       let partes = horarioStr.split(':');
       return (parseInt(partes[0]) * 60) + parseInt(partes[1]);
     }
 
-    // Função para converter minutos em formato legível "X h Y min" ou "Y min"
     function formatarMinutosLegivel(minutosTotais) {
       if (minutosTotais <= 0) return "0";
       let horas = Math.floor(minutosTotais / 60);
       let mins = minutosTotais % 60;
-      if (horas > 0) {
-        return `${horas}h ${mins}min`;
-      }
+      if (horas > 0) return `${horas}h ${mins}min`;
       return `${mins} min`;
     }
 
@@ -200,7 +204,7 @@
       const funcSelecionado = document.getElementById('filtroColaborador').value;
       const mesRef = document.getElementById('filtroMes').value; 
       const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Processando auditoria e calculando horas CLT...</td></tr>";
+      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Processando auditoria e carregando coordenadas de GPS...</td></tr>";
 
       let ano = parseInt(mesRef.split('-')[0]);
       let mes = parseInt(mesRef.split('-')[1]) - 1;
@@ -226,21 +230,28 @@
               mapaFotosMemoria[idFoto] = p.fotoSelfie;
             }
 
+            // Guarda coordenadas geográficas vinculadas a cada batida
+            let gpsLink = (p.latitude && p.longitude) ? `https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}` : null;
+
             if (p.tipo === "Entrada Manhã") { 
               batidasDoBanco[chaveAgrupada].entrada = p.horario; 
               if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto;
+              batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink;
             }
             if (p.tipo === "Saída Almoço") {
               batidasDoBanco[chaveAgrupada].saidaAlm = p.horario;
               if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto;
+              batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink;
             }
             if (p.tipo === "Retorno Almoço") {
               batidasDoBanco[chaveAgrupada].retAlm = p.horario;
               if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto;
+              batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink;
             }
             if (p.tipo === "Saída Expediente") {
               batidasDoBanco[chaveAgrupada].saidaFim = p.horario;
               if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto;
+              batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink;
             }
           }
         });
@@ -266,10 +277,7 @@
             let totalAtrasoExibir = "0";
             let totalExtraExibir = "0";
 
-            // 🧮 Lógica de Cálculo de Jornada CLT (Base de 8 Horas Diárias = 480 minutos)
             if (diaBtd.entrada !== "--" || diaBtd.saidaAlm !== "--" || diaBtd.retAlm !== "--" || diaBtd.saidaFim !== "--") {
-              
-              // Verifica se o ciclo de batidas do dia está completo para poder fechar a conta
               if (diaBtd.entrada !== "--" && diaBtd.saidaAlm !== "--" && diaBtd.retAlm !== "--" && diaBtd.saidaFim !== "--") {
                 let mEntrada = converterParaMinutos(diaBtd.entrada);
                 let mSaidaAlm = converterParaMinutos(diaBtd.saidaAlm);
@@ -280,17 +288,14 @@
                 let minutosTrabalhadosTarde = mSaidaFim - mRetAlm;
                 let totalTrabalhadoNoDia = minutosTrabalhadosManha + minutosTrabalhadosTarde;
 
-                let jornadaPadrao = 480; // 8 horas em minutos
+                let jornadaPadrao = 480; 
 
                 if (totalTrabalhadoNoDia < jornadaPadrao) {
-                  let diferencaAtraso = jornadaPadrao - totalTrabalhadoNoDia;
-                  totalAtrasoExibir = formatarMinutosLegivel(diferencaAtraso);
+                  totalAtrasoExibir = formatarMinutosLegivel(jornadaPadrao - totalTrabalhadoNoDia);
                 } else if (totalTrabalhadoNoDia > jornadaPadrao) {
-                  let diferencaExtra = totalTrabalhadoNoDia - jornadaPadrao;
-                  totalExtraExibir = formatarMinutosLegivel(diferencaExtra);
+                  totalExtraExibir = formatarMinutosLegivel(totalTrabalhadoNoDia - jornadaPadrao);
                 }
               } else {
-                // Caso falte alguma batida no dia, avisa o administrador para não dar cálculo errado
                 totalAtrasoExibir = "<span class='col-incompleto'>Incompleto</span>";
                 totalExtraExibir = "<span class='col-incompleto'>Incompleto</span>";
               }
@@ -305,7 +310,8 @@
               data: dataFormatadaExibir, func: f,
               entrada: diaBtd.entrada, saidaAlm: diaBtd.saidaAlm, retAlm: diaBtd.retAlm, saidaFim: diaBtd.saidaFim,
               atraso: totalAtrasoExibir, extra: totalExtraExibir, statusDia, classStatus, chaveData,
-              imgE: diaBtd.idFotoEntrada, imgSA: diaBtd.idFotoSaidaAlm, imgRA: diaBtd.idFotoRetAlm, imgSF: diaBtd.idFotoSaidaFim
+              imgE: diaBtd.idFotoEntrada, imgSA: diaBtd.idFotoSaidaAlm, imgRA: diaBtd.idFotoRetAlm, imgSF: diaBtd.idFotoSaidaFim,
+              mapE: diaBtd.gpsEntrada, mapSA: diaBtd.gpsSaidaAlm, mapRA: diaBtd.gpsRetAlm, mapSF: diaBtd.gpsSaidaFim
             });
           });
         }
@@ -317,22 +323,30 @@
           return;
         }
 
+        function gerarBlocoAuditoria(titulo, idFoto, linkGps, nomeFunc) {
+          if (!idFoto && !linkGps) return '<span class="sem-foto">-</span>';
+          
+          let htmlBloco = `<div class="bloco-ponto-acoes">`;
+          htmlBloco += `<span class="titulo-acao-btd">${titulo}</span>`;
+          htmlBloco += idFoto ? `<button class="btn-foto" onclick="abrirModal('${idFoto}', '${nomeFunc} - ${titulo}')">📸 Foto</button>` : '';
+          htmlBloco += linkGps ? `<a href="${linkGps}" target="_blank" class="btn-mapa">📍 Local</a>` : '';
+          htmlBloco += `</div>`;
+          return htmlBloco;
+        }
+
         relatorioFinal.forEach(r => {
           let tr = document.createElement('tr');
           
-          let containerFotos = "";
-          if (r.classStatus !== "" && r.statusDia !== "FALTA") {
-            containerFotos = `<span class="${r.classStatus}">${r.statusDia}</span>`;
-          } else if (r.statusDia === "FALTA") {
-            containerFotos = `<span class="${r.classStatus}">${r.statusDia}</span>`;
+          let containerAuditoria = "";
+          if (r.classStatus !== "") {
+            containerAuditoria = `<span class="${r.classStatus}">${r.statusDia}</span>`;
           } else {
-            containerFotos += r.imgE ? `<button class="btn-foto" onclick="abrirModal('${r.imgE}', '${r.func} - Entrada')">📸 Entrada</button> ` : '<span class="sem-foto">-</span> ';
-            containerFotos += r.imgSA ? `<button class="btn-foto" onclick="abrirModal('${r.imgSA}', '${r.func} - Almoço')">📸 Almoço</button> ` : '<span class="sem-foto">-</span> ';
-            containerFotos += r.imgRA ? `<button class="btn-foto" onclick="abrirModal('${r.imgRA}', '${r.func} - Retorno')">📸 Retorno</button> ` : '<span class="sem-foto">-</span> ';
-            containerFotos += r.imgSF ? `<button class="btn-foto" onclick="abrirModal('${r.imgSF}', '${r.func} - Saída')">📸 Saída</button>` : '<span class="sem-foto">-</span>';
+            containerAuditoria += gerarBlocoAuditoria("Entrada", r.imgE, r.mapE, r.func);
+            containerAuditoria += gerarBlocoAuditoria("Almoço", r.imgSA, r.mapSA, r.func);
+            containerAuditoria += gerarBlocoAuditoria("Retorno", r.imgRA, r.mapRA, r.func);
+            containerAuditoria += gerarBlocoAuditoria("Saída", r.imgSF, r.mapSF, r.func);
           }
 
-          // Define as classes dinâmicas para colorir atrasos de vermelho e extras de verde
           let tdAtrasoClass = (r.atraso !== "0" && r.atraso !== "<span class='col-incompleto'>Incompleto</span>") ? "class='col-atraso'" : "";
           let tdExtraClass = (r.extra !== "0" && r.extra !== "<span class='col-incompleto'>Incompleto</span>") ? "class='col-extra'" : "";
 
@@ -345,7 +359,7 @@
             <td>${r.saidaFim}</td>
             <td ${tdAtrasoClass}>${r.atraso}</td>
             <td ${tdExtraClass}>${r.extra}</td>
-            <td>${containerFotos}</td>
+            <td>${containerAuditoria}</td>
           `;
           corpo.appendChild(tr);
         });
@@ -358,7 +372,7 @@
         document.getElementById("modalImg").src = mapaFotosMemoria[idFoto];
         document.getElementById("modalFoto").style.display = "flex";
       } else {
-        alert("Mídia não localizada ou corrompida.");
+        alert("Mídia não localizada.");
       }
     }
 
@@ -369,14 +383,12 @@
     function baixarExcel() {
       let dados = [["Data", "Funcionário", "Entrada", "Saída Almoço", "Retorno Almoço", "Saída Fim", "Atraso / Débito", "Hora Extra", "Status"]];
       relatorioFinal.forEach(r => {
-        // Remove tags HTML antes de exportar
         let atrClean = r.atraso.includes("Incompleto") ? "Incompleto" : r.atraso;
         let extClean = r.extra.includes("Incompleto") ? "Incompleto" : r.extra;
         dados.push([r.data, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, atrClean, extClean, r.statusDia]);
       });
       let sheet = XLSX.utils.aoa_to_sheet(dados);
       let book = XLSX.utils.book_new();
-      XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(book, sheet, "Auditoria CLT");
       XLSX.writeFile(book, `Fechamento_CLT_SR_${document.getElementById('filtroMes').value}.xlsx`);
     }
