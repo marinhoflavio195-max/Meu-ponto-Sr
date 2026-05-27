@@ -78,7 +78,6 @@
           <option value="Adrissa">Adrissa</option>
           <option value="Alan">Alan</option>
           <option value="Alice">Alice</option>
-          <option value="Aline">Aline</option>
           <option value="Alisson">Alisson</option>
           <option value="Altemar">Altemar</option>
           <option value="Andre">André</option>
@@ -191,12 +190,12 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Mapeamento corrigido unificando o nome real de ponto (Francisca Souza) com o setor
+    // Mapeamento de equipes fixas atualizado (Removido colaborador Aline)
     const mapeamentoEquipes = {
       "Irene": "EQUIP_1", "Rose": "EQUIP_1", "Debora": "EQUIP_1", "Gabriel": "EQUIP_1", "Jaki": "EQUIP_1",
       "Alice": "EQUIP_1", "Thalice": "EQUIP_1", "Raimundo Q": "EQUIP_1", "Andre": "EQUIP_1", "Rone Fruta": "EQUIP_1",
       "Rita": "EQUIP_1", "Sueli": "EQUIP_1", "Edete": "EQUIP_1", "Genilson": "EQUIP_1", "Patricia": "EQUIP_1",
-      "Carlos": "EQUIP_1", "Vinicios": "EQUIP_1", "Valdimiro": "EQUIP_1", "Aline": "EQUIP_1",
+      "Carlos": "EQUIP_1", "Vinicios": "EQUIP_1", "Valdimiro": "EQUIP_1",
       
       "Marta": "EQUIP_2", "Dayana": "EQUIP_2", "Fran": "EQUIP_2", "Erica": "EQUIP_2", "Alisson": "EQUIP_2",
       "Adrissa": "EQUIP_2", "Ruan": "EQUIP_2", "Rayana": "EQUIP_2", "Debora Sabao": "EQUIP_2", "Marcos": "EQUIP_2",
@@ -205,25 +204,14 @@
       "Jeferson": "EQUIP_2", "Dulce": "EQUIP_2", "Eudes": "EQUIP_2", "Felipe Frente": "EQUIP_2",
       
       "Netim": "DEPOSITO", "Vilson": "DEPOSITO", "Tharles": "DEPOSITO", "Marcelo": "DEPOSITO", "Flavia": "DEPOSITO",
-      "Keverson": "DEPOSITO", "Talison": "DEPOSITO", "Alan": "DEPOSITO", "Denilson": "DEPOSITO", "Henrique": "DEPOSITO",
+      "Keverson": "DEPOSITO", "Talison": "DEPOSITO", "Alan": "DEPOSITO", "Henrique": "DEPOSITO",
       "Flavio": "DEPOSITO", "Altemar": "DEPOSITO"
     };
 
-    // Escala de folga amarrada de forma definitiva aos nomes reais de ponto
-    const escalaFolgasSemanais = {
+    // Escala Fixa Semanal (Exceto as Quartas-feiras que variam por revezamento)
+    const escalaFolgasFixas = {
       "Irene": [1], "Rose": [1], "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1],
       "Debora": [2], "Gabriel": [2], "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2],
-      
-      // Ajustados na quarta-feira com base nas imagens reais e correções
-      "Raylma": [3], 
-      "Francisca Souza": [3], // Mapeado diretamente para o dia 3 (Quarta-Feira)
-      "Samira": [3], 
-      "Henrrique": [3], 
-      "Henrique": [3], 
-      "Edmilson": [3], 
-      "Rone Fruta": [3], 
-      "Jaki": [3], "Alice": [3], "Thalice": [3], "Raimundo Q": [3], "Andre": [3], "Aline": [3],
-      
       "Rita": [4], "Sueli": [4], "Edete": [4], "Genilson": [4], "Erisvana": [4], "Leandro": [4], "Victor": [4], "Hilaria": [4],
       "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5], "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5]
     };
@@ -251,6 +239,37 @@
       return Math.ceil((((d - anoInicio) / 86400000) + 1) / 7);
     }
 
+    // Função que checa matematicamente se o colaborador está de folga baseado na data
+    function checarSeEstaDeFolga(colaborador, dataObj) {
+      const diaSemana = dataObj.getDay(); 
+      const eq = mapeamentoEquipes[colaborador];
+
+      if (eq === "DEPOSITO") {
+        return diaSemana === 0; // Depósito só folga no domingo
+      }
+
+      if (diaSemana === 0) {
+        // No domingo, folga quem está no turno da noite (10:00)
+        const numSemanaAno = obterNumeroSemanaAno(dataObj);
+        const turnoDaSemana = numSemanaAno % 2 === 0 ? (eq === "EQUIP_1" ? "07:00" : "10:00") : (eq === "EQUIP_1" ? "10:00" : "07:00");
+        return turnoDaSemana === "10:00";
+      }
+
+      // Se for Quarta-feira (Dia 3), aplica a regra de revezamento móvel das duas equipes
+      if (diaSemana === 3) {
+        const numSemanaAno = obterNumeroSemanaAno(dataObj);
+        // Na semana do dia 27/05/2026 (Semana 22 - Par), a EQUIP_2 folga.
+        if (numSemanaAno % 2 === 0) {
+          return eq === "EQUIP_2";
+        } else {
+          return eq === "EQUIP_1";
+        }
+      }
+
+      // Para os outros dias da semana, pega da tabela fixa
+      return !!(escalaFolgasFixas[colaborador] && escalaFolgasFixas[colaborador].includes(diaSemana));
+    }
+
     window.atualizarPainelFolgasDiario = function() {
       const dataSelecionadaStr = document.getElementById('filtroDataFolga').value;
       if (!dataSelecionadaStr) return;
@@ -258,7 +277,6 @@
       const partes = dataSelecionadaStr.split('-');
       const dataFocada = new Date(partes[0], partes[1] - 1, partes[2]);
       const diaSemana = dataFocada.getDay();
-      const numSemanaAno = obterNumeroSemanaAno(dataFocada);
 
       let dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
       document.getElementById('tituloFolgasDoDia').innerHTML = `⚽ COLABORADORES DE FOLGA NO DIA (${dataFormatada}):`;
@@ -266,15 +284,13 @@
       let folguistas = [];
 
       Object.keys(mapeamentoEquipes).forEach(f => {
-        let eq = mapeamentoEquipes[f];
-        if (eq === "DEPOSITO") {
-          if (diaSemana === 0) folguistas.push(`${f} (Depósito)`);
-        } else {
-          let turnoDaSemana = numSemanaAno % 2 === 0 ? (eq === "EQUIP_1" ? "07:00" : "10:00") : (eq === "EQUIP_1" ? "10:00" : "07:00");
-
-          if (diaSemana === 0) {
-            if(turnoDaSemana === "10:00") folguistas.push(`${f} (Domingo - Noite)`);
-          } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
+        if (checarSeEstaDeFolga(f, dataFocada)) {
+          let eq = mapeamentoEquipes[f];
+          if (eq === "DEPOSITO") {
+            folguistas.push(`${f} (Depósito)`);
+          } else if (diaSemana === 0) {
+            folguistas.push(`${f} (Domingo - Noite)`);
+          } else {
             folguistas.push(f);
           }
         }
@@ -295,7 +311,7 @@
     function formatarMinutosLegivel(minutosTotais) {
       if (minutosTotais <= 0) return "0";
       let horas = Math.floor(minutosTotais / 60);
-      let mins = minutosTotais % 60;
+      let mins = minutesTotais % 60;
       return horas > 0 ? `${horas}h ${mins}min` : `${mins} min`;
     }
 
@@ -376,6 +392,8 @@
             let totalExtraExibir = "0";
             let jornadaAlvoMinutos = 480;
 
+            let eFolgaHoje = checarSeEstaDeFolga(f, dataCorrente);
+
             if (eq === "DEPOSITO") {
               if (diaSemana === 0) {
                 statusDia = "FOLGA DOMINGO";
@@ -392,11 +410,11 @@
               if (baseTurno === "10:00") {
                 turnoEsperado = "10:00 às 20:00";
                 if (diaSemana === 0) { statusDia = "FOLGA DOMINGO"; classStatus = "status-folga"; }
-                else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) { statusDia = "FOLGA SEMANAL"; classStatus = "status-folga"; }
+                else if (eFolgaHoje) { statusDia = "FOLGA SEMANAL"; classStatus = "status-folga"; }
               } else {
                 turnoEsperado = "07:00 às 17:00";
                 if (diaSemana === 0) { turnoEsperado = "07:00 às 12:00"; jornadaAlvoMinutos = 300; }
-                else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) { statusDia = "FOLGA SEMANAL"; classStatus = "status-folga"; }
+                else if (eFolgaHoje) { statusDia = "FOLGA SEMANAL"; classStatus = "status-folga"; }
               }
             }
 
@@ -432,7 +450,10 @@
                 }
               }
             } else {
-              if (statusDia === "Regular") {
+              if (classStatus === "status-folga") {
+                totalAtrasoExibir = "0";
+                totalExtraExibir = "0";
+              } else if (statusDia === "Regular") {
                 statusDia = "FALTA";
                 classStatus = "status-falta";
                 totalAtrasoExibir = formatarMinutosLegivel(jornadaAlvoMinutos);
