@@ -14,23 +14,18 @@
     body { font-family: Arial, sans-serif; background-color: #f0f4f1; margin: 0; padding: 20px; color: #333; }
     .painel-container { width: 98%; max-width: 100%; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,74,38,0.1); box-sizing: border-box; border-top: 6px solid #006430; }
     
-    /* Cabeçalho Temático da Copa */
     h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 10px; font-size: 28px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
     h1::after { content: "🇧🇷"; font-size: 24px; }
     
-    /* Bloco de Folgas - Verde e Amarelo */
     .bloco-folgas-hoje { background: #e8f5e9; border: 2px solid #006430; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; color: #004a26; }
     .bloco-folgas-hoje h3 { margin: 0 0 10px 0; font-size: 18px; display: flex; align-items: center; gap: 8px; color: #006430; }
     .lista-folguistas { font-weight: bold; font-size: 15px; color: #006430; line-height: 1.5; }
 
-    /* Filtros - Suave Verde Canarinho */
     .filtros-topo { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; background: #f7fbf7; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
     .campo-filtro { flex: 1; min-width: 240px; }
     .campo-filtro label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #004a26; }
     .campo-filtro select, .campo-filtro input { width: 100%; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 16px; box-sizing: border-box; background-color: #ffffff; }
-    .campo-filtro select:focus, .campo-filtro input:focus { border-color: #006430; outline: none; box-shadow: 0 0 5px rgba(0,100,48,0.3); }
     
-    /* Botões em tons de Azul e Verde */
     .botoes-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
     .btn { padding: 14px 25px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; color: white; transition: background 0.2s; }
     .btn-filtrar { background-color: #006430; border-bottom: 3px solid #004a26; }
@@ -40,7 +35,6 @@
     .btn-pdf { background-color: #0b5394; border-bottom: 3px solid #073763; }
     .btn-pdf:hover { background-color: #073763; }
     
-    /* Tabela Estilo Seleção */
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th { background-color: #006430; color: white; padding: 12px 8px; text-align: left; font-size: 14px; border-bottom: 3px solid #ffd700; }
     td { padding: 12px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
@@ -54,7 +48,6 @@
     .col-extra { color: #006430; font-weight: bold; background-color: #f0f7f1; }
     .col-incompleto { color: #757575; font-style: italic; }
     
-    /* Ações de Auditoria */
     .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 5px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; min-width: 80px; border: 1px solid #d0dfd5; }
     .titulo-acao-btd { font-size: 10px; font-weight: bold; color: #004a26; margin-bottom: 3px; text-transform: uppercase; }
     .btn-foto { background: #673ab7; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
@@ -148,7 +141,7 @@
       </div>
       <div class="campo-filtro">
         <label for="filtroDataFolga">VER FOLGAS DE UM DIA ESPECÍFICO:</label>
-        <input type="date" id="filtroDataFolga" onchange="atualizarPainelFolgasDiario()">
+        <input type="date" id="filtroDataFolga" onchange="window.atualizarPainelFolgasDiario()">
       </div>
     </div>
 
@@ -229,8 +222,6 @@
     document.getElementById('filtroMes').value = hojeObj.getFullYear() + '-' + String(hojeObj.getMonth() + 1).padStart(2, '0');
     document.getElementById('filtroDataFolga').value = hojeObj.toISOString().split('T')[0];
 
-    setTimeout(() => { atualizarPainelFolgasDiario(); }, 800);
-
     function obterNumeroSemanaAno(data) {
       const d = new Date(Date.UTC(data.getFullYear(), data.getMonth(), data.getDate()));
       const diaNum = d.getUTCDay() || 7;
@@ -239,7 +230,8 @@
       return Math.ceil((((d - anoInicio) / 86400000) + 1) / 7);
     }
 
-    function atualizarPainelFolgasDiario() {
+    // AJUSTADO: CORREÇÃO TOTAL DA LÓGICA DE FOLGAS DIÁRIAS NO CARD DO TOPO
+    window.atualizarPainelFolgasDiario = function() {
       const dataSelecionadaStr = document.getElementById('filtroDataFolga').value;
       if (!dataSelecionadaStr) return;
 
@@ -260,29 +252,39 @@
           if (diaSemana === 0) folguistas.push(`${f} (Depósito)`);
         } 
         else {
-          if (diaSemana === 0) {
-            let turnoEsperado = "";
-            if (numSemanaAno % 2 === 0) {
-              turnoEsperado = (eq === "EQUIP_1") ? "07:00 às 17:00" : "10:00 às 20:00";
-            } else {
-              turnoEsperado = (eq === "EQUIP_1") ? "10:00 às 20:00" : "07:00 às 17:00";
+          // Identifica o turno exato da equipe do colaborador na semana em análise
+          let turnoDaSemana = "";
+          if (numSemanaAno % 2 === 0) {
+            turnoDaSemana = (eq === "EQUIP_1") ? "07:00" : "10:00";
+          } else {
+            turnoDaSemana = (eq === "EQUIP_1") ? "10:00" : "07:00";
+          }
+
+          // REGRA CORRIGIDA: Se é semana de 10:00 (Noite), folga obrigatoriamente no Domingo e tem as folgas picadas
+          if (turnoDaSemana === "10:00") {
+            if (diaSemana === 0) {
+              folguistas.push(`${f} (Domingo - Equipe da Noite)`);
+            } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
+              folguistas.push(f);
             }
-            if (turnoEsperado === "10:00 às 20:00") {
-              folguistas.push(`${f} (Equipe Loja)`);
-            }
-          } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
-            folguistas.push(f);
+          } 
+          // REGRA CORRIGIDA: Se é semana de 07:00 (Manhã), trabalha domingo e NÃO tem folga picada útil!
+          else if (turnoDaSemana === "07:00") {
+            // Não faz nada de segunda a sábado (não entra na lista de folgas)
+            // Domingo trabalha, então também não entra aqui.
           }
         }
       });
 
       const container = document.getElementById('listaFolguistasContainer');
       if (folguistas.length === 0) {
-        container.innerHTML = "Nenhum funcionário escalado para folga nesta data.";
+        container.innerHTML = "Nenhum funcionário escalado para folga nesta data (Todos em campo!).";
       } else {
         container.innerHTML = folguistas.join(' • ');
       }
     }
+
+    setTimeout(() => { window.atualizarPainelFolgasDiario(); }, 800);
 
     function converterParaMinutos(horarioStr) {
       if (!horarioStr || horarioStr === "--") return null;
@@ -327,7 +329,7 @@
 
             if (p.tipo === "Entrada Manhã") { batidasDoBanco[chaveAgrupada].entrada = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; }
             if (p.tipo === "Saída Almoço") { batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; }
-            if (p.tipo === "Retorno Almoço") { batidasDoBanco[chaveAgrupada].retAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
+            if (p.tipo === "Retorno Almoço") { batidasDoBanco[child.key]); batidasDoBanco[chaveAgrupada].retAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
             if (p.tipo === "Saída Expediente") { batidasDoBanco[chaveAgrupada].saidaFim = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; }
           }
         });
@@ -368,23 +370,30 @@
               }
             } 
             else {
+              let baseTurno = "";
               if (numSemanaAno % 2 === 0) {
-                turnoEsperado = (eq === "EQUIP_1") ? "07:00 às 17:00" : "10:00 às 20:00";
+                baseTurno = (eq === "EQUIP_1") ? "07:00" : "10:00";
               } else {
-                turnoEsperado = (eq === "EQUIP_1") ? "10:00 às 20:00" : "07:00 às 17:00";
+                baseTurno = (eq === "EQUIP_1") ? "10:00" : "07:00";
               }
 
-              if (diaSemana === 0) {
-                if (turnoEsperado === "10:00 às 20:00") {
+              // AJUSTADO: INVERSÃO DA REGRA PARA A TABELA DE FECHAMENTO MENSAL
+              if (baseTurno === "10:00") {
+                turnoEsperado = "10:00 às 20:00";
+                if (diaSemana === 0) {
                   statusDia = "FOLGA DOMINGO";
                   classStatus = "status-folga";
-                } else {
-                  turnoEsperado = "07:00 às 12:00 (Fim de Semana)";
-                  jornadaAlvoMinutos = 300;
+                } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
+                  statusDia = "FOLGA SEMANAL";
+                  classStatus = "status-folga";
                 }
-              } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
-                statusDia = "FOLGA SEMANAL";
-                classStatus = "status-folga";
+              } else {
+                turnoEsperado = "07:00 às 17:00";
+                if (diaSemana === 0) {
+                  turnoEsperado = "07:00 às 12:00 (Fim de Semana)";
+                  jornadaAlvoMinutos = 300; // Turno corrido de domingo
+                }
+                // Na semana de 7:00, de segunda a sábado é dia "Regular" normal (sem folgas picadas)
               }
             }
 
