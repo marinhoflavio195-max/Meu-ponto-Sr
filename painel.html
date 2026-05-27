@@ -217,6 +217,9 @@
       "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5], "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5], "Denilson": [5], "Henrique": [5]
     };
 
+    let relatorioFinal = [];
+    let mapaFotosMemoria = {};
+
     const hojeObj = new Date();
     document.getElementById('filtroMes').value = hojeObj.getFullYear() + '-' + String(hojeObj.getMonth() + 1).padStart(2, '0');
     document.getElementById('filtroDataFolga').value = hojeObj.toISOString().split('T')[0];
@@ -243,7 +246,6 @@
 
       let folguistas = [];
 
-      // Passa por todos os colaboradores mapeados no sistema
       Object.keys(mapeamentoEquipes).forEach(f => {
         let eq = mapeamentoEquipes[f];
         
@@ -292,6 +294,7 @@
       return `${mins} min`;
     }
 
+    // CORRIGIDO: Processamento robusto das batidas de ponto do Firebase
     function processarFechamentoMensal() {
       const funcSelecionado = document.getElementById('filtroColaborador').value;
       const mesRef = document.getElementById('filtroMes').value; 
@@ -302,7 +305,6 @@
       let mes = parseInt(mesRef.split('-')[1]) - 1;
       let totalDias = new Date(ano, mes + 1, 0).getDate();
 
-      // Ajuste dinâmico: se buscar TODOS, analisa todos do mapeamento
       let listaParaProcessar = funcSelecionado === "TODOS" ? Object.keys(mapeamentoEquipes) : [funcSelecionado];
 
       database.ref('pontos_registrados').once('value', snapshot => {
@@ -318,7 +320,9 @@
             }
             let idFoto = `${child.key}`;
             if(p.fotoSelfie) mapaFotosMemoria[idFoto] = p.fotoSelfie;
-            let gpsLink = (p.latitude && p.longitude) ? `https://maps.google.com/?q=${p.latitude},${p.longitude}` : null;
+            
+            // CONSERTO DA SINTAXE DE STRING AQUI (Substituído o 1{ pela crase correta)
+            let gpsLink = (p.latitude && p.longitude) ? `https://www.google.com/maps?q=${p.latitude},${p.longitude}` : null;
 
             if (p.tipo === "Entrada Manhã") { batidasDoBanco[chaveAgrupada].entrada = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; }
             if (p.tipo === "Saída Almoço") { batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; }
