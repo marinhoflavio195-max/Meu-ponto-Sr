@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Administrativo - Meu Ponto SR (Edição Copa)</title>
+  <title>Painel Administrativo - Meu Ponto SR</title>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -191,7 +191,6 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // MAPEAMENTO ATUALIZADO CONFORME A SUA PLANILHA REAL DE FOLGAS
     const mapeamentoEquipes = {
       "Irene": "EQUIP_1", "Rose": "EQUIP_1", "Debora": "EQUIP_1", "Gabriel": "EQUIP_1", "Jaki": "EQUIP_1",
       "Alice": "EQUIP_1", "Thalice": "EQUIP_1", "Raimundo Q": "EQUIP_1", "Andre": "EQUIP_1", "Rone Fruta": "EQUIP_1",
@@ -209,13 +208,13 @@
       "Flavio": "DEPOSITO", "Altemar": "DEPOSITO"
     };
 
-    // Ajustado estritamente com base na foto enviada da tabela SR1
+    // Equipes de Loja folgam na semana fixa da tabela. Depósito NUNCA folga em dia de semana.
     const escalaFolgasSemanais = {
-      "Irene": [1], "Rose": [1], "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1], "Netim": [1], "Vilson": [1],
-      "Debora": [2], "Gabriel": [2], "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2], "Tharles": [2], "Marcelo": [2],
-      "Jaki": [3], "Alice": [3], "Thalice": [3], "Raimundo Q": [3], "Andre": [3], "Rone Fruta": [3], "Raylma": [3], "Franc Acou": [3], "Samira": [3], "Henrrique": [3], "Edmilson": [3], "Flavia": [3], "Keverson": [3], "Flavio": [3], 
-      "Rita": [4], "Sueli": [4], "Edete": [4], "Genilson": [4], "Erisvana": [4], "Leandro": [4], "Victor": [4], "Hilaria": [4], "Talison": [4], "Alan": [4],
-      "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5], "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5], "Denilson": [5], "Henrique": [5], "Aline": [3], "Altemar": [1]
+      "Irene": [1], "Rose": [1], "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1],
+      "Debora": [2], "Gabriel": [2], "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2],
+      "Jaki": [3], "Alice": [3], "Thalice": [3], "Raimundo Q": [3], "Andre": [3], "Rone Fruta": [3], "Raylma": [3], "Franc Acou": [3], "Samira": [3], "Henrrique": [3], "Edmilson": [3], "Aline": [3],
+      "Rita": [4], "Sueli": [4], "Edete": [4], "Genilson": [4], "Erisvana": [4], "Leandro": [4], "Victor": [4], "Hilaria": [4],
+      "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5], "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5]
     };
 
     let relatorioFinal = [];
@@ -252,7 +251,6 @@
         
         if (eq === "DEPOSITO") {
           if (diaSemana === 0) folguistas.push(`${f} (Depósito)`);
-          else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) folguistas.push(f);
         } 
         else {
           let turnoDaSemana = "";
@@ -266,6 +264,10 @@
             if (diaSemana === 0) {
               folguistas.push(`${f} (Domingo - Equipe da Noite)`);
             } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
+              folguistas.push(f);
+            }
+          } else {
+            if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
               folguistas.push(f);
             }
           }
@@ -363,7 +365,7 @@
                 jornadaAlvoMinutos = 360;
               } else {
                 turnoEsperado = "07:00 às 17:30 (Semana)";
-                jornadaAlvoMinutos = 510;
+                jornadaAlvoMinutos = 510; 
               }
             } 
             else {
@@ -388,24 +390,16 @@
                 if (diaSemana === 0) {
                   turnoEsperado = "07:00 às 12:00 (Fim de Semana)";
                   jornadaAlvoMinutos = 300;
+                } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
+                  statusDia = "FOLGA SEMANAL";
+                  classStatus = "status-folga";
                 }
               }
-            }
-
-            // Forçar folga semanal se estiver mapeado na planilha
-            if (statusDia === "Regular" && eq !== "DEPOSITO" && escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
-               statusDia = "FOLGA SEMANAL";
-               classStatus = "status-folga";
-            }
-            if (statusDia === "Regular" && eq === "DEPOSITO" && escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
-               statusDia = "FOLGA SEMANAL";
-               classStatus = "status-folga";
             }
 
             let diaBtd = batidasDoBanco[chaveBusca] || { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
             let temAlgumaBatida = (diaBtd.entrada !== "--" || diaBtd.saidaAlm !== "--" || diaBtd.retAlm !== "--" || diaBtd.saidaFim !== "--");
 
-            // MUDANÇA DA LÓGICA CRÍTICA: Se o cara bateu o ponto, PRIORIZA as batidas mesmo se o sistema achar que era folga!
             if (temAlgumaBatida) {
               statusDia = "Regular"; 
               classStatus = "";
@@ -435,7 +429,6 @@
                 }
               }
             } else {
-              // Se não tem batida nenhuma e não era folga configurada, vira FALTA
               if (statusDia === "Regular") {
                 statusDia = "FALTA";
                 classStatus = "status-falta";
@@ -459,7 +452,7 @@
           let tr = document.createElement('tr');
           
           let containerAuditoria = "";
-          if (r.classStatus !== "") {
+          if (r.classStatus !== "" && r.statusDia !== "Regular") {
             containerAuditoria = `<span class="${r.classStatus}">${r.statusDia}</span>`;
           } else {
             function criarMiniBloco(label, img, map) {
