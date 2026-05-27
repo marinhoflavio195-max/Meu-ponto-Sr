@@ -97,7 +97,7 @@
           <option value="Flavia">Flávia</option>
           <option value="Flavio">Flávio</option>
           <option value="Fran">Fran</option>
-          <option value="Franc Acou">Franc Açougue</option>
+          <option value="Francisca Souza">Francisca Souza</option>
           <option value="Gabriel">Gabriel</option>
           <option value="Genilson">Genilson</option>
           <option value="Henrique">Henrique Dep.</option>
@@ -191,6 +191,7 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // Mapeamento corrigido unificando o nome real de ponto (Francisca Souza) com o setor
     const mapeamentoEquipes = {
       "Irene": "EQUIP_1", "Rose": "EQUIP_1", "Debora": "EQUIP_1", "Gabriel": "EQUIP_1", "Jaki": "EQUIP_1",
       "Alice": "EQUIP_1", "Thalice": "EQUIP_1", "Raimundo Q": "EQUIP_1", "Andre": "EQUIP_1", "Rone Fruta": "EQUIP_1",
@@ -199,7 +200,7 @@
       
       "Marta": "EQUIP_2", "Dayana": "EQUIP_2", "Fran": "EQUIP_2", "Erica": "EQUIP_2", "Alisson": "EQUIP_2",
       "Adrissa": "EQUIP_2", "Ruan": "EQUIP_2", "Rayana": "EQUIP_2", "Debora Sabao": "EQUIP_2", "Marcos": "EQUIP_2",
-      "Raylma": "EQUIP_2", "Franc Acou": "EQUIP_2", "Samira": "EQUIP_2", "Henrrique": "EQUIP_2", "Edmilson": "EQUIP_2",
+      "Raylma": "EQUIP_2", "Francisca Souza": "EQUIP_2", "Samira": "EQUIP_2", "Henrrique": "EQUIP_2", "Edmilson": "EQUIP_2",
       "Erisvana": "EQUIP_2", "Leandro": "EQUIP_2", "Victor": "EQUIP_2", "Hilaria": "EQUIP_2", "Karine": "EQUIP_2",
       "Jeferson": "EQUIP_2", "Dulce": "EQUIP_2", "Eudes": "EQUIP_2", "Felipe Frente": "EQUIP_2",
       
@@ -208,11 +209,21 @@
       "Flavio": "DEPOSITO", "Altemar": "DEPOSITO"
     };
 
-    // Folgas fixas da Loja. Depósito NÃO tem folga em dia de semana!
+    // Escala de folga amarrada de forma definitiva aos nomes reais de ponto
     const escalaFolgasSemanais = {
       "Irene": [1], "Rose": [1], "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1],
       "Debora": [2], "Gabriel": [2], "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2],
-      "Jaki": [3], "Alice": [3], "Thalice": [3], "Raimundo Q": [3], "Andre": [3], "Rone Fruta": [3], "Raylma": [3], "Franc Acou": [3], "Samira": [3], "Henrrique": [3], "Edmilson": [3], "Aline": [3],
+      
+      // Ajustados na quarta-feira com base nas imagens reais e correções
+      "Raylma": [3], 
+      "Francisca Souza": [3], // Mapeado diretamente para o dia 3 (Quarta-Feira)
+      "Samira": [3], 
+      "Henrrique": [3], 
+      "Henrique": [3], 
+      "Edmilson": [3], 
+      "Rone Fruta": [3], 
+      "Jaki": [3], "Alice": [3], "Thalice": [3], "Raimundo Q": [3], "Andre": [3], "Aline": [3],
+      
       "Rita": [4], "Sueli": [4], "Edete": [4], "Genilson": [4], "Erisvana": [4], "Leandro": [4], "Victor": [4], "Hilaria": [4],
       "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5], "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5]
     };
@@ -226,7 +237,10 @@
 
     function normalizarTexto(txt) {
       if(!txt) return "";
-      return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      let t = txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      if (t.includes("francisca souza") || t.includes("franc.acou")) return "franciscasouza";
+      if (t.includes("roni") || t.includes("rone")) return "ronefruta";
+      return t.replace(/\s+/g, "");
     }
 
     function obterNumeroSemanaAno(data) {
@@ -256,12 +270,7 @@
         if (eq === "DEPOSITO") {
           if (diaSemana === 0) folguistas.push(`${f} (Depósito)`);
         } else {
-          let turnoDaSemana = "";
-          if (numSemanaAno % 2 === 0) {
-            turnoDaSemana = (eq === "EQUIP_1") ? "07:00" : "10:00";
-          } else {
-            turnoDaSemana = (eq === "EQUIP_1") ? "10:00" : "07:00";
-          }
+          let turnoDaSemana = numSemanaAno % 2 === 0 ? (eq === "EQUIP_1" ? "07:00" : "10:00") : (eq === "EQUIP_1" ? "10:00" : "07:00");
 
           if (diaSemana === 0) {
             if(turnoDaSemana === "10:00") folguistas.push(`${f} (Domingo - Noite)`);
@@ -306,7 +315,6 @@
         let batidasDoBanco = {};
         mapaFotosMemoria = {};
         
-        // LEITURA INTELIGENTE E AMPLA DO BANCO (Corrige o erro de não puxar anteriores)
         snapshot.forEach(child => {
           let p = child.val();
           if (p.colaborador && p.horario && p.tipo) {
@@ -333,13 +341,13 @@
               
               let idFoto = child.key;
               if (p.fotoSelfie) mapaFotosMemoria[idFoto] = p.fotoSelfie;
-              let gpsLink = (p.latitude && p.longitude) ? `https://www.google.com/maps?q=${p.latitude},${p.longitude}` : null;
+              let gpsLink = (p.latitude && p.longitude) ? `http://googleusercontent.com/maps.google.com/maps?q=${p.latitude},${p.longitude}` : null;
 
               let tipoNorm = normalizarTexto(p.tipo);
               if (tipoNorm.includes("entrada")) { batidasDoBanco[chaveAgrupada].entrada = p.horario; batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; }
-              if (tipoNorm.includes("saida alm") || tipoNorm === "saida almoço") { batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; }
-              if (tipoNorm.includes("retorno") || tipoNorm === "retorno almoço") { batidasDoBanco[chaveAgrupada].retAlm = p.horario; batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
-              if (tipoNorm.includes("expediente") || tipoNorm.includes("fim") || tipoNorm.includes("saida fim")) { batidasDoBanco[chaveAgrupada].saidaFim = p.horario; batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; }
+              if (tipoNorm.includes("saidaalm") || tipoNorm.includes("almo") || tipoNorm === "saidaalmoco") { batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; }
+              if (tipoNorm.includes("retorno") || tipoNorm.includes("retalm")) { batidasDoBanco[chaveAgrupada].retAlm = p.horario; batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
+              if (tipoNorm.includes("expediente") || tipoNorm.includes("fim") || tipoNorm.includes("saidafim")) { batidasDoBanco[chaveAgrupada].saidaFim = p.horario; batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; }
             }
           }
         });
