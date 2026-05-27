@@ -75,64 +75,61 @@
         <label for="filtroColaborador">SELECIONE O FUNCIONÁRIO PARA FILTRAR:</label>
         <select id="filtroColaborador">
           <option value="TODOS">-- Todos os Funcionários --</option>
-          <optgroup label="EQUIPE 1">
-            <option value="Irene">Irene</option>
-            <option value="Rose">Rose</option>
-            <option value="Debora">Débora</option>
-            <option value="Gabriel">Gabriel</option>
-            <option value="Jaki">Jaki</option>
-            <option value="Alice">Alice</option>
-            <option value="Thalice">Thalice</option>
-            <option value="Raimundo Q">Raimundo Q</option>
-            <option value="Andre">André</option>
-            <option value="Rone Fruta">Rone Fruta</option>
-            <option value="Rita">Rita</option>
-            <option value="Sueli">Suely</option>
-            <option value="Edete">Edete</option>
-            <option value="Genilson">Genilson</option>
-            <option value="Patricia">Patrícia</option>
-            <option value="Carlos">Carlos</option>
-            <option value="Vinicios">Vinícius</option>
-            <option value="Valdimiro">Valdimiro</option>
-          </optgroup>
-          <optgroup label="EQUIPE 2">
-            <option value="Marta">Marta</option>
-            <option value="Dayana">Dayana</option>
-            <option value="Fran">Fran</option>
-            <option value="Erica">Érica</option>
-            <option value="Alisson">Alisson</option>
-            <option value="Adrissa">Adrissa</option>
-            <option value="Ruan">Ruan</option>
-            <option value="Rayana">Rayana</option>
-            <option value="Debora Sabao">Débora Sabão</option>
-            <option value="Marcos">Marcos</option>
-            <option value="Raylma">Raylma</option>
-            <option value="Franc Acou">Franc Açougue</option>
-            <option value="Samira">Samira</option>
-            <option value="Henrrique">Henrique</option>
-            <option value="Edmilson">Edmilson</option>
-            <option value="Erisvana">Erisvana</option>
-            <option value="Leandro">Leandro</option>
-            <option value="Victor">Victor</option>
-            <option value="Hilaria">Hilária</option>
-            <option value="Karine">Karine</option>
-            <option value="Jeferson">Jeferson</option>
-            <option value="Dulce">Dulce</option>
-            <option value="Eudes">Eudes</option>
-            <option value="Felipe Frente">Felipe Frente</option>
-          </optgroup>
-          <optgroup label="EQUIPE DEPÓSITO">
-            <option value="Netim">Netim</option>
-            <option value="Vilson">Vilson</option>
-            <option value="Tharles">Tharles</option>
-            <option value="Marcelo">Marcelo</option>
-            <option value="Flavia">Flávia</option>
-            <option value="Keverson">Keverson</option>
-            <option value="Talison">Talison</option>
-            <option value="Alan">Alan</option>
-            <option value="Denilson">Denilson</option>
-            <option value="Henrique">Henrique Dep.</option>
-          </optgroup>
+          <option value="Adrissa">Adrissa</option>
+          <option value="Alan">Alan</option>
+          <option value="Alice">Alice</option>
+          <option value="Aline">Aline</option>
+          <option value="Alisson">Alisson</option>
+          <option value="Altemar">Altemar</option>
+          <option value="Andre">André</option>
+          <option value="Carlos">Carlos</option>
+          <option value="Dayana">Dayana</option>
+          <option value="Debora">Débora</option>
+          <option value="Debora Sabao">Débora Sabão</option>
+          <option value="Denilson">Denilson</option>
+          <option value="Dulce">Dulce</option>
+          <option value="Edete">Edete</option>
+          <option value="Edmilson">Edmilson</option>
+          <option value="Erica">Érica</option>
+          <option value="Erisvana">Erisvana</option>
+          <option value="Eudes">Eudes</option>
+          <option value="Felipe Frente">Felipe Frente</option>
+          <option value="Flavia">Flávia</option>
+          <option value="Flavio">Flávio</option>
+          <option value="Fran">Fran</option>
+          <option value="Franc Acou">Franc Açougue</option>
+          <option value="Gabriel">Gabriel</option>
+          <option value="Genilson">Genilson</option>
+          <option value="Henrique">Henrique Dep.</option>
+          <option value="Henrrique">Henrique</option>
+          <option value="Hilaria">Hilária</option>
+          <option value="Irene">Irene</option>
+          <option value="Jaki">Jaki</option>
+          <option value="Jeferson">Jeferson</option>
+          <option value="Karine">Karine</option>
+          <option value="Keverson">Keverson</option>
+          <option value="Leandro">Leandro</option>
+          <option value="Marcelo">Marcelo</option>
+          <option value="Marcos">Marcos</option>
+          <option value="Marta">Marta</option>
+          <option value="Netim">Netim</option>
+          <option value="Patricia">Patrícia</option>
+          <option value="Raimundo Q">Raimundo Q</option>
+          <option value="Rayana">Rayana</option>
+          <option value="Raylma">Raylma</option>
+          <option value="Rita">Rita</option>
+          <option value="Rone Fruta">Rone Fruta</option>
+          <option value="Rose">Rose</option>
+          <option value="Ruan">Ruan</option>
+          <option value="Samira">Samira</option>
+          <option value="Sueli">Suely</option>
+          <option value="Talison">Talison</option>
+          <option value="Thalice">Thalice</option>
+          <option value="Tharles">Tharles</option>
+          <option value="Valdimiro">Valdimiro</option>
+          <option value="Victor">Victor</option>
+          <option value="Vilson">Vilson</option>
+          <option value="Vinicios">Vinícius</option>
         </select>
       </div>
       <div class="campo-filtro">
@@ -194,11 +191,12 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // MAPEAMENTO OPERACIONAL DE TURNOS E ROTATIVIDADE
     const mapeamentoEquipes = {
       "Irene": "EQUIP_1", "Rose": "EQUIP_1", "Debora": "EQUIP_1", "Gabriel": "EQUIP_1", "Jaki": "EQUIP_1",
       "Alice": "EQUIP_1", "Thalice": "EQUIP_1", "Raimundo Q": "EQUIP_1", "Andre": "EQUIP_1", "Rone Fruta": "EQUIP_1",
       "Rita": "EQUIP_1", "Sueli": "EQUIP_1", "Edete": "EQUIP_1", "Genilson": "EQUIP_1", "Patricia": "EQUIP_1",
-      "Carlos": "EQUIP_1", "Vinicios": "EQUIP_1", "Valdimiro": "EQUIP_1",
+      "Carlos": "EQUIP_1", "Vinicios": "EQUIP_1", "Valdimiro": "EQUIP_1", "Aline": "EQUIP_1",
       
       "Marta": "EQUIP_2", "Dayana": "EQUIP_2", "Fran": "EQUIP_2", "Erica": "EQUIP_2", "Alisson": "EQUIP_2",
       "Adrissa": "EQUIP_2", "Ruan": "EQUIP_2", "Rayana": "EQUIP_2", "Debora Sabao": "EQUIP_2", "Marcos": "EQUIP_2",
@@ -207,13 +205,14 @@
       "Jeferson": "EQUIP_2", "Dulce": "EQUIP_2", "Eudes": "EQUIP_2", "Felipe Frente": "EQUIP_2",
       
       "Netim": "DEPOSITO", "Vilson": "DEPOSITO", "Tharles": "DEPOSITO", "Marcelo": "DEPOSITO", "Flavia": "DEPOSITO",
-      "Keverson": "DEPOSITO", "Talison": "DEPOSITO", "Alan": "DEPOSITO", "Denilson": "DEPOSITO", "Henrique": "DEPOSITO"
+      "Keverson": "DEPOSITO", "Talison": "DEPOSITO", "Alan": "DEPOSITO", "Denilson": "DEPOSITO", "Henrique": "DEPOSITO",
+      "Flavio": "DEPOSITO", "Altemar": "DEPOSITO"
     };
 
     const escalaFolgasSemanais = {
-      "Irene": [1], "Rose": [1], "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1], "Netim": [1], "Vilson": [1],
-      "Debora": [2], "Gabriel": [2], "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2], "Tharles": [2], "Marcelo": [2],
-      "Jaki": [3], "Alice": [3], "Thalice": [3], "Raimundo Q": [3], "Andre": [3], "Rone Fruta": [3], "Raylma": [3], "Franc Acou": [3], "Samira": [3], "Henrrique": [3], "Edmilson": [3], "Flavia": [3], "Keverson": [3],
+      "Irene": [1], "Rose": [1], "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1], "Netim": [1], "Vilson": [1], "Altemar": [1],
+      "Debora": [2], "Gabriel": [2], "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2], "Tharles": [2], "Marcelo": [2], "Flavio": [2],
+      "Jaki": [3], "Alice": [3], "Thalice": [3], "Raimundo Q": [3], "Andre": [3], "Rone Fruta": [3], "Raylma": [3], "Franc Acou": [3], "Samira": [3], "Henrrique": [3], "Edmilson": [3], "Flavia": [3], "Keverson": [3], "Aline": [3],
       "Rita": [4], "Sueli": [4], "Edete": [4], "Genilson": [4], "Erisvana": [4], "Leandro": [4], "Victor": [4], "Hilaria": [4], "Talison": [4], "Alan": [4],
       "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5], "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5], "Denilson": [5], "Henrique": [5]
     };
@@ -230,7 +229,6 @@
       return Math.ceil((((d - anoInicio) / 86400000) + 1) / 7);
     }
 
-    // AJUSTADO: CORREÇÃO TOTAL DA LÓGICA DE FOLGAS DIÁRIAS NO CARD DO TOPO
     window.atualizarPainelFolgasDiario = function() {
       const dataSelecionadaStr = document.getElementById('filtroDataFolga').value;
       if (!dataSelecionadaStr) return;
@@ -245,6 +243,7 @@
 
       let folguistas = [];
 
+      // Passa por todos os colaboradores mapeados no sistema
       Object.keys(mapeamentoEquipes).forEach(f => {
         let eq = mapeamentoEquipes[f];
         
@@ -252,7 +251,6 @@
           if (diaSemana === 0) folguistas.push(`${f} (Depósito)`);
         } 
         else {
-          // Identifica o turno exato da equipe do colaborador na semana em análise
           let turnoDaSemana = "";
           if (numSemanaAno % 2 === 0) {
             turnoDaSemana = (eq === "EQUIP_1") ? "07:00" : "10:00";
@@ -260,18 +258,12 @@
             turnoDaSemana = (eq === "EQUIP_1") ? "10:00" : "07:00";
           }
 
-          // REGRA CORRIGIDA: Se é semana de 10:00 (Noite), folga obrigatoriamente no Domingo e tem as folgas picadas
           if (turnoDaSemana === "10:00") {
             if (diaSemana === 0) {
               folguistas.push(`${f} (Domingo - Equipe da Noite)`);
             } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
               folguistas.push(f);
             }
-          } 
-          // REGRA CORRIGIDA: Se é semana de 07:00 (Manhã), trabalha domingo e NÃO tem folga picada útil!
-          else if (turnoDaSemana === "07:00") {
-            // Não faz nada de segunda a sábado (não entra na lista de folgas)
-            // Domingo trabalha, então também não entra aqui.
           }
         }
       });
@@ -280,7 +272,7 @@
       if (folguistas.length === 0) {
         container.innerHTML = "Nenhum funcionário escalado para folga nesta data (Todos em campo!).";
       } else {
-        container.innerHTML = folguistas.join(' • ');
+        container.innerHTML = folguistas.sort().join(' • ');
       }
     }
 
@@ -304,12 +296,13 @@
       const funcSelecionado = document.getElementById('filtroColaborador').value;
       const mesRef = document.getElementById('filtroMes').value; 
       const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Carregando registros e aplicando regras de rodízio de equipes...</td></tr>";
+      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Carregando registros e calculando ponto...</td></tr>";
 
       let ano = parseInt(mesRef.split('-')[0]);
       let mes = parseInt(mesRef.split('-')[1]) - 1;
       let totalDias = new Date(ano, mes + 1, 0).getDate();
 
+      // Ajuste dinâmico: se buscar TODOS, analisa todos do mapeamento
       let listaParaProcessar = funcSelecionado === "TODOS" ? Object.keys(mapeamentoEquipes) : [funcSelecionado];
 
       database.ref('pontos_registrados').once('value', snapshot => {
@@ -329,7 +322,7 @@
 
             if (p.tipo === "Entrada Manhã") { batidasDoBanco[chaveAgrupada].entrada = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; }
             if (p.tipo === "Saída Almoço") { batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; }
-            if (p.tipo === "Retorno Almoço") { batidasDoBanco[child.key]); batidasDoBanco[chaveAgrupada].retAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
+            if (p.tipo === "Retorno Almoço") { batidasDoBanco[chaveAgrupada].retAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
             if (p.tipo === "Saída Expediente") { batidasDoBanco[chaveAgrupada].saidaFim = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; }
           }
         });
@@ -377,7 +370,6 @@
                 baseTurno = (eq === "EQUIP_1") ? "10:00" : "07:00";
               }
 
-              // AJUSTADO: INVERSÃO DA REGRA PARA A TABELA DE FECHAMENTO MENSAL
               if (baseTurno === "10:00") {
                 turnoEsperado = "10:00 às 20:00";
                 if (diaSemana === 0) {
@@ -391,9 +383,8 @@
                 turnoEsperado = "07:00 às 17:00";
                 if (diaSemana === 0) {
                   turnoEsperado = "07:00 às 12:00 (Fim de Semana)";
-                  jornadaAlvoMinutos = 300; // Turno corrido de domingo
+                  jornadaAlvoMinutos = 300;
                 }
-                // Na semana de 7:00, de segunda a sábado é dia "Regular" normal (sem folgas picadas)
               }
             }
 
