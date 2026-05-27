@@ -48,8 +48,8 @@
     .col-extra { color: #006430; font-weight: bold; background-color: #f0f7f1; }
     .col-incompleto { color: #757575; font-style: italic; }
     
-    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 5px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; min-width: 80px; border: 1px solid #d0dfd5; }
-    .titulo-acao-btd { font-size: 10px; font-weight: bold; color: #004a26; margin-bottom: 3px; text-transform: uppercase; }
+    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 5px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; min-width: 75px; border: 1px solid #d0dfd5; }
+    .titulo-acao-btd { font-size: 9px; font-weight: bold; color: #004a26; margin-bottom: 3px; text-transform: uppercase; }
     .btn-foto { background: #673ab7; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
     .btn-mapa { background: #0b5394; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
     .sem-foto { color: #aaa; font-style: italic; font-size: 12px; }
@@ -208,7 +208,7 @@
       "Flavio": "DEPOSITO", "Altemar": "DEPOSITO"
     };
 
-    // Equipes de Loja folgam na semana fixa da tabela. Depósito NUNCA folga em dia de semana.
+    // Folgas fixas da Loja. Depósito NÃO tem folga em dia de semana!
     const escalaFolgasSemanais = {
       "Irene": [1], "Rose": [1], "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1],
       "Debora": [2], "Gabriel": [2], "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2],
@@ -223,6 +223,11 @@
     const hojeObj = new Date();
     document.getElementById('filtroMes').value = hojeObj.getFullYear() + '-' + String(hojeObj.getMonth() + 1).padStart(2, '0');
     document.getElementById('filtroDataFolga').value = hojeObj.toISOString().split('T')[0];
+
+    function normalizarTexto(txt) {
+      if(!txt) return "";
+      return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
 
     function obterNumeroSemanaAno(data) {
       const d = new Date(Date.UTC(data.getFullYear(), data.getMonth(), data.getDate()));
@@ -248,11 +253,9 @@
 
       Object.keys(mapeamentoEquipes).forEach(f => {
         let eq = mapeamentoEquipes[f];
-        
         if (eq === "DEPOSITO") {
           if (diaSemana === 0) folguistas.push(`${f} (Depósito)`);
-        } 
-        else {
+        } else {
           let turnoDaSemana = "";
           if (numSemanaAno % 2 === 0) {
             turnoDaSemana = (eq === "EQUIP_1") ? "07:00" : "10:00";
@@ -260,26 +263,16 @@
             turnoDaSemana = (eq === "EQUIP_1") ? "10:00" : "07:00";
           }
 
-          if (turnoDaSemana === "10:00") {
-            if (diaSemana === 0) {
-              folguistas.push(`${f} (Domingo - Equipe da Noite)`);
-            } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
-              folguistas.push(f);
-            }
-          } else {
-            if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
-              folguistas.push(f);
-            }
+          if (diaSemana === 0) {
+            if(turnoDaSemana === "10:00") folguistas.push(`${f} (Domingo - Noite)`);
+          } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
+            folguistas.push(f);
           }
         }
       });
 
       const container = document.getElementById('listaFolguistasContainer');
-      if (folguistas.length === 0) {
-        container.innerHTML = "Nenhum funcionário escalado para folga nesta data (Todos em campo!).";
-      } else {
-        container.innerHTML = folguistas.sort().join(' • ');
-      }
+      container.innerHTML = folguistas.length === 0 ? "Nenhum funcionário de folga." : folguistas.sort().join(' • ');
     }
 
     setTimeout(() => { window.atualizarPainelFolgasDiario(); }, 800);
@@ -294,15 +287,14 @@
       if (minutosTotais <= 0) return "0";
       let horas = Math.floor(minutosTotais / 60);
       let mins = minutosTotais % 60;
-      if (horas > 0) return `${horas}h ${mins}min`;
-      return `${mins} min`;
+      return horas > 0 ? `${horas}h ${mins}min` : `${mins} min`;
     }
 
     function processarFechamentoMensal() {
       const funcSelecionado = document.getElementById('filtroColaborador').value;
       const mesRef = document.getElementById('filtroMes').value; 
       const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Carregando registros e calculando ponto...</td></tr>";
+      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Carregando e processando batidas do banco...</td></tr>";
 
       let ano = parseInt(mesRef.split('-')[0]);
       let mes = parseInt(mesRef.split('-')[1]) - 1;
@@ -314,22 +306,41 @@
         let batidasDoBanco = {};
         mapaFotosMemoria = {};
         
+        // LEITURA INTELIGENTE E AMPLA DO BANCO (Corrige o erro de não puxar anteriores)
         snapshot.forEach(child => {
           let p = child.val();
-          if (p.dataChave && p.dataChave.startsWith(mesRef)) {
-            let chaveAgrupada = `${p.dataChave}_${p.colaborador}`;
-            if (!batidasDoBanco[chaveAgrupada]) {
-              batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
+          if (p.colaborador && p.horario && p.tipo) {
+            let dataChaveLimpa = "";
+            if (p.dataChave) {
+              if (p.dataChave.includes('/')) {
+                let pt = p.dataChave.split('/');
+                dataChaveLimpa = `${pt[2]}-${pt[1]}-${pt[0]}`;
+              } else {
+                dataChaveLimpa = p.dataChave;
+              }
+            } else if (p.data) {
+              let pt = p.data.split('/');
+              dataChaveLimpa = `${pt[2]}-${pt[1]}-${pt[0]}`;
             }
-            let idFoto = `${child.key}`;
-            if(p.fotoSelfie) mapaFotosMemoria[idFoto] = p.fotoSelfie;
-            
-            let gpsLink = (p.latitude && p.longitude) ? `https://www.google.com/maps?q=${p.latitude},${p.longitude}` : null;
 
-            if (p.tipo === "Entrada Manhã") { batidasDoBanco[chaveAgrupada].entrada = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; }
-            if (p.tipo === "Saída Almoço") { batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; }
-            if (p.tipo === "Retorno Almoço") { batidasDoBanco[chaveAgrupada].retAlm = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
-            if (p.tipo === "Saída Expediente") { batidasDoBanco[chaveAgrupada].saidaFim = p.horario; if(p.fotoSelfie) batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; }
+            if (dataChaveLimpa.startsWith(mesRef)) {
+              let nFunc = normalizarTexto(p.colaborador);
+              let chaveAgrupada = `${dataChaveLimpa}_${nFunc}`;
+              
+              if (!batidasDoBanco[chaveAgrupada]) {
+                batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
+              }
+              
+              let idFoto = child.key;
+              if (p.fotoSelfie) mapaFotosMemoria[idFoto] = p.fotoSelfie;
+              let gpsLink = (p.latitude && p.longitude) ? `https://www.google.com/maps?q=${p.latitude},${p.longitude}` : null;
+
+              let tipoNorm = normalizarTexto(p.tipo);
+              if (tipoNorm.includes("entrada")) { batidasDoBanco[chaveAgrupada].entrada = p.horario; batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; }
+              if (tipoNorm.includes("saida alm") || tipoNorm === "saida almoço") { batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; }
+              if (tipoNorm.includes("retorno") || tipoNorm === "retorno almoço") { batidasDoBanco[chaveAgrupada].retAlm = p.horario; batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
+              if (tipoNorm.includes("expediente") || tipoNorm.includes("fim") || tipoNorm.includes("saida fim")) { batidasDoBanco[chaveAgrupada].saidaFim = p.horario; batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; }
+            }
           }
         });
 
@@ -337,16 +348,17 @@
         corpo.innerHTML = "";
 
         for (let d = 1; d <= totalDias; d++) {
-          let dataCorrente = new Date(ano, mes, d);
           let diaStr = String(d).padStart(2, '0');
           let mesStr = String(mes + 1).padStart(2, '0');
           let chaveData = `${ano}-${mesStr}-${diaStr}`;
           let dataFormatadaExibir = `${diaStr}/${mesStr}/${ano}`;
+          let dataCorrente = new Date(ano, mes, d);
           let diaSemana = dataCorrente.getDay(); 
           let numSemanaAno = obterNumeroSemanaAno(dataCorrente);
 
           listaParaProcessar.forEach(f => {
-            let chaveBusca = `${chaveData}_${f}`;
+            let nFunc = normalizarTexto(f);
+            let chaveBusca = `${chaveData}_${nFunc}`;
             let eq = mapeamentoEquipes[f] || "EQUIP_1";
             
             let turnoEsperado = ""; 
@@ -364,36 +376,19 @@
                 turnoEsperado = "07:00 às 13:00 (Sábado)";
                 jornadaAlvoMinutos = 360;
               } else {
-                turnoEsperado = "07:00 às 17:30 (Semana)";
+                turnoEsperado = "07:00 às 17:30";
                 jornadaAlvoMinutos = 510; 
               }
-            } 
-            else {
-              let baseTurno = "";
-              if (numSemanaAno % 2 === 0) {
-                baseTurno = (eq === "EQUIP_1") ? "07:00" : "10:00";
-              } else {
-                baseTurno = (eq === "EQUIP_1") ? "10:00" : "07:00";
-              }
-
+            } else {
+              let baseTurno = numSemanaAno % 2 === 0 ? (eq === "EQUIP_1" ? "07:00" : "10:00") : (eq === "EQUIP_1" ? "10:00" : "07:00");
               if (baseTurno === "10:00") {
                 turnoEsperado = "10:00 às 20:00";
-                if (diaSemana === 0) {
-                  statusDia = "FOLGA DOMINGO";
-                  classStatus = "status-folga";
-                } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
-                  statusDia = "FOLGA SEMANAL";
-                  classStatus = "status-folga";
-                }
+                if (diaSemana === 0) { statusDia = "FOLGA DOMINGO"; classStatus = "status-folga"; }
+                else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) { statusDia = "FOLGA SEMANAL"; classStatus = "status-folga"; }
               } else {
                 turnoEsperado = "07:00 às 17:00";
-                if (diaSemana === 0) {
-                  turnoEsperado = "07:00 às 12:00 (Fim de Semana)";
-                  jornadaAlvoMinutos = 300;
-                } else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) {
-                  statusDia = "FOLGA SEMANAL";
-                  classStatus = "status-folga";
-                }
+                if (diaSemana === 0) { turnoEsperado = "07:00 às 12:00"; jornadaAlvoMinutos = 300; }
+                else if (escalaFolgasSemanais[f] && escalaFolgasSemanais[f].includes(diaSemana)) { statusDia = "FOLGA SEMANAL"; classStatus = "status-folga"; }
               }
             }
 
@@ -401,7 +396,7 @@
             let temAlgumaBatida = (diaBtd.entrada !== "--" || diaBtd.saidaAlm !== "--" || diaBtd.retAlm !== "--" || diaBtd.saidaFim !== "--");
 
             if (temAlgumaBatida) {
-              statusDia = "Regular"; 
+              statusDia = "Regular";
               classStatus = "";
               
               let ehTurnoDireto = (diaSemana === 0 && eq !== "DEPOSITO") || (diaSemana === 6 && eq === "DEPOSITO");
@@ -450,30 +445,31 @@
 
         relatorioFinal.forEach(r => {
           let tr = document.createElement('tr');
-          
           let containerAuditoria = "";
-          if (r.classStatus !== "" && r.statusDia !== "Regular") {
+
+          function criarMiniBloco(label, img, map) {
+            let b = `<div class="bloco-ponto-acoes"><span class="titulo-acao-btd">${label}</span>`;
+            b += img ? `<button class="btn-foto" onclick="abrirModal('${img}', '${r.func} - ${label}')">📸 Foto</button>` : `<span class="sem-foto">-</span>`;
+            b += map ? `<a href="${map}" target="_blank" class="btn-mapa">📍 Mapa</a>` : ``;
+            b += `</div>`;
+            return b;
+          }
+          
+          let ehTurnoDireto = r.turnoEsperado.includes("Sábado") || r.turnoEsperado.includes("Fim de Semana") || r.turnoEsperado.includes("12:00") || r.turnoEsperado.includes("13:00");
+          
+          containerAuditoria += criarMiniBloco("Ent", r.imgE, r.mapE);
+          if (!ehTurnoDireto) {
+            containerAuditoria += criarMiniBloco("Alm", r.imgSA, r.mapSA);
+            containerAuditoria += criarMiniBloco("Ret", r.imgRA, r.mapRA);
+          }
+          containerAuditoria += criarMiniBloco("Sai", r.imgSF, r.mapSF);
+
+          if (r.classStatus !== "" && (r.entrada === "--" && r.saidaFim === "--")) {
             containerAuditoria = `<span class="${r.classStatus}">${r.statusDia}</span>`;
-          } else {
-            function criarMiniBloco(label, img, map) {
-              if(!img && !map) return '<span class="sem-foto">-</span>';
-              let b = `<div class="bloco-ponto-acoes"><span class="titulo-acao-btd">${label}</span>`;
-              if(img) b += `<button class="btn-foto" onclick="abrirModal('${img}', '${r.func} - ${label}')">📸 Foto</button>`;
-              if(map) b += `<a href="${map}" target="_blank" class="btn-mapa">📍 Mapa</a>`;
-              b += `</div>`;
-              return b;
-            }
-            
-            let ehTurnoDireto = r.turnoEsperado.includes("Sábado") || r.turnoEsperado.includes("Fim de Semana");
-            
-            containerAuditoria += criarMiniBloco("Ent", r.imgE, r.mapE);
-            containerAuditoria += ehTurnoDireto ? "" : criarMiniBloco("Alm", r.imgSA, r.mapSA);
-            containerAuditoria += ehTurnoDireto ? "" : criarMiniBloco("Ret", r.imgRA, r.mapRA);
-            containerAuditoria += criarMiniBloco("Sai", r.imgSF, r.mapSF);
           }
 
-          let tdAtrasoClass = (r.atraso !== "0" && r.atraso !== "<span class='col-incompleto'>Incompleto</span>") ? "class='col-atraso'" : "";
-          let tdExtraClass = (r.extra !== "0" && r.extra !== "<span class='col-incompleto'>Incompleto</span>") ? "class='col-extra'" : "";
+          let tdAtrasoClass = (r.atraso !== "0" && !r.atraso.includes("Incompleto")) ? "class='col-atraso'" : "";
+          let tdExtraClass = (r.extra !== "0" && !r.extra.includes("Incompleto")) ? "class='col-extra'" : "";
 
           tr.innerHTML = `
             <td><strong>${r.data}</strong><span class="escala-info">${r.turnoEsperado}</span></td>
@@ -512,14 +508,14 @@
       });
       let sheet = XLSX.utils.aoa_to_sheet(dados);
       let book = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(book, sheet, "Auditoria de Turnos");
-      XLSX.writeFile(book, `Auditoria_Escalas_SR_${document.getElementById('filtroMes').value}.xlsx`);
+      XLSX.utils.book_append_sheet(book, sheet, "Auditoria");
+      XLSX.writeFile(book, `Auditoria_MeuPontoSR_${document.getElementById('filtroMes').value}.xlsx`);
     }
 
     function baixarPDF() {
       const { jsPDF } = window.jspdf;
       let doc = new jsPDF();
-      doc.setFontSize(14); doc.text("SÃO RAIMUNDO SUPERMERCADO - AUDITORIA DE TURNOS CLT", 14, 15);
+      doc.setFontSize(14); doc.text("SÃO RAIMUNDO SUPERMERCADO - AUDITORIA DE TURNOS", 14, 15);
       let col = ["Data/Escala", "Funcionário", "Entrada", "S.Alm", "R.Alm", "Saída", "Débito", "Extra", "Status"];
       let rows = [];
       relatorioFinal.forEach(r => {
@@ -528,7 +524,7 @@
         rows.push([`${r.data}\n(${r.turnoEsperado})`, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, atrClean, extClean, r.statusDia]);
       });
       doc.autoTable({ startY: 22, head: [col], body: rows, theme: 'grid', styles: { fontSize: 7, cellPadding: 2 } });
-      doc.save(`Auditoria_Escalas_SR_${document.getElementById('filtroMes').value}.pdf`);
+      doc.save(`Auditoria_MeuPontoSR_${document.getElementById('filtroMes').value}.pdf`);
     }
   </script>
 </body>
