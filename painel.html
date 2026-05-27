@@ -9,6 +9,567 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo - Meu Ponto SR</title>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f0f4f1; margin: 0; padding: 20px; color: #333; }
+    .painel-container { width: 98%; max-width: 100%; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,74,38,0.1); box-sizing: border-box; border-top: 6px solid #006430; }
+    
+    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 10px; font-size: 28px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+    h1::after { content: "🇧🇷"; font-size: 24px; }
+    
+    .bloco-folgas-hoje { background: #e8f5e9; border: 2px solid #006430; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; color: #004a26; }
+    .bloco-folgas-hoje h3 { margin: 0 0 10px 0; font-size: 18px; display: flex; align-items: center; gap: 8px; color: #006430; }
+    .lista-folguistas { font-weight: bold; font-size: 15px; color: #006430; line-height: 1.5; }
+
+    .filtros-topo { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; background: #f7fbf7; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
+    .campo-filtro { flex: 1; min-width: 240px; }
+    .campo-filtro label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #004a26; }
+    .campo-filtro select, .campo-filtro input { width: 100%; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 16px; box-sizing: border-box; background-color: #ffffff; }
+    
+    .botoes-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
+    .btn { padding: 14px 25px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; color: white; transition: background 0.2s; }
+    .btn-filtrar { background-color: #006430; border-bottom: 3px solid #004a26; }
+    .btn-filtrar:hover { background-color: #004a26; }
+    .btn-excel { background-color: #2e7d32; border-bottom: 3px solid #1b5e20; }
+    .btn-excel:hover { background-color: #1b5e20; }
+    .btn-pdf { background-color: #0b5394; border-bottom: 3px solid #073763; }
+    .btn-pdf:hover { background-color: #073763; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th { background-color: #006430; color: white; padding: 12px 8px; text-align: left; font-size: 14px; border-bottom: 3px solid #ffd700; }
+    td { padding: 12px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
+    tr:hover { background-color: #f1f8f3; }
+    
+    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 5px 10px; border-radius: 4px; font-size: 12px; }
+    .status-folga { color: #006430; font-weight: bold; background: #e8f5e9; padding: 5px 10px; border-radius: 4px; font-size: 12px; border: 1px solid #a5d6a7; }
+    .escala-info { font-size: 11px; color: #555; display: block; font-weight: normal; }
+    
+    .col-atraso { color: #c62828; font-weight: bold; background-color: #fff5f5; }
+    .col-extra { color: #006430; font-weight: bold; background-color: #f0f7f1; }
+    .col-incompleto { color: #757575; font-style: italic; }
+    
+    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 5px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; min-width: 75px; border: 1px solid #d0dfd5; }
+    .titulo-acao-btd { font-size: 9px; font-weight: bold; color: #004a26; margin-bottom: 3px; text-transform: uppercase; }
+    .btn-foto { background: #673ab7; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
+    .btn-mapa { background: #0b5394; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
+    .sem-foto { color: #aaa; font-style: italic; font-size: 12px; }
+
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-content img { width: 100%; border-radius: 8px; border: 3px solid #006430; margin-bottom: 15px; }
+    .btn-fechar-modal { background: #006430; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
+  </style>
+</head>
+<body>
+
+  <div class="painel-container">
+    <h1>MEU PONTO SR - PAINEL ADMINISTRATIVO</h1>
+
+    <div class="bloco-folgas-hoje" id="blocoFolgas">
+      <h3 id="tituloFolgasDoDia">⚽ Escalados para Folga hoje</h3>
+      <div class="lista-folguistas" id="listaFolguistasContainer">Carregando escalação de folgas...</div>
+    </div>
+
+    <div class="filtros-topo">
+      <div class="campo-filtro">
+        <label for="filtroColaborador">SELECIONE O FUNCIONÁRIO PARA FILTRAR:</label>
+        <select id="filtroColaborador">
+          <option value="TODOS">-- Todos os Funcionários --</option>
+          <option value="Adrissa">Adrissa</option>
+          <option value="Alan">Alan</option>
+          <option value="Alice">Alice</option>
+          <option value="Alisson">Alisson</option>
+          <option value="Altemar">Altemar</option>
+          <option value="Andre">André</option>
+          <option value="Carlos">Carlos</option>
+          <option value="Dayana">Dayana</option>
+          <option value="Debora">Débora</option>
+          <option value="Debora Sabao">Débora Sabão</option>
+          <option value="Denilson">Denilson</option>
+          <option value="Dulce">Dulce</option>
+          <option value="Edete">Edete</option>
+          <option value="Edmilson">Edmilson</option>
+          <option value="Erica">Érica</option>
+          <option value="Erisvana">Erisvana</option>
+          <option value="Eudes">Eudes</option>
+          <option value="Felipe Frente">Felipe Frente</option>
+          <option value="Flavia">Flávia</option>
+          <option value="Flavio">Flávio</option>
+          <option value="Fran">Fran</option>
+          <option value="Francisca Souza">Francisca Souza</option>
+          <option value="Gabriel">Gabriel</option>
+          <option value="Genilson">Genilson</option>
+          <option value="Henrique">Henrique Dep.</option>
+          <option value="Henrrique">Henrique</option>
+          <option value="Hilaria">Hilária</option>
+          <option value="Irene">Irene</option>
+          <option value="Jaki">Jaki</option>
+          <option value="Jeferson">Jeferson</option>
+          <option value="Karine">Karine</option>
+          <option value="Keverson">Keverson</option>
+          <option value="Leandro">Leandro</option>
+          <option value="Marcelo">Marcelo</option>
+          <option value="Marcos">Marcos</option>
+          <option value="Marta">Marta</option>
+          <option value="Netim">Netim</option>
+          <option value="Patricia">Patrícia</option>
+          <option value="Raimundo Q">Raimundo Q</option>
+          <option value="Rayana">Rayana</option>
+          <option value="Raylma">Raylma</option>
+          <option value="Rita">Rita</option>
+          <option value="Rone Fruta">Rone Fruta</option>
+          <option value="Rose">Rose</option>
+          <option value="Ruan">Ruan</option>
+          <option value="Samira">Samira</option>
+          <option value="Sueli">Suely</option>
+          <option value="Talison">Talison</option>
+          <option value="Thalice">Thalice</option>
+          <option value="Tharles">Tharles</option>
+          <option value="Valdimiro">Valdimiro</option>
+          <option value="Victor">Victor</option>
+          <option value="Vilson">Vilson</option>
+          <option value="Vinicios">Vinícius</option>
+        </select>
+      </div>
+      <div class="campo-filtro">
+        <label for="filtroMes">MÊS DE FECHAMENTO:</label>
+        <input type="month" id="filtroMes">
+      </div>
+      <div class="campo-filtro">
+        <label for="filtroDataFolga">VER FOLGAS DE UM DIA ESPECÍFICO:</label>
+        <input type="date" id="filtroDataFolga" onchange="window.atualizarPainelFolgasDiario()">
+      </div>
+    </div>
+
+    <div class="botoes-acoes">
+      <button class="btn btn-filtrar" onclick="processarFechamentoMensal()">🔍 Consultar Período</button>
+      <button class="btn btn-excel" onclick="baixarExcel()">📊 Baixar Excel</button>
+      <button class="btn btn-pdf" onclick="baixarPDF()">📄 Gerar PDF</button>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table id="tabelaFechamento">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Funcionário</th>
+            <th>Entrada</th>
+            <th>S. Almoço</th>
+            <th>R. Almoço</th>
+            <th>Saída Fim</th>
+            <th>Atraso / Débito</th>
+            <th>Hora Extra</th>
+            <th>Auditoria Inteligente</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela">
+          <tr><td colspan="9" style="text-align:center; padding:30px; font-size: 16px;">Selecione os parâmetros e clique em Consultar.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="modalFoto" class="modal">
+    <div class="modal-content">
+      <h3 id="modalTitulo" style="margin-top:0; color:#006430; font-size: 18px;">Selfie de Verificação</h3>
+      <img id="modalImg" src="" alt="Selfie do Funcionário">
+      <button class="btn-fechar-modal" onclick="fecharModal()">Fechar Visualização</button>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
+      authDomain: "meu-ponto-sr.firebaseapp.com",
+      databaseURL: "https://meu-ponto-sr-default-rtdb.firebaseio.com",
+      projectId: "meu-ponto-sr",
+      storageBucket: "meu-ponto-sr.appspot.com",
+      messagingSenderId: "356930006135",
+      appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Mapeamento de equipes fixas
+    const mapeamentoEquipes = {
+      "Irene": "EQUIP_1", "Rose": "EQUIP_1", "Debora": "EQUIP_1", "Gabriel": "EQUIP_1", "Jaki": "EQUIP_1",
+      "Alice": "EQUIP_1", "Thalice": "EQUIP_1", "Raimundo Q": "EQUIP_1", "Andre": "EQUIP_1", "Rone Fruta": "EQUIP_1",
+      "Rita": "EQUIP_1", "Sueli": "EQUIP_1", "Edete": "EQUIP_1", "Genilson": "EQUIP_1", "Patricia": "EQUIP_1",
+      "Carlos": "EQUIP_1", "Vinicios": "EQUIP_1", "Valdimiro": "EQUIP_1",
+      
+      "Marta": "EQUIP_2", "Dayana": "EQUIP_2", "Fran": "EQUIP_2", "Erica": "EQUIP_2", "Alisson": "EQUIP_2",
+      "Adrissa": "EQUIP_2", "Ruan": "EQUIP_2", "Rayana": "EQUIP_2", "Debora Sabao": "EQUIP_2", "Marcos": "EQUIP_2",
+      "Raylma": "EQUIP_2", "Francisca Souza": "EQUIP_2", "Samira": "EQUIP_2", "Henrrique": "EQUIP_2", "Edmilson": "EQUIP_2",
+      "Erisvana": "EQUIP_2", "Leandro": "EQUIP_2", "Victor": "EQUIP_2", "Hilaria": "EQUIP_2", "Karine": "EQUIP_2",
+      "Jeferson": "EQUIP_2", "Dulce": "EQUIP_2", "Eudes": "EQUIP_2", "Felipe Frente": "EQUIP_2",
+      
+      "Netim": "DEPOSITO", "Vilson": "DEPOSITO", "Tharles": "DEPOSITO", "Marcelo": "DEPOSITO", "Flavia": "DEPOSITO",
+      "Keverson": "DEPOSITO", "Talison": "DEPOSITO", "Alan": "DEPOSITO", "Henrique": "DEPOSITO",
+      "Flavio": "DEPOSITO", "Altemar": "DEPOSITO"
+    };
+
+    // ESCALA FIXA DEFINITIVA DA EQUIP-2 POR DIA DA SEMANA (1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex)
+    const escalaFolgasFixas = {
+      // Segunda-feira (EQUIP_2)
+      "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1],
+      // Terça-feira (EQUIP_2)
+      "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2],
+      // Quarta-feira (EQUIP_2) - Apenas os 6 informados!
+      "Raylma": [3], "Francisca Souza": [3], "Samira": [3], "Henrrique": [3], "Henrique": [3], "Edmilson": [3], "Rone Fruta": [3],
+      // Quinta-feira (EQUIP_2)
+      "Erisvana": [4], "Leandro": [4], "Victor": [4], "Hilaria": [4],
+      // Sexta-feira (EQUIP_2)
+      "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5],
+
+      // EQUIP_1 (Folgas fixas que não batem com os dias acima)
+      "Irene": [1], "Rose": [1],
+      "Debora": [2], "Gabriel": [2],
+      "Rita": [4], "Sueli": [4], "Edete": [4], "Genilson": [4],
+      "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5]
+    };
+
+    let relatorioFinal = [];
+    let mapaFotosMemoria = {};
+
+    const hojeObj = new Date();
+    document.getElementById('filtroMes').value = hojeObj.getFullYear() + '-' + String(hojeObj.getMonth() + 1).padStart(2, '0');
+    document.getElementById('filtroDataFolga').value = hojeObj.toISOString().split('T')[0];
+
+    function normalizarTexto(txt) {
+      if(!txt) return "";
+      let t = txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      if (t.includes("francisca souza") || t.includes("franc.acou")) return "franciscasouza";
+      if (t.includes("roni") || t.includes("rone")) return "ronefruta";
+      return t.replace(/\s+/g, "");
+    }
+
+    function obterNumeroSemanaAno(data) {
+      const d = new Date(Date.UTC(data.getFullYear(), data.getMonth(), data.getDate()));
+      const diaNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - diaNum);
+      const anoInicio = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+      return Math.ceil((((d - anoInicio) / 86400000) + 1) / 7);
+    }
+
+    // Checa folga puramente baseada na tabela fixa enviada por você
+    function checarSeEstaDeFolga(colaborador, dataObj) {
+      const diaSemana = dataObj.getDay(); 
+      const eq = mapeamentoEquipes[colaborador];
+
+      if (eq === "DEPOSITO") {
+        return diaSemana === 0; // Depósito só folga no domingo
+      }
+
+      if (diaSemana === 0) {
+        // No domingo, folga quem está no turno da noite (10:00)
+        const numSemanaAno = obterNumeroSemanaAno(dataObj);
+        const turnoDaSemana = numSemanaAno % 2 === 0 ? (eq === "EQUIP_1" ? "07:00" : "10:00") : (eq === "EQUIP_1" ? "10:00" : "07:00");
+        return turnoDaSemana === "10:00";
+      }
+
+      // Verifica direto na escala estática de dias úteis
+      return !!(escalaFolgasFixas[colaborador] && escalaFolgasFixas[colaborador].includes(diaSemana));
+    }
+
+    window.atualizarPainelFolgasDiario = function() {
+      const dataSelecionadaStr = document.getElementById('filtroDataFolga').value;
+      if (!dataSelecionadaStr) return;
+
+      const partes = dataSelecionadaStr.split('-');
+      const dataFocada = new Date(partes[0], partes[1] - 1, partes[2]);
+      const diaSemana = dataFocada.getDay();
+
+      let dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      document.getElementById('tituloFolgasDoDia').innerHTML = `⚽ COLABORADORES DE FOLGA NO DIA (${dataFormatada}):`;
+
+      let folguistas = [];
+
+      Object.keys(mapeamentoEquipes).forEach(f => {
+        if (checarSeEstaDeFolga(f, dataFocada)) {
+          let eq = mapeamentoEquipes[f];
+          if (eq === "DEPOSITO") {
+            folguistas.push(`${f} (Depósito)`);
+          } else if (diaSemana === 0) {
+            folguistas.push(`${f} (Domingo - Noite)`);
+          } else {
+            folguistas.push(f);
+          }
+        }
+      });
+
+      const container = document.getElementById('listaFolguistasContainer');
+      container.innerHTML = folguistas.length === 0 ? "Nenhum funcionário de folga." : folguistas.sort().join(' • ');
+    }
+
+    setTimeout(() => { window.atualizarPainelFolgasDiario(); }, 800);
+
+    function converterParaMinutos(horarioStr) {
+      if (!horarioStr || horarioStr === "--") return null;
+      let partes = horarioStr.split(':');
+      return (parseInt(partes[0]) * 60) + parseInt(partes[1]);
+    }
+
+    function formatarMinutosLegivel(minutosTotais) {
+      if (minutosTotais <= 0) return "0";
+      let horas = Math.floor(minutosTotais / 60);
+      let mins = minutosTotais % 60;
+      return horas > 0 ? `${horas}h ${mins}min` : `${mins} min`;
+    }
+
+    function processarFechamentoMensal() {
+      const funcSelecionado = document.getElementById('filtroColaborador').value;
+      const mesRef = document.getElementById('filtroMes').value; 
+      const corpo = document.getElementById('corpoTabela');
+      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Carregando e processando batidas do banco...</td></tr>";
+
+      let ano = parseInt(mesRef.split('-')[0]);
+      let mes = parseInt(mesRef.split('-')[1]) - 1;
+      let totalDias = new Date(ano, mes + 1, 0).getDate();
+
+      let listaParaProcessar = funcSelecionado === "TODOS" ? Object.keys(mapeamentoEquipes) : [funcSelecionado];
+
+      database.ref('pontos_registrados').once('value', snapshot => {
+        let batidasDoBanco = {};
+        mapaFotosMemoria = {};
+        
+        snapshot.forEach(child => {
+          let p = child.val();
+          if (p.colaborador && p.horario && p.tipo) {
+            let dataChaveLimpa = "";
+            if (p.dataChave) {
+              if (p.dataChave.includes('/')) {
+                let pt = p.dataChave.split('/');
+                dataChaveLimpa = `${pt[2]}-${pt[1]}-${pt[0]}`;
+              } else {
+                dataChaveLimpa = p.dataChave;
+              }
+            } else if (p.data) {
+              let pt = p.data.split('/');
+              dataChaveLimpa = `${pt[2]}-${pt[1]}-${pt[0]}`;
+            }
+
+            if (dataChaveLimpa.startsWith(mesRef)) {
+              let nFunc = normalizarTexto(p.colaborador);
+              let chaveAgrupada = `${dataChaveLimpa}_${nFunc}`;
+              
+              if (!batidasDoBanco[chaveAgrupada]) {
+                batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
+              }
+              
+              let idFoto = child.key;
+              if (p.fotoSelfie) mapaFotosMemoria[idFoto] = p.fotoSelfie;
+              let gpsLink = (p.latitude && p.longitude) ? `http://googleusercontent.com/maps.google.com/maps?q=${p.latitude},${p.longitude}` : null;
+
+              let tipoNorm = normalizarTexto(p.tipo);
+              if (tipoNorm.includes("entrada")) { batidasDoBanco[chaveAgrupada].entrada = p.horario; batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; }
+              if (tipoNorm.includes("saidaalm") || tipoNorm.includes("almo") || tipoNorm === "saidaalmoco") { batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; }
+              if (tipoNorm.includes("retorno") || tipoNorm.includes("retalm")) { batidasDoBanco[chaveAgrupada].retAlm = p.horario; batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; }
+              if (tipoNorm.includes("expediente") || tipoNorm.includes("fim") || tipoNorm.includes("saidafim")) { batidasDoBanco[chaveAgrupada].saidaFim = p.horario; batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; }
+            }
+          }
+        });
+
+        relatorioFinal = [];
+        corpo.innerHTML = "";
+
+        for (let d = 1; d <= totalDias; d++) {
+          let diaStr = String(d).padStart(2, '0');
+          let mesStr = String(mes + 1).padStart(2, '0');
+          let chaveData = `${ano}-${mesStr}-${diaStr}`;
+          let dataFormatadaExibir = `${diaStr}/${mesStr}/${ano}`;
+          let dataCorrente = new Date(ano, mes, d);
+          let diaSemana = dataCorrente.getDay(); 
+          let numSemanaAno = obterNumeroSemanaAno(dataCorrente);
+
+          listaParaProcessar.forEach(f => {
+            let nFunc = normalizarTexto(f);
+            let chaveBusca = `${chaveData}_${nFunc}`;
+            let eq = mapeamentoEquipes[f] || "EQUIP_1";
+            
+            let turnoEsperado = ""; 
+            let statusDia = "Regular";
+            let classStatus = "";
+            let totalAtrasoExibir = "0";
+            let totalExtraExibir = "0";
+            let jornadaAlvoMinutos = 480;
+
+            let eFolgaHoje = checarSeEstaDeFolga(f, dataCorrente);
+
+            if (eq === "DEPOSITO") {
+              if (diaSemana === 0) {
+                statusDia = "FOLGA DOMINGO";
+                classStatus = "status-folga";
+              } else if (diaSemana === 6) {
+                turnoEsperado = "07:00 às 13:00 (Sábado)";
+                jornadaAlvoMinutos = 360;
+              } else {
+                turnoEsperado = "07:00 às 17:30";
+                jornadaAlvoMinutos = 510; 
+              }
+            } else {
+              let baseTurno = numSemanaAno % 2 === 0 ? (eq === "EQUIP_1" ? "07:00" : "10:00") : (eq === "EQUIP_1" ? "10:00" : "07:00");
+              if (baseTurno === "10:00") {
+                turnoEsperado = "10:00 às 20:00";
+                if (diaSemana === 0) { statusDia = "FOLGA DOMINGO"; classStatus = "status-folga"; }
+                else if (eFolgaHoje) { statusDia = "FOLGA SEMANAL"; classStatus = "status-folga"; }
+              } else {
+                turnoEsperado = "07:00 às 17:00";
+                if (diaSemana === 0) { turnoEsperado = "07:00 às 12:00"; jornadaAlvoMinutos = 300; }
+                else if (eFolgaHoje) { statusDia = "FOLGA SEMANAL"; classStatus = "status-folga"; }
+              }
+            }
+
+            let diaBtd = batidasDoBanco[chaveBusca] || { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
+            let temAlgumaBatida = (diaBtd.entrada !== "--" || diaBtd.saidaAlm !== "--" || diaBtd.retAlm !== "--" || diaBtd.saidaFim !== "--");
+
+            if (temAlgumaBatida) {
+              statusDia = "Regular";
+              classStatus = "";
+              
+              let ehTurnoDireto = (diaSemana === 0 && eq !== "DEPOSITO") || (diaSemana === 6 && eq === "DEPOSITO");
+
+              if (ehTurnoDireto) {
+                if (diaBtd.entrada !== "--" && diaBtd.saidaFim !== "--") {
+                  let totalTrabalhadoNoDia = converterParaMinutos(diaBtd.saidaFim) - converterParaMinutos(diaBtd.entrada);
+                  if (totalTrabalhadoNoDia < jornadaAlvoMinutos) totalAtrasoExibir = formatarMinutosLegivel(jornadaAlvoMinutos - totalTrabalhadoNoDia);
+                  else if (totalTrabalhadoNoDia > jornadaAlvoMinutos) totalExtraExibir = formatarMinutosLegivel(totalTrabalhadoNoDia - jornadaAlvoMinutos);
+                } else {
+                  totalAtrasoExibir = "<span class='col-incompleto'>Incompleto</span>";
+                  totalExtraExibir = "<span class='col-incompleto'>Incompleto</span>";
+                }
+              } else {
+                if (diaBtd.entrada !== "--" && diaBtd.saidaAlm !== "--" && diaBtd.retAlm !== "--" && diaBtd.saidaFim !== "--") {
+                  let minutosTrabalhadosManha = converterParaMinutos(diaBtd.saidaAlm) - converterParaMinutos(diaBtd.entrada);
+                  let minutosTrabalhadosTarde = converterParaMinutos(diaBtd.saidaFim) - converterParaMinutos(diaBtd.retAlm);
+                  let totalTrabalhadoNoDia = minutosTrabalhadosManha + minutosTrabalhadosTarde;
+
+                  if (totalTrabalhadoNoDia < jornadaAlvoMinutos) totalAtrasoExibir = formatarMinutosLegivel(jornadaAlvoMinutos - totalTrabalhadoNoDia);
+                  else if (totalTrabalhadoNoDia > jornadaAlvoMinutos) totalExtraExibir = formatarMinutosLegivel(totalTrabalhadoNoDia - jornadaAlvoMinutos);
+                } else {
+                  totalAtrasoExibir = "<span class='col-incompleto'>Incompleto</span>";
+                  totalExtraExibir = "<span class='col-incompleto'>Incompleto</span>";
+                }
+              }
+            } else {
+              if (classStatus === "status-folga") {
+                totalAtrasoExibir = "0";
+                totalExtraExibir = "0";
+              } else if (statusDia === "Regular") {
+                statusDia = "FALTA";
+                classStatus = "status-falta";
+                totalAtrasoExibir = formatarMinutosLegivel(jornadaAlvoMinutos);
+              }
+            }
+
+            relatorioFinal.push({
+              data: dataFormatadaExibir, func: f, turnoEsperado,
+              entrada: diaBtd.entrada, saidaAlm: diaBtd.saidaAlm, retAlm: diaBtd.retAlm, saidaFim: diaBtd.saidaFim,
+              atraso: totalAtrasoExibir, extra: totalExtraExibir, statusDia, classStatus, chaveData,
+              imgE: diaBtd.idFotoEntrada, imgSA: diaBtd.idFotoSaidaAlm, imgRA: diaBtd.idFotoRetAlm, imgSF: diaBtd.idFotoSaidaFim,
+              mapE: diaBtd.gpsEntrada, mapSA: diaBtd.gpsSaidaAlm, mapRA: diaBtd.gpsRetAlm, mapSF: diaBtd.gpsSaidaFim
+            });
+          });
+        }
+
+        relatorioFinal.sort((a, b) => a.chaveData.localeCompare(b.chaveData));
+
+        relatorioFinal.forEach(r => {
+          let tr = document.createElement('tr');
+          let containerAuditoria = "";
+
+          function criarMiniBloco(label, img, map) {
+            let b = `<div class="bloco-ponto-acoes"><span class="titulo-acao-btd">${label}</span>`;
+            b += img ? `<button class="btn-foto" onclick="abrirModal('${img}', '${r.func} - ${label}')">📸 Foto</button>` : `<span class="sem-foto">-</span>`;
+            b += map ? `<a href="${map}" target="_blank" class="btn-mapa">📍 Mapa</a>` : ``;
+            b += `</div>`;
+            return b;
+          }
+          
+          let ehTurnoDireto = r.turnoEsperado.includes("Sábado") || r.turnoEsperado.includes("Fim de Semana") || r.turnoEsperado.includes("12:00") || r.turnoEsperado.includes("13:00");
+          
+          containerAuditoria += criarMiniBloco("Ent", r.imgE, r.mapE);
+          if (!ehTurnoDireto) {
+            containerAuditoria += criarMiniBloco("Alm", r.imgSA, r.mapSA);
+            containerAuditoria += criarMiniBloco("Ret", r.imgRA, r.mapRA);
+          }
+          containerAuditoria += criarMiniBloco("Sai", r.imgSF, r.mapSF);
+
+          if (r.classStatus !== "" && (r.entrada === "--" && r.saidaFim === "--")) {
+            containerAuditoria = `<span class="${r.classStatus}">${r.statusDia}</span>`;
+          }
+
+          let tdAtrasoClass = (r.atraso !== "0" && !r.atraso.includes("Incompleto")) ? "class='col-atraso'" : "";
+          let tdExtraClass = (r.extra !== "0" && !r.extra.includes("Incompleto")) ? "class='col-extra'" : "";
+
+          tr.innerHTML = `
+            <td><strong>${r.data}</strong><span class="escala-info">${r.turnoEsperado}</span></td>
+            <td><strong>${r.func}</strong></td>
+            <td>${r.entrada}</td>
+            <td>${r.saidaAlm}</td>
+            <td>${r.retAlm}</td>
+            <td>${r.saidaFim}</td>
+            <td ${tdAtrasoClass}>${r.atraso}</td>
+            <td ${tdExtraClass}>${r.extra}</td>
+            <td>${containerAuditoria}</td>
+          `;
+          corpo.appendChild(tr);
+        });
+      });
+    }
+
+    function abrirModal(idFoto, titulo) {
+      if(mapaFotosMemoria[idFoto]) {
+        document.getElementById("modalTitulo").innerHTML = titulo;
+        document.getElementById("modalImg").src = mapaFotosMemoria[idFoto];
+        document.getElementById("modalFoto").style.display = "flex";
+      } else {
+        alert("Foto indisponível.");
+      }
+    }
+
+    function fecharModal() { document.getElementById("modalFoto").style.display = "none"; }
+
+    function baixarExcel() {
+      let dados = [["Data", "Funcionário", "Escala Prevista", "Entrada", "Saída Almoço", "Retorno Almoço", "Saída Fim", "Atraso / Débito", "Hora Extra", "Status"]];
+      relatorioFinal.forEach(r => {
+        let atrClean = r.atraso.includes("Incompleto") ? "Incompleto" : r.atraso;
+        let extClean = r.extra.includes("Incompleto") ? "Incompleto" : r.extra;
+        dados.push([r.data, r.func, r.turnoEsperado, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, atrClean, extClean, r.statusDia]);
+      });
+      let sheet = XLSX.utils.aoa_to_sheet(dados);
+      let book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "Auditoria");
+      XLSX.writeFile(book, `Auditoria_MeuPontoSR_${document.getElementById('filtroMes').value}.xlsx`);
+    }
+
+    function baixarPDF() {
+      const { jsPDF } = window.jspdf;
+      let doc = new jsPDF();
+      doc.setFontSize(14); doc.text("SÃO RAIMUNDO SUPERMERCADO - AUDITORIA DE TURNOS", 14, 15);
+      let col = ["Data/Escala", "Funcionário", "Entrada", "S.Alm", "R.Alm", "Saída", "Débito", "Extra", "Status"];
+      let rows = [];
+      relatorioFinal.forEach(r => {
+        let atrClean = r.atraso.includes("Incompleto") ? "Incompleto" : r.atraso;
+        let extClean = r.extra.includes("Incompleto") ? "Incompleto" : r.extra;
+        rows.push([`${r.data}\n(${r.turnoEsperado})`, r.func, r.entrada, r.saidaAlm, r.retAlm, r.saidaFim, atrClean, extClean, r.statusDia]);
+      });
+      doc.autoTable({ startY: 22, head: [col], body: rows, theme: 'grid', styles: { fontSize: 7, cellPadding: 2 } });
+      doc.save(`Auditoria_MeuPontoSR_${document.getElementById('filtroMes').value}.pdf`);
+    }
+  </script>
+</body>
+</html>
 
   <style>
     body { font-family: Arial, sans-serif; background-color: #f0f4f1; margin: 0; padding: 20px; color: #333; }
