@@ -22,9 +22,9 @@
 
     /* Buscador e Lista de Funcionários por Setor */
     .campo-busca { width: 100%; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 16px; box-sizing: border-box; margin-bottom: 15px; font-weight: bold; }
-    .lista-funcionarios { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px; margin-bottom: 20px; background: #fafafa; }
+    .lista-funcionarios { max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px; margin-bottom: 20px; background: #fafafa; }
     
-    .header-setor { background: #006430; color: white; padding: 6px 10px; font-size: 12px; font-weight: bold; text-align: left; border-radius: 4px; margin-top: 10px; margin-bottom: 5px; letter-spacing: 0.5px; }
+    .header-setor { background: #006430; color: white; padding: 6px 10px; font-size: 13px; font-weight: bold; text-align: left; border-radius: 4px; margin-top: 10px; margin-bottom: 5px; letter-spacing: 0.5px; border-left: 4px solid #ffd700; }
     
     .item-colaborador { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; border-radius: 6px; }
     .item-colaborador:hover { background: #e8f5e9; }
@@ -71,15 +71,15 @@
     </div>
 
     <div class="area-botoes-ponto" id="areaBotoes">
-      <button class="btn-ponto btn-entrada" id="btn-Entrada" onclick="tentarRegistrarPonto('Entrada')">➡️ ENTRADA EXPEDIENTE</button>
-      <button class="btn-ponto btn-saida-alm" id="btn-Saída Almoço" onclick="tentarRegistrarPonto('Saída Almoço')">🥪 SAÍDA PARA ALMOÇO</button>
-      <button class="btn-ponto btn-retorno-alm" id="btn-Retorno Almoço" onclick="tentarRegistrarPonto('Retorno Almoço')">↩️ RETORNO DO ALMOÇO</button>
-      <button class="btn-ponto btn-saida-fim" id="btn-Saída Fim" onclick="tentarRegistrarPonto('Saída Fim')">🛑 SAÍDA ENCERRAMENTO</button>
+      <button class="btn-ponto btn-entrada" id="btn-Entrada" onclick="validarGeolocalizacaoAntesDeBater('Entrada')">➡️ ENTRADA EXPEDIENTE</button>
+      <button class="btn-ponto btn-saida-alm" id="btn-Saída Almoço" onclick="validarGeolocalizacaoAntesDeBater('Saída Almoço')">🥪 SAÍDA PARA ALMOÇO</button>
+      <button class="btn-ponto btn-retorno-alm" id="btn-Retorno Almoço" onclick="validarGeolocalizacaoAntesDeBater('Retorno Almoço')">↩️ RETORNO DO ALMOÇO</button>
+      <button class="btn-ponto btn-saida-fim" id="btn-Saída Fim" onclick="validarGeolocalizacaoAntesDeBater('Saída Fim')">🛑 SAÍDA ENCERRAMENTO</button>
     </div>
   </div>
 
   <script>
-    // Configuração do seu Firebase
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -92,54 +92,35 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // BANCO DE DADOS COMPLETO DE COLABORADORES DA LOJA COM SETORES E FOTOS PADRÃO
+    // COORDENADAS E LIMITES (50 METROS)
+    const SUPERMERCADO_LAT = -4.4623; 
+    const SUPERMERCADO_LON = -43.8864;
+    const RAIO_MAXIMO_METROS = 50; 
+
+    // BANCO DE DADOS INTEGRADO COM OS SETORES REAIS DA LOJA
     const colaboradores = [
-      // EQUIPE 1
-      { nome: "Irene", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Rose", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Debora", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Gabriel", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Jaki", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Alice", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Thalice", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Raimundo Q", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Andre", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Rita", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Sueli", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Edete", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Genilson", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Patricia", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Carlos", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Vinicios", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Valdimiro", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      
-      // EQUIPE 2
-      { nome: "Marta", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Dayana", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Fran", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Erica", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Alisson", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Adrissa", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Ruan", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Rayana", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Debora Sabao", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Marcos", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Raylma", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Francisca Souza", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Samira", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Henrrique", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Edmilson", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Rone Fruta", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Erisvana", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Leandro", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Victor", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Hilaria", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Karine", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Jeferson", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Dulce", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Eudes", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Felipe Frente", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      
+      // AÇOUGUE
+      { nome: "Genilson", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Carlos", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Vinicios", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Valdimiro", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Henrrique", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Edmilson", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+
+      // CAIXA
+      { nome: "Irene", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Rose", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Debora", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Jaki", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Alice", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Thalice", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Marta", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Dayana", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Fran", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Erica", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Adrissa", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Rayana", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+
       // DEPÓSITO
       { nome: "Netim", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
       { nome: "Vilson", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
@@ -151,17 +132,53 @@
       { nome: "Alan", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
       { nome: "Henrique", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
       { nome: "Flavio", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Altemar", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }
+      { nome: "Altemar", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+
+      // ESCRITÓRIO
+      { nome: "Gabriel", setor: "ESCRITÓRIO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Victor", setor: "ESCRITÓRIO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+
+      // FLV (Frutas, Legumes e Verduras)
+      { nome: "Rone Fruta", setor: "FLV", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Leandro", setor: "FLV", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+
+      // GERÊNCIA
+      { nome: "Eudes", setor: "GERÊNCIA", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+
+      // PADARIA
+      { nome: "Raimundo Q", setor: "PADARIA", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Andre", setor: "PADARIA", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+
+      // REPOSITOR
+      { nome: "Alisson", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Ruan", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Debora Sabao", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Marcos", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Felipe Frente", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+
+      // RH (Recursos Humanos)
+      { nome: "Karine", setor: "RH", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+
+      // ZELADORIA
+      { nome: "Rita", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Sueli", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Edete", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Patricia", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Raylma", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Francisca Souza", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Samira", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Erisvana", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Hilaria", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Jeferson", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Dulce", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" }
     ];
 
     let colaboradorSelecionado = "";
 
-    // Organizar e carregar a lista dividida por Setores na tela
     function carregarListaColaboradores(filtro = "") {
       const container = document.getElementById("listaColaboradoresContainer");
       container.innerHTML = "";
 
-      // Agrupa por setor
       const setores = {};
       colaboradores.forEach(c => {
         if (filtro && !c.nome.toLowerCase().includes(filtro.toLowerCase())) return;
@@ -169,16 +186,15 @@
         setores[c.setor].push(c);
       });
 
-      Object.keys(setores).forEach(nomeSetor => {
+      // Ordena os nomes dos setores em ordem alfabética para exibição organizada
+      Object.keys(setores).sort().forEach(nomeSetor => {
         if (setores[nomeSetor].length === 0) return;
 
-        // Título do Setor
         const header = document.createElement("div");
         header.className = "header-setor";
         header.innerText = nomeSetor;
         container.appendChild(header);
 
-        // Funcionários do Setor
         setores[nomeSetor].sort((a,b) => a.nome.localeCompare(b.nome)).forEach(c => {
           const div = document.createElement("div");
           div.className = "item-colaborador" + (colaboradorSelecionado === c.nome ? " selecionado" : "");
@@ -205,7 +221,6 @@
       buscarHistoricoESequenciaBotoes(nome);
     }
 
-    // Monitor do Status da Rede (Online/Offline)
     function atualizarStatusRede() {
       const indicador = document.getElementById("statusRede");
       if (navigator.onLine) {
@@ -222,7 +237,6 @@
     window.addEventListener('online', atualizarStatusRede);
     window.addEventListener('offline', atualizarStatusRede);
 
-    // LÓGICA DO SEU CÓDIGO ANTERIOR: Gerencia os botões sequenciais na tela
     function buscarHistoricoESequenciaBotoes(nome) {
       const hoje = new Date();
       const diaChave = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
@@ -243,15 +257,13 @@
           }
         });
 
-        // Junta pontos travados na memória offline do celular
-        let pendentes = JSON.parse(localStorage.getItem("pontos_offline") || "[]");
+        let pendentes = JSON.parse(localStorage.getItem("points_offline") || "[]");
         pendentes.forEach(p => {
           if(p.colaborador === nome && p.dataChave === diaChave) {
             pontosDeHoje[p.tipo] = p.horario + " (Aguardando Internet)";
           }
         });
 
-        // Renderiza o histórico visual
         const containerHist = document.getElementById("corpoHistorico");
         containerHist.innerHTML = "";
         Object.keys(pontosDeHoje).forEach(tipo => {
@@ -266,7 +278,6 @@
         });
         document.getElementById("blocoHistorico").style.display = "block";
 
-        // ESCONDE E MOSTRA OS BOTÕES EM SEQUÊNCIA EXATA (Igual ao seu sistema anterior)
         document.querySelectorAll(".btn-ponto").forEach(btn => btn.style.display = "none");
         
         if (pontosDeHoje["Entrada"] === "--") {
@@ -283,14 +294,57 @@
       });
     }
 
-    // REGISTRO DO PONTO COM MECANISMO ANTI-QUEDA DE SINAL
-    function tentarRegistrarPonto(tipo) {
+    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; 
+      const phi1 = lat1 * Math.PI / 180;
+      const phi2 = lat2 * Math.PI / 180;
+      const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+      const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+      const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c;
+    }
+
+    function validarGeolocalizacaoAntesDeBater(tipo) {
       if (!colaboradorSelecionado) return;
 
       const botaoClicado = document.getElementById(`btn-${tipo}`);
       botaoClicado.disabled = true;
-      botaoClicado.innerText = "REGISTRANDO...";
+      botaoClicado.innerText = "VERIFICANDO GPS...";
 
+      if (!navigator.geolocation) {
+        alert("O navegador deste aparelho não suporta leitura de GPS. Fale com a gerência.");
+        finalizarProcessoBatida();
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latDispositivo = position.coords.latitude;
+          const lonDispositivo = position.coords.longitude;
+
+          const distanciaDaLoja = calcularDistanciaMetros(latDispositivo, lonDispositivo, SUPERMERCADO_LAT, SUPERMERCADO_LON);
+
+          if (distanciaDaLoja <= RAIO_MAXIMO_METROS) {
+            registrarPontoValidado(tipo, latDispositivo, lonDispositivo);
+          } else {
+            alert(`❌ ACESSO NEGADO!\nVocê está fora do perímetro permitido (${Math.round(distanciaDaLoja)} metros de distância).\nO ponto só pode ser registrado a menos de 50 metros do supermercado.`);
+            finalizarProcessoBatida();
+          }
+        },
+        (error) => {
+          alert("⚠️ ERRO DE LOCALIZAÇÃO!\nNão foi possível ler o GPS do aparelho. Certifique-se de ativar a localização do dispositivo e dar permissão de acesso para este site.");
+          finalizarProcessoBatida();
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function registrarPontoValidado(tipo, lat, lon) {
       const agora = new Date();
       const dataChave = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
       const dataExibir = `${String(agora.getDate()).padStart(2,'0')}/${String(agora.getMonth()+1).padStart(2,'0')}/${agora.getFullYear()}`;
@@ -303,8 +357,8 @@
         horario: horario,
         tipo: tipo,
         fotoSelfie: "", 
-        latitude: "-4.4623", 
-        longitude: "-43.8864"
+        latitude: lat.toString(), 
+        longitude: lon.toString()
       };
 
       if (navigator.onLine) {
@@ -322,27 +376,26 @@
     }
 
     function guardarNoCacheOffline(dados) {
-      let fila = JSON.parse(localStorage.getItem("pontos_offline") || "[]");
+      let fila = JSON.parse(localStorage.getItem("points_offline") || "[]");
       fila.push(dados);
-      localStorage.setItem("pontos_offline", JSON.stringify(fila));
-      alert(`Ponto salvo no aparelho! Sem Wi-Fi no momento, mas o registro de ${dados.tipo} foi armazenado e subirá sozinho assim que a internet voltar.`);
+      localStorage.setItem("points_offline", JSON.stringify(fila));
+      alert(`Ponto salvo no aparelho! Sem Wi-Fi no momento, mas o registro de ${dados.tipo} foi validado por GPS e armazenado localmente. Subirá sozinho assim que a internet voltar.`);
       finalizarProcessoBatida();
     }
 
     function sincronizarPontosOffline() {
-      let fila = JSON.parse(localStorage.getItem("pontos_offline") || "[]");
+      let fila = JSON.parse(localStorage.getItem("points_offline") || "[]");
       if (fila.length === 0) return;
 
       let promessas = fila.map(p => database.ref('pontos_registrados').push(p));
 
       Promise.all(promessas).then(() => {
-        localStorage.removeItem("pontos_offline");
+        localStorage.removeItem("points_offline");
         if(colaboradorSelecionado) buscarHistoricoESequenciaBotoes(colaboradorSelecionado);
-      }).catch(err => console.log("Aguardando rede firme para sincronização...", err));
+      }).catch(err => console.log("Aguardando rede firme...", err));
     }
 
     function finalizarProcessoBatida() {
-      // Reativa todos os botões para a próxima pessoa usar
       document.querySelectorAll(".btn-ponto").forEach(btn => {
         btn.disabled = false;
         if(btn.id === "btn-Entrada") btn.innerText = "➡️ ENTRADA EXPEDIENTE";
@@ -350,7 +403,7 @@
         if(btn.id === "btn-Retorno Almoço") btn.innerText = "↩️ RETORNO DO ALMOÇO";
         if(btn.id === "btn-Saída Fim") btn.innerText = "🛑 SAÍDA ENCERRAMENTO";
       });
-      buscarHistoricoESequenciaBotoes(colaboradorSelecionado);
+      if (colaboradorSelecionado) buscarHistoricoESequenciaBotoes(colaboradorSelecionado);
     }
 
     // Inicialização do sistema
