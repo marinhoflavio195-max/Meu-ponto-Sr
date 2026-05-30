@@ -22,7 +22,7 @@
 
     /* Buscador e Lista de Funcionários por Setor */
     .campo-busca { width: 100%; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 16px; box-sizing: border-box; margin-bottom: 15px; font-weight: bold; }
-    .lista-funcionarios { max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px; margin-bottom: 20px; background: #fafafa; }
+    .lista-funcionarios { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px; margin-bottom: 20px; background: #fafafa; }
     
     .header-setor { background: #006430; color: white; padding: 6px 10px; font-size: 13px; font-weight: bold; text-align: left; border-radius: 4px; margin-top: 10px; margin-bottom: 5px; letter-spacing: 0.5px; border-left: 4px solid #ffd700; }
     
@@ -92,88 +92,81 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // COORDENADAS E LIMITES (50 METROS)
+    // COORDENADAS DO SUPERMERCADO SÃO RAIMUNDO (Codó - MA)
     const SUPERMERCADO_LAT = -4.4623; 
     const SUPERMERCADO_LON = -43.8864;
-    const RAIO_MAXIMO_METROS = 50; 
+    const RAIO_MAXIMO_METROS = 50; // MANTIDO EM 50 METROS CONFORME PEDIDO
 
-    // BANCO DE DADOS INTEGRADO COM OS SETORES REAIS DA LOJA
+    // BANCO DE DADOS RESTAURADO COM AS CHAVES ORIGINAIS DE ANTES (EQUIP_1, EQUIP_2, DEPOSITO)
     const colaboradores = [
-      // AÇOUGUE
-      { nome: "Genilson", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Carlos", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Vinicios", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Valdimiro", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Henrrique", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Edmilson", setor: "AÇOUGUE", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-
-      // CAIXA
-      { nome: "Irene", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Rose", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Debora", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Jaki", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Alice", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Thalice", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Marta", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Dayana", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Fran", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Erica", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Adrissa", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Rayana", setor: "CAIXA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-
-      // DEPÓSITO
-      { nome: "Netim", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Vilson", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Tharles", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Marcelo", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Flavia", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Keverson", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Talison", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Alan", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Henrique", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Flavio", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Altemar", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-
-      // ESCRITÓRIO
-      { nome: "Gabriel", setor: "ESCRITÓRIO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Victor", setor: "ESCRITÓRIO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-
-      // FLV (Frutas, Legumes e Verduras)
-      { nome: "Rone Fruta", setor: "FLV", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Leandro", setor: "FLV", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-
-      // GERÊNCIA
-      { nome: "Eudes", setor: "GERÊNCIA", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-
-      // PADARIA
-      { nome: "Raimundo Q", setor: "PADARIA", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Andre", setor: "PADARIA", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-
-      // REPOSITOR
-      { nome: "Alisson", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Ruan", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Debora Sabao", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Marcos", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Felipe Frente", setor: "REPOSITOR", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-
-      // RH (Recursos Humanos)
-      { nome: "Karine", setor: "RH", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-
-      // ZELADORIA
-      { nome: "Rita", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Sueli", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Edete", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Patricia", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Raylma", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Francisca Souza", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Samira", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Erisvana", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Hilaria", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Jeferson", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Dulce", setor: "ZELADORIA", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" }
+      // EQUIP_1
+      { nome: "Irene", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Rose", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Debora", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Gabriel", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Jaki", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Alice", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Thalice", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Raimundo Q", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Andre", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Rita", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Sueli", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Edete", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Genilson", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Patricia", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Carlos", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Vinicios", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Valdimiro", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      
+      // EQUIP_2
+      { nome: "Marta", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Dayana", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Fran", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Erica", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Alisson", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Adrissa", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Ruan", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Rayana", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Debora Sabao", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Marcos", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Raylma", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Francisca Souza", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Samira", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Henrrique", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Edmilson", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Rone Fruta", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Erisvana", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Leandro", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Victor", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Hilaria", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Karine", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Jeferson", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Dulce", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Eudes", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Felipe Frente", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      
+      // DEPOSITO
+      { nome: "Netim", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Vilson", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Tharles", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Marcelo", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Flavia", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Keverson", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Talison", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Alan", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Henrique", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Flavio", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Altemar", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }
     ];
 
     let colaboradorSelecionado = "";
+
+    // Nomes de exibição das cabeçalhos idênticos aos de antes
+    const nomesFormatadosSetores = {
+      "EQUIP_1": "EQUIPE 01",
+      "EQUIP_2": "EQUIPE 02",
+      "DEPOSITO": "DEPÓSITO"
+    };
 
     function carregarListaColaboradores(filtro = "") {
       const container = document.getElementById("listaColaboradoresContainer");
@@ -186,16 +179,15 @@
         setores[c.setor].push(c);
       });
 
-      // Ordena os nomes dos setores em ordem alfabética para exibição organizada
-      Object.keys(setores).sort().forEach(nomeSetor => {
-        if (setores[nomeSetor].length === 0) return;
+      Object.keys(setores).forEach(chaveSetor => {
+        if (setores[chaveSetor].length === 0) return;
 
         const header = document.createElement("div");
         header.className = "header-setor";
-        header.innerText = nomeSetor;
+        header.innerText = nomesFormatadosSetores[chaveSetor] || chaveSetor;
         container.appendChild(header);
 
-        setores[nomeSetor].sort((a,b) => a.nome.localeCompare(b.nome)).forEach(c => {
+        setores[chaveSetor].sort((a,b) => a.nome.localeCompare(b.nome)).forEach(c => {
           const div = document.createElement("div");
           div.className = "item-colaborador" + (colaboradorSelecionado === c.nome ? " selecionado" : "");
           div.id = `func-${c.nome.replace(/\s+/g, '')}`;
@@ -332,12 +324,12 @@
           if (distanciaDaLoja <= RAIO_MAXIMO_METROS) {
             registrarPontoValidado(tipo, latDispositivo, lonDispositivo);
           } else {
-            alert(`❌ ACESSO NEGADO!\nVocê está fora do perímetro permitido (${Math.round(distanciaDaLoja)} metros de distância).\nO ponto só pode ser registrado a menos de 50 metros do supermercado.`);
+            alert(`❌ ACESSO NEGADO!\nVocê está fora da loja (${Math.round(distanciaDaLoja)} metros de distância).\nO ponto só pode ser registrado a menos de 50 metros do supermercado.`);
             finalizarProcessoBatida();
           }
         },
         (error) => {
-          alert("⚠️ ERRO DE LOCALIZAÇÃO!\nNão foi possível ler o GPS do aparelho. Certifique-se de ativar a localização do dispositivo e dar permissão de acesso para este site.");
+          alert("⚠️ ERRO DE LOCALIZAÇÃO!\nNão foi possível ler o GPS do aparelho. Certifique-se de ativar a localização e dar permissão para este site.");
           finalizarProcessoBatida();
         },
         { enableHighAccuracy: true, timeout: 10000 }
