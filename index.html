@@ -12,21 +12,25 @@
     body { font-family: Arial, sans-serif; background-color: #f0f4f1; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
     .ponto-container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,74,38,0.15); border-top: 6px solid #006430; text-align: center; }
     
-    h2 { color: #006430; margin-bottom: 5px; font-size: 24px; }
-    .sub-titulo { color: #666; margin-bottom: 20px; font-size: 14px; }
+    h2 { color: #006430; margin-bottom: 5px; font-size: 24px; letter-spacing: 1px; }
+    .sub-titulo { color: #666; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
 
     /* Alerta de Status da Internet */
     .status-rede { padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; margin-bottom: 15px; display: none; }
     .rede-offline { background: #ffebee; color: #c62828; display: block; }
     .rede-online { background: #e8f5e9; color: #2e7d32; }
 
-    /* Grid de Funcionários com Foto */
-    .lista-funcionarios { max-height: 280px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px; margin-bottom: 20px; background: #fafafa; }
+    /* Buscador e Lista de Funcionários por Setor */
+    .campo-busca { width: 100%; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 16px; box-sizing: border-box; margin-bottom: 15px; font-weight: bold; }
+    .lista-funcionarios { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px; margin-bottom: 20px; background: #fafafa; }
+    
+    .header-setor { background: #006430; color: white; padding: 6px 10px; font-size: 12px; font-weight: bold; text-align: left; border-radius: 4px; margin-top: 10px; margin-bottom: 5px; letter-spacing: 0.5px; }
+    
     .item-colaborador { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; border-radius: 6px; }
     .item-colaborador:hover { background: #e8f5e9; }
     .item-colaborador.selecionado { background: #c8e6c9; border: 1px solid #006430; }
-    .foto-perfil { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 2px solid #006430; background: #eee; }
-    .nome-colaborador { font-size: 16px; font-weight: bold; color: #333; text-align: left; }
+    .foto-perfil { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 2px solid #ffd700; background: #eee; }
+    .nome-colaborador { font-size: 15px; font-weight: bold; color: #333; text-align: left; }
 
     /* Histórico de Batidas do Dia */
     .bloco-historico { background: #f7fbf7; border: 1px solid #c8e6c9; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left; display: none; }
@@ -35,12 +39,17 @@
     .status-ok { color: #2e7d32; }
     .status-pendente { color: #9e9e9e; font-style: italic; }
 
-    select, button { width: 100%; padding: 14px; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-    select { border: 1px solid #a5d6a7; margin-bottom: 15px; font-weight: bold; }
+    /* Área dos Botões de Batida Sequenciais */
+    .area-botoes-ponto { display: none; margin-top: 15px; flex-direction: column; gap: 10px; }
+    .btn-ponto { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; transition: background 0.2s; display: none; }
     
-    .btn-bater { background: #006430; color: white; border: none; font-weight: bold; cursor: pointer; border-bottom: 4px solid #004a26; transition: background 0.1s; }
-    .btn-bater:active { transform: scale(0.98); border-bottom-width: 2px; }
-    .btn-bater:disabled { background: #9e9e9e; border-bottom-color: #757575; cursor: not-allowed; }
+    .btn-entrada { background-color: #2e7d32; border-bottom: 4px solid #1b5e20; }
+    .btn-saida-alm { background-color: #f57c00; border-bottom: 4px solid #e65100; }
+    .btn-retorno-alm { background-color: #0288d1; border-bottom: 4px solid #01579b; }
+    .btn-saida-fim { background-color: #d32f2f; border-bottom: 4px solid #b71c1c; }
+
+    .btn-ponto:active { transform: scale(0.98); border-bottom-width: 2px; }
+    .btn-ponto:disabled { background: #9e9e9e !important; border-bottom-color: #757575 !important; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -51,22 +60,22 @@
 
     <div id="statusRede" class="status-rede"></div>
 
+    <input type="text" id="inputBusca" class="campo-busca" placeholder="🔍 Digite seu nome para buscar..." oninput="filtrarFuncionarios()">
+
     <div class="lista-funcionarios" id="listaColaboradoresContainer">
       </div>
 
     <div class="bloco-historico" id="blocoHistorico">
-      <h4 id="titHist">Histórico de Hoje:</h4>
+      <h4 id="titHist">Suas batidas de hoje:</h4>
       <div id="corpoHistorico"></div>
     </div>
 
-    <select id="tipoPonto">
-      <option value="Entrada">Entrada Expediente</option>
-      <option value="Saída Almoço">Saída para Almoço</option>
-      <option value="Retorno Almoço">Retorno do Almoço</option>
-      <option value="Saída Fim">Saída Encerramento</option>
-    </select>
-
-    <button class="btn-bater" id="btnRegistrar" onclick="tentarRegistrarPonto()">REGISTRAR PONTO</button>
+    <div class="area-botoes-ponto" id="areaBotoes">
+      <button class="btn-ponto btn-entrada" id="btn-Entrada" onclick="tentarRegistrarPonto('Entrada')">➡️ ENTRADA EXPEDIENTE</button>
+      <button class="btn-ponto btn-saida-alm" id="btn-Saída Almoço" onclick="tentarRegistrarPonto('Saída Almoço')">🥪 SAÍDA PARA ALMOÇO</button>
+      <button class="btn-ponto btn-retorno-alm" id="btn-Retorno Almoço" onclick="tentarRegistrarPonto('Retorno Almoço')">↩️ RETORNO DO ALMOÇO</button>
+      <button class="btn-ponto btn-saida-fim" id="btn-Saída Fim" onclick="tentarRegistrarPonto('Saída Fim')">🛑 SAÍDA ENCERRAMENTO</button>
+    </div>
   </div>
 
   <script>
@@ -83,49 +92,127 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // LISTA DE FUNCIONÁRIOS COM LINKS DE FOTOS (Troque as URLs pelas fotos reais deles)
+    // BANCO DE DADOS COMPLETO DE COLABORADORES DA LOJA COM SETORES E FOTOS PADRÃO
     const colaboradores = [
-      { nome: "Flavio", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Samira", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Edmilson", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Raylma", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Francisca Souza", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" }
-      // Adicione os outros aqui seguindo o mesmo modelo padrão
+      // EQUIPE 1
+      { nome: "Irene", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Rose", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Debora", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Gabriel", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Jaki", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Alice", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Thalice", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Raimundo Q", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Andre", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Rita", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Sueli", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Edete", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Genilson", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Patricia", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Carlos", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Vinicios", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Valdimiro", setor: "EQUIPE 1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      
+      // EQUIPE 2
+      { nome: "Marta", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Dayana", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Fran", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Erica", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Alisson", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Adrissa", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Ruan", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Rayana", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Debora Sabao", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Marcos", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Raylma", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Francisca Souza", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Samira", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Henrrique", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Edmilson", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Rone Fruta", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Erisvana", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Leandro", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Victor", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Hilaria", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Karine", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Jeferson", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Dulce", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Eudes", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Felipe Frente", setor: "EQUIPE 2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      
+      // DEPÓSITO
+      { nome: "Netim", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Vilson", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Tharles", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Marcelo", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Flavia", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
+      { nome: "Keverson", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Talison", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Alan", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Henrique", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Flavio", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
+      { nome: "Altemar", setor: "DEPÓSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }
     ];
 
     let colaboradorSelecionado = "";
 
-    // Renderizar lista de funcionários com foto na tela
-    function carregarListaColaboradores() {
+    // Organizar e carregar a lista dividida por Setores na tela
+    function carregarListaColaboradores(filtro = "") {
       const container = document.getElementById("listaColaboradoresContainer");
       container.innerHTML = "";
-      colaboradores.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(c => {
-        const div = document.createElement("div");
-        div.className = "item-colaborador";
-        div.onclick = () => selecionarColaborador(div, c.nome);
-        div.innerHTML = `
-          <img src="${c.foto}" class="foto-perfil" alt="${c.nome}">
-          <span class="nome-colaborador">${c.nome}</span>
-        `;
-        container.appendChild(div);
+
+      // Agrupa por setor
+      const setores = {};
+      colaboradores.forEach(c => {
+        if (filtro && !c.nome.toLowerCase().includes(filtro.toLowerCase())) return;
+        if (!setores[c.setor]) setores[c.setor] = [];
+        setores[c.setor].push(c);
       });
+
+      Object.keys(setores).forEach(nomeSetor => {
+        if (setores[nomeSetor].length === 0) return;
+
+        // Título do Setor
+        const header = document.createElement("div");
+        header.className = "header-setor";
+        header.innerText = nomeSetor;
+        container.appendChild(header);
+
+        // Funcionários do Setor
+        setores[nomeSetor].sort((a,b) => a.nome.localeCompare(b.nome)).forEach(c => {
+          const div = document.createElement("div");
+          div.className = "item-colaborador" + (colaboradorSelecionado === c.nome ? " selecionado" : "");
+          div.id = `func-${c.nome.replace(/\s+/g, '')}`;
+          div.onclick = () => selecionarColaborador(div, c.nome);
+          div.innerHTML = `
+            <img src="${c.foto}" class="foto-perfil" alt="${c.nome}">
+            <span class="nome-colaborador">${c.nome}</span>
+          `;
+          container.appendChild(div);
+        });
+      });
+    }
+
+    function filtrarFuncionarios() {
+      const texto = document.getElementById("inputBusca").value;
+      carregarListaColaboradores(texto);
     }
 
     function selecionarColaborador(elemento, nome) {
       document.querySelectorAll(".item-colaborador").forEach(el => el.classList.remove("selecionado"));
       elemento.classList.add("selecionado");
       colaboradorSelecionado = nome;
-      buscarHistóricoDoDia(nome);
+      buscarHistoricoESequenciaBotoes(nome);
     }
 
-    // Monitor de Internet (Avisa na tela se cair)
+    // Monitor do Status da Rede (Online/Offline)
     function atualizarStatusRede() {
       const indicador = document.getElementById("statusRede");
       if (navigator.onLine) {
         indicador.className = "status-rede rede-online";
         indicador.innerText = "⚡ Conectado à Internet";
         setTimeout(() => indicador.style.display = "none", 2000);
-        sincronizarPontosOffline(); // Tenta enviar pontos guardados se houver
+        sincronizarPontosOffline();
       } else {
         indicador.className = "status-rede rede-offline";
         indicador.innerText = "⚠️ Modo Offline Ativo (Os pontos serão salvos localmente)";
@@ -135,14 +222,13 @@
     window.addEventListener('online', atualizarStatusRede);
     window.addEventListener('offline', atualizarStatusRede);
 
-    // Renderiza o Histórico de hoje na tela do colaborador
-    function buscarHistóricoDoDia(nome) {
+    // LÓGICA DO SEU CÓDIGO ANTERIOR: Gerencia os botões sequenciais na tela
+    function buscarHistoricoESequenciaBotoes(nome) {
       const hoje = new Date();
       const diaChave = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
       
-      document.getElementById("titHist").innerText = `Histórico de Hoje (${hoje.getDate()}/${hoje.getMonth()+1}):`;
+      document.getElementById("titHist").innerText = `Suas batidas de hoje (${hoje.getDate()}/${hoje.getMonth()+1}):`;
       
-      // Busca primeiro no banco
       database.ref('pontos_registrados').once('value', snapshot => {
         let pontosDeHoje = { "Entrada": "--", "Saída Almoço": "--", "Retorno Almoço": "--", "Saída Fim": "--" };
         
@@ -157,28 +243,20 @@
           }
         });
 
-        // Mescla com o que possa estar retido no offline do aparelho
+        // Junta pontos travados na memória offline do celular
         let pendentes = JSON.parse(localStorage.getItem("pontos_offline") || "[]");
         pendentes.forEach(p => {
           if(p.colaborador === nome && p.dataChave === diaChave) {
-            pontosDeHoje[p.tipo] = p.horario + " (Aguardando Wi-Fi)";
+            pontosDeHoje[p.tipo] = p.horario + " (Aguardando Internet)";
           }
         });
 
+        // Renderiza o histórico visual
         const containerHist = document.getElementById("corpoHistorico");
         containerHist.innerHTML = "";
-        
-        // Define automaticamente a sugestão do próximo ponto lógico no Select
-        let proximoSugerido = "Entrada";
-
         Object.keys(pontosDeHoje).forEach(tipo => {
           let hora = pontosDeHoje[tipo];
           let classe = hora !== "--" ? "status-ok" : "status-pendente";
-          if(hora === "--" && proximoSugerido === "Entrada") { proximoSugerido = tipo; }
-          else if(pontosDeHoje["Entrada"] !== "--" && pontosDeHoje["Saída Almoço"] === "--") { proximoSugerido = "Saída Almoço"; }
-          else if(pontosDeHoje["Saída Almoço"] !== "--" && pontosDeHoje["Retorno Almoço"] === "--") { proximoSugerido = "Retorno Almoço"; }
-          else if(pontosDeHoje["Retorno Almoço"] !== "--" && pontosDeHoje["Saída Fim"] === "--") { proximoSugerido = "Saída Fim"; }
-
           containerHist.innerHTML += `
             <div class="linha-hist">
               <span>${tipo}:</span>
@@ -186,27 +264,37 @@
             </div>
           `;
         });
-
-        document.getElementById("tipoPonto").value = proximoSugerido;
         document.getElementById("blocoHistorico").style.display = "block";
+
+        // ESCONDE E MOSTRA OS BOTÕES EM SEQUÊNCIA EXATA (Igual ao seu sistema anterior)
+        document.querySelectorAll(".btn-ponto").forEach(btn => btn.style.display = "none");
+        
+        if (pontosDeHoje["Entrada"] === "--") {
+          document.getElementById("btn-Entrada").style.display = "block";
+        } else if (pontosDeHoje["Saída Almoço"] === "--") {
+          document.getElementById("btn-Saída Almoço").style.display = "block";
+        } else if (pontosDeHoje["Retorno Almoço"] === "--") {
+          document.getElementById("btn-Retorno Almoço").style.display = "block";
+        } else if (pontosDeHoje["Saída Fim"] === "--") {
+          document.getElementById("btn-Saída Fim").style.display = "block";
+        }
+
+        document.getElementById("areaBotoes").style.display = "flex";
       });
     }
 
-    // A MÁGICA DO OFFLINE: Registra e gerencia o fluxo de rede
-    function tentarRegistrarPonto() {
-      if (!colaboradorSelecionado) {
-        alert("Por favor, selecione seu nome na lista com foto primeiro!");
-        return;
-      }
+    // REGISTRO DO PONTO COM MECANISMO ANTI-QUEDA DE SINAL
+    function tentarRegistrarPonto(tipo) {
+      if (!colaboradorSelecionado) return;
 
-      document.getElementById("btnRegistrar").disabled = true;
-      document.getElementById("btnRegistrar").innerText = "Processando...";
+      const botaoClicado = document.getElementById(`btn-${tipo}`);
+      botaoClicado.disabled = true;
+      botaoClicado.innerText = "REGISTRANDO...";
 
       const agora = new Date();
       const dataChave = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
       const dataExibir = `${String(agora.getDate()).padStart(2,'0')}/${String(agora.getMonth()+1).padStart(2,'0')}/${agora.getFullYear()}`;
       const horario = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}:${String(agora.getSeconds()).padStart(2,'0')}`;
-      const tipo = document.getElementById("tipoPonto").value;
 
       const dadosPonto = {
         colaborador: colaboradorSelecionado,
@@ -214,23 +302,21 @@
         dataChave: dataChave,
         horario: horario,
         tipo: tipo,
-        fotoSelfie: "", // O aplicativo de câmera pode injetar a base64 aqui
-        latitude: "-4.4623", // Exemplo Codó-MA
+        fotoSelfie: "", 
+        latitude: "-4.4623", 
         longitude: "-43.8864"
       };
 
       if (navigator.onLine) {
-        // Envia direto pro Firebase se tiver sinal
         database.ref('pontos_registrados').push(dadosPonto)
           .then(() => {
-            alert(`Ponto de ${tipo} batido com SUCESSO às ${horario}!`);
-            finalizarBatida();
+            alert(`Sucesso! Ponto de ${tipo} registrado às ${horario}.`);
+            finalizarProcessoBatida();
           })
-          .catch(err => {
+          .catch(() => {
             guardarNoCacheOffline(dadosPonto);
           });
       } else {
-        // Se estiver sem sinal, guarda localmente
         guardarNoCacheOffline(dadosPonto);
       }
     }
@@ -239,34 +325,35 @@
       let fila = JSON.parse(localStorage.getItem("pontos_offline") || "[]");
       fila.push(dados);
       localStorage.setItem("pontos_offline", JSON.stringify(fila));
-      alert(`⚠️ Você está Sem Internet! Mas não se preocupe: seu ponto de ${dados.tipo} foi salvo no aparelho e será enviado automaticamente quando o sinal voltar.`);
-      finalizarBatida();
+      alert(`Ponto salvo no aparelho! Sem Wi-Fi no momento, mas o registro de ${dados.tipo} foi armazenado e subirá sozinho assim que a internet voltar.`);
+      finalizarProcessoBatida();
     }
 
     function sincronizarPontosOffline() {
       let fila = JSON.parse(localStorage.getItem("pontos_offline") || "[]");
       if (fila.length === 0) return;
 
-      console.log(`Sincronizando ${fila.length} pontos salvos no modo offline...`);
-      
-      let promessas = fila.map(ponto => {
-        return database.ref('pontos_registrados').push(ponto);
-      });
+      let promessas = fila.map(p => database.ref('pontos_registrados').push(p));
 
       Promise.all(promessas).then(() => {
         localStorage.removeItem("pontos_offline");
-        console.log("Todos os pontos retidos foram sincronizados com sucesso!");
-        if(colaboradorSelecionado) buscarHistóricoDoDia(colaboradorSelecionado);
-      }).catch(err => console.error("Erro na sincronização automática de rede", err));
+        if(colaboradorSelecionado) buscarHistoricoESequenciaBotoes(colaboradorSelecionado);
+      }).catch(err => console.log("Aguardando rede firme para sincronização...", err));
     }
 
-    function finalizarBatida() {
-      document.getElementById("btnRegistrar").disabled = false;
-      document.getElementById("btnRegistrar").innerText = "REGISTRAR PONTO";
-      buscarHistóricoDoDia(colaboradorSelecionado);
+    function finalizarProcessoBatida() {
+      // Reativa todos os botões para a próxima pessoa usar
+      document.querySelectorAll(".btn-ponto").forEach(btn => {
+        btn.disabled = false;
+        if(btn.id === "btn-Entrada") btn.innerText = "➡️ ENTRADA EXPEDIENTE";
+        if(btn.id === "btn-Saída Almoço") btn.innerText = "🥪 SAÍDA PARA ALMOÇO";
+        if(btn.id === "btn-Retorno Almoço") btn.innerText = "↩️ RETORNO DO ALMOÇO";
+        if(btn.id === "btn-Saída Fim") btn.innerText = "🛑 SAÍDA ENCERRAMENTO";
+      });
+      buscarHistoricoESequenciaBotoes(colaboradorSelecionado);
     }
 
-    // Inicialização
+    // Inicialização do sistema
     carregarListaColaboradores();
     atualizarStatusRede();
   </script>
