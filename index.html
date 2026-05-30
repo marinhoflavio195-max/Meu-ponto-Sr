@@ -3,83 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de Ponto - São Raimundo</title>
+  <title>Meu Ponto SR - Colaborador</title>
   
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f0f4f1; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
-    .ponto-container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,74,38,0.15); border-top: 6px solid #006430; text-align: center; }
+    body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .container { width: 90%; max-width: 400px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); text-align: center; box-sizing: border-box; margin: 20px auto; }
+    h1 { color: #d32f2f; margin-top: 0; font-size: 24px; letter-spacing: 1px; }
+    label { display: block; margin-top: 15px; font-size: 14px; color: #666; text-align: left; font-weight: bold; }
+    select { width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 10px; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; background: #fff; outline: none; box-sizing: border-box; }
+    select:focus { border-color: #d32f2f; }
+    #bloco-colaborador, #bloco-botoes, #bloco-camera { display: none; }
     
-    h2 { color: #006430; margin-bottom: 5px; font-size: 24px; letter-spacing: 1px; }
-    .sub-titulo { color: #666; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
-
-    /* Alerta de Status da Internet */
-    .status-rede { padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; margin-bottom: 15px; display: none; }
-    .rede-offline { background: #ffebee; color: #c62828; display: block; }
-    .rede-online { background: #e8f5e9; color: #2e7d32; }
-
-    /* Buscador e Lista de Funcionários por Setor */
-    .campo-busca { width: 100%; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 16px; box-sizing: border-box; margin-bottom: 15px; font-weight: bold; }
-    .lista-funcionarios { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px; margin-bottom: 20px; background: #fafafa; }
+    button { width: 100%; padding: 14px; margin-top: 10px; border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .btn-entrada { background: #2e7d32; }
+    .btn-saida-almoco { background: #f57c00; }
+    .btn-retorno-almoco { background: #0288d1; }
+    .btn-saida { background: #c62828; }
+    .btn-capturar { background: #673ab7; margin-top: 15px; }
+    .btn-cancelar { background: #757575; margin-top: 8px; }
     
-    .header-setor { background: #006430; color: white; padding: 6px 10px; font-size: 13px; font-weight: bold; text-align: left; border-radius: 4px; margin-top: 10px; margin-bottom: 5px; letter-spacing: 0.5px; border-left: 4px solid #ffd700; }
+    #status { margin-top: 15px; font-size: 15px; color: #333; font-weight: bold; background: #fff3e0; padding: 10px; border-radius: 6px; display: none; }
+    .nuvem-status { font-size: 14px; color: #2e7d32; margin-top: 6px; display: none; font-weight: bold; }
+    #localizacao { margin-top: 15px; padding: 12px; background: #f9f9f9; border-radius: 8px; font-size: 13px; color: #555; border: 1px solid #eee; text-align: left; }
+    .btn-wpp { background: #25d366; color: white; margin-top: 10px; text-decoration: none; display: inline-block; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; font-weight: bold; }
     
-    .item-colaborador { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; border-radius: 6px; }
-    .item-colaborador:hover { background: #e8f5e9; }
-    .item-colaborador.selecionado { background: #c8e6c9; border: 1px solid #006430; }
-    .foto-perfil { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 2px solid #ffd700; background: #eee; }
-    .nome-colaborador { font-size: 15px; font-weight: bold; color: #333; text-align: left; }
-
-    /* Histórico de Batidas do Dia */
-    .bloco-historico { background: #f7fbf7; border: 1px solid #c8e6c9; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left; display: none; }
-    .bloco-historico h4 { margin: 0 0 8px 0; color: #004a26; font-size: 14px; border-bottom: 1px solid #c8e6c9; padding-bottom: 4px; }
-    .linha-hist { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; font-weight: bold; }
-    .status-ok { color: #2e7d32; }
-    .status-pendente { color: #9e9e9e; font-style: italic; }
-
-    /* Área dos Botões de Batida Sequenciais */
-    .area-botoes-ponto { display: none; margin-top: 15px; flex-direction: column; gap: 10px; }
-    .btn-ponto { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; transition: background 0.2s; display: none; }
-    
-    .btn-entrada { background-color: #2e7d32; border-bottom: 4px solid #1b5e20; }
-    .btn-saida-alm { background-color: #f57c00; border-bottom: 4px solid #e65100; }
-    .btn-retorno-alm { background-color: #0288d1; border-bottom: 4px solid #01579b; }
-    .btn-saida-fim { background-color: #d32f2f; border-bottom: 4px solid #b71c1c; }
-
-    .btn-ponto:active { transform: scale(0.98); border-bottom-width: 2px; }
-    .btn-ponto:disabled { background: #9e9e9e !important; border-bottom-color: #757575 !important; cursor: not-allowed; }
+    video { width: 100%; max-height: 250px; background: #000; border-radius: 10px; margin-top: 10px; transform: scaleX(-1); }
+    canvas { display: none; }
+    .preview-foto { width: 100%; max-height: 250px; border-radius: 10px; margin-top: 10px; display: none; border: 2px solid #2e7d32; }
   </style>
 </head>
 <body>
 
-  <div class="ponto-container">
-    <h2>SÃO RAIMUNDO</h2>
-    <div class="sub-titulo">REGISTRO DIGITAL DE PONTO</div>
+  <div class="container">
+    <h1>MEU PONTO SR</h1>
 
-    <div id="statusRede" class="status-rede"></div>
+    <label for="setor">1. SELECIONE O SETOR:</label>
+    <select id="setor" onchange="filtrarColaboradores()">
+      <option value="">-- Escolha o Setor --</option>
+      <option value="escritorio">ESCRITÓRIO / ADMINISTRAÇÃO</option>
+      <option value="rh">RH / DEPARTAMENTO PESSOAL</option>
+      <option value="tesouraria">TESOURARIA</option>
+      <option value="caixas">CAIXAS</option>
+      <option value="repositores">REPOSITORES</option>
+      <option value="almoxarifado">ALMOXARIFADO</option>
+      <option value="açougue">AÇOUGUE</option>
+      <option value="empacotadores">EMPACOTADORES</option>
+      <option value="terceirizados">TERCEIRIZADOS / SEGURANÇA</option>
+    </select>
 
-    <input type="text" id="inputBusca" class="campo-busca" placeholder="🔍 Digite seu nome para buscar..." oninput="filtrarFuncionarios()">
-
-    <div class="lista-funcionarios" id="listaColaboradoresContainer">
-      </div>
-
-    <div class="bloco-historico" id="blocoHistorico">
-      <h4 id="titHist">Suas batidas de hoje:</h4>
-      <div id="corpoHistorico"></div>
+    <div id="bloco-colaborador">
+      <label for="colaborador">2. SELECIONE SEU NOME:</label>
+      <select id="colaborador" onchange="verificarFluxoPontoDoDia()">
+        </select>
     </div>
 
-    <div class="area-botoes-ponto" id="areaBotoes">
-      <button class="btn-ponto btn-entrada" id="btn-Entrada" onclick="validarGeolocalizacaoAntesDeBater('Entrada')">➡️ ENTRADA EXPEDIENTE</button>
-      <button class="btn-ponto btn-saida-alm" id="btn-Saída Almoço" onclick="validarGeolocalizacaoAntesDeBater('Saída Almoço')">🥪 SAÍDA PARA ALMOÇO</button>
-      <button class="btn-ponto btn-retorno-alm" id="btn-Retorno Almoço" onclick="validarGeolocalizacaoAntesDeBater('Retorno Almoço')">↩️ RETORNO DO ALMOÇO</button>
-      <button class="btn-ponto btn-saida-fim" id="btn-Saída Fim" onclick="validarGeolocalizacaoAntesDeBater('Saída Fim')">🛑 SAÍDA ENCERRAMENTO</button>
+    <div id="bloco-botoes">
+      <label style="text-align: center; margin-bottom: 5px; color: #333;">3. REGISTRE SEU PONTO:</label>
+      <button id="btnEntrada" class="btn-entrada" style="display:none;" onclick="iniciarFluxoFoto('Entrada Manhã')">🌅 Registrar Entrada</button>
+      <button id="btnSaidaAlmoco" class="btn-saida-almoco" style="display:none;" onclick="iniciarFluxoFoto('Saída Almoço')">🥪 Saída p/ Almoço</button>
+      <button id="btnRetornoAlmoco" class="btn-retorno-almoco" style="display:none;" onclick="iniciarFluxoFoto('Retorno Almoço')">☕ Retorno do Almoço</button>
+      <button id="btnSaidaFim" class="btn-saida" style="display:none;" onclick="iniciarFluxoFoto('Saída Expediente')">🛑 Saída Fim Expediente</button>
     </div>
+
+    <div id="bloco-camera">
+      <label id="tituloCamera" style="text-align: center; color: #673ab7;"></label>
+      <video id="video" autoplay playsinline></video>
+      <img id="preview" class="preview-foto" alt="Sua Selfie">
+      <button class="btn-capturar" onclick="tirarFotoEValidarPonto()">📸 Tirar Foto e Confirmar</button>
+      <button class="btn-cancelar" onclick="cancelarFluxoFoto()">Voltar</button>
+    </div>
+
+    <p id="status"></p>
+    <div id="notificacaoWpp"></div>
+    <p id="nuvem" class="nuvem-status">☁️ Conectando ao Banco...</p>
+
+    <div id="localizacao">Aguardando seleção...</div>
+    <canvas id="canvas"></canvas>
   </div>
 
   <script>
-    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -89,318 +94,249 @@
       messagingSenderId: "356930006135",
       appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
     };
+
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // COORDENADAS DO SUPERMERCADO SÃO RAIMUNDO (Codó - MA)
-    const SUPERMERCADO_LAT = -4.4623; 
-    const SUPERMERCADO_LON = -43.8864;
-    const RAIO_MAXIMO_METROS = 50; // MANTIDO EM 50 METROS CONFORME PEDIDO
+    const MERCADO_LAT = -4.451406;
+    const MERCADO_LON = -43.876278;
+    const DISTANCIA_MAX_METROS = 50; // 🎯 Atualizado para 50 metros para máxima estabilidade na loja
 
-    // BANCO DE DADOS RESTAURADO COM AS CHAVES ORIGINAIS DE ANTES (EQUIP_1, EQUIP_2, DEPOSITO)
-    const colaboradores = [
-      // EQUIP_1
-      { nome: "Irene", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Rose", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Debora", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Gabriel", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Jaki", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Alice", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Thalice", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Raimundo Q", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Andre", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Rita", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Sueli", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Edete", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Genilson", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Patricia", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Carlos", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Vinicios", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Valdimiro", setor: "EQUIP_1", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      
-      // EQUIP_2
-      { nome: "Marta", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Dayana", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Fran", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Erica", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Alisson", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Adrissa", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Ruan", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Rayana", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Debora Sabao", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Marcos", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Raylma", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Francisca Souza", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Samira", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Henrrique", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Edmilson", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Rone Fruta", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Erisvana", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Leandro", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Victor", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Hilaria", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Karine", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Jeferson", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Dulce", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Eudes", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Felipe Frente", setor: "EQUIP_2", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      
-      // DEPOSITO
-      { nome: "Netim", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Vilson", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Tharles", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Marcelo", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Flavia", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/219/219969.png" },
-      { nome: "Keverson", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Talison", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Alan", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Henrique", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Flavio", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-      { nome: "Altemar", setor: "DEPOSITO", foto: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }
-    ];
-
-    let colaboradorSelecionado = "";
-
-    // Nomes de exibição das cabeçalhos idênticos aos de antes
-    const nomesFormatadosSetores = {
-      "EQUIP_1": "EQUIPE 01",
-      "EQUIP_2": "EQUIPE 02",
-      "DEPOSITO": "DEPÓSITO"
+    const equipe = {
+      escritorio: ["Ezequiel", "Ruan", "André", "hilária"],
+      rh: ["Flávio", "Altemar"],
+      tesouraria: ["Inês"],
+      caixas: ["Irene", "Karine", "Marta", "Daiane", "Jaqueline", "Rita", "Patrícia", "railma", "adrissa", "Erisva", "Débora"],
+      repositores: ["talice", "Samira", "Rosimar", "Victor mix", "Débora", "Raiana", "dulce", "ediete Vinícius", "Henrique", "Alisson", "Gabriel", "levir"],
+      almoxarifado: ["Netinho", "Denilson", "Thalles", "thalisson", "Flávia", "keverson", "Marcelo", "Alan", "Henrique", "Vilson"],
+      açougue: ["Carlos", "Francisca", "Alice", "Érica", "Suely"],
+      empacotadores: ["Felipe", "Edmilson", "Raimundo Queiroz"],
+      terceirizados: ["Roberto", "Acrísio", "graça", "novato mix"]
     };
 
-    function carregarListaColaboradores(filtro = "") {
-      const container = document.getElementById("listaColaboradoresContainer");
-      container.innerHTML = "";
+    let streamCamera = null;
+    let tipoPontoAtual = "";
 
-      const setores = {};
-      colaboradores.forEach(c => {
-        if (filtro && !c.nome.toLowerCase().includes(filtro.toLowerCase())) return;
-        if (!setores[c.setor]) setores[c.setor] = [];
-        setores[c.setor].push(c);
+    function filtrarColaboradores() {
+      const setor = document.getElementById("setor").value;
+      const blocoColaborador = document.getElementById("bloco-colaborador");
+      const seletor = document.getElementById("colaborador");
+      
+      seletor.innerHTML = "";
+      document.getElementById("bloco-botoes").style.display = "none";
+      document.getElementById("status").style.display = "none";
+      cancelarFluxoFoto();
+
+      if (!setor) { blocoColaborador.style.display = "none"; return; }
+
+      let opt = document.createElement("option");
+      opt.value = ""; opt.text = "-- Escolha seu Nome --";
+      seletor.appendChild(opt);
+
+      equipe[setor].forEach(nome => {
+        let o = document.createElement("option");
+        o.value = nome; o.text = nome; seletor.appendChild(o);
       });
+      blocoColaborador.style.display = "block";
+    }
 
-      Object.keys(setores).forEach(chaveSetor => {
-        if (setores[chaveSetor].length === 0) return;
+    function verificarFluxoPontoDoDia() {
+      const nome = document.getElementById("colaborador").value;
+      const blocoBotoes = document.getElementById("bloco-botoes");
+      
+      document.getElementById("btnEntrada").style.display = "none";
+      document.getElementById("btnSaidaAlmoco").style.display = "none";
+      document.getElementById("btnRetornoAlmoco").style.display = "none";
+      document.getElementById("btnSaidaFim").style.display = "none";
+      document.getElementById("notificacaoWpp").innerHTML = "";
+      cancelarFluxoFoto();
 
-        const header = document.createElement("div");
-        header.className = "header-setor";
-        header.innerText = nomesFormatadosSetores[chaveSetor] || chaveSetor;
-        container.appendChild(header);
+      if (!nome) { blocoBotoes.style.display = "none"; return; }
 
-        setores[chaveSetor].sort((a,b) => a.nome.localeCompare(b.nome)).forEach(c => {
-          const div = document.createElement("div");
-          div.className = "item-colaborador" + (colaboradorSelecionado === c.nome ? " selecionado" : "");
-          div.id = `func-${c.nome.replace(/\s+/g, '')}`;
-          div.onclick = () => selecionarColaborador(div, c.nome);
-          div.innerHTML = `
-            <img src="${c.foto}" class="foto-perfil" alt="${c.nome}">
-            <span class="nome-colaborador">${c.nome}</span>
-          `;
-          container.appendChild(div);
+      let agora = new Date();
+      let dataChave = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+
+      database.ref('pontos_registrados')
+        .orderByChild('colaborador')
+        .equalTo(nome)
+        .once('value', snapshot => {
+          let batidas = { entrada: false, saidaAlmoco: false, retornoAlmoco: false, saidaFim: false };
+          
+          snapshot.forEach(child => {
+            let p = child.val();
+            if (p.dataChave === dataChave) {
+              if (p.tipo === "Entrada Manhã") batidas.entrada = true;
+              if (p.tipo === "Saída Almoço") batidas.saidaAlmoco = true;
+              if (p.tipo === "Retorno Almoço") batidas.retornoAlmoco = true;
+              if (p.tipo === "Saída Expediente") batidas.saidaFim = true;
+            }
+          });
+
+          blocoBotoes.style.display = "block";
+
+          if (!batidas.entrada) {
+            document.getElementById("btnEntrada").style.display = "block";
+            document.getElementById("localizacao").innerHTML = "Status: Aguardando registro de <strong>Entrada</strong>.";
+          } else if (!batidas.saidaAlmoco) {
+            document.getElementById("btnSaidaAlmoco").style.display = "block";
+            document.getElementById("localizacao").innerHTML = "Status: Entrada registrada. Aguardando <strong>Saída pro Almoço</strong>.";
+          } else if (!batidas.retornoAlmoco) {
+            document.getElementById("btnRetornoAlmoco").style.display = "block";
+            document.getElementById("localizacao").innerHTML = "Status: No almoço. Aguardando <strong>Retorno do Almoço</strong>.";
+          } else if (!batidas.saidaFim) {
+            document.getElementById("btnSaidaFim").style.display = "block";
+            document.getElementById("localizacao").innerHTML = "Status: De volta do almoço. Aguardando <strong>Saída Fim de Expediente</strong>.";
+          } else {
+            document.getElementById("localizacao").innerHTML = "✅ Todos os 4 pontos de hoje já foram coletados e finalizados!";
+          }
         });
+    }
+
+    function iniciarFluxoFoto(tipo) {
+      tipoPontoAtual = tipo;
+      document.getElementById("bloco-botoes").style.display = "none";
+      document.getElementById("bloco-camera").style.display = "block";
+      document.getElementById("tituloCamera").innerHTML = `POSICIONE A CÂMERA FRONTAL PARA: <br><strong>${tipo.toUpperCase()}</strong>`;
+      
+      document.getElementById("video").style.display = "block";
+      document.getElementById("preview").style.display = "none";
+
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+        audio: false
+      }).then(stream => {
+        streamCamera = stream;
+        document.getElementById("video").srcObject = stream;
+      }).catch(err => {
+        alert("Erro ao acessar a câmera frontal. Verifique as permissões do seu navegador.");
+        cancelarFluxoFoto();
       });
     }
 
-    function filtrarFuncionarios() {
-      const texto = document.getElementById("inputBusca").value;
-      carregarListaColaboradores(texto);
-    }
-
-    function selecionarColaborador(elemento, nome) {
-      document.querySelectorAll(".item-colaborador").forEach(el => el.classList.remove("selecionado"));
-      elemento.classList.add("selecionado");
-      colaboradorSelecionado = nome;
-      buscarHistoricoESequenciaBotoes(nome);
-    }
-
-    function atualizarStatusRede() {
-      const indicador = document.getElementById("statusRede");
-      if (navigator.onLine) {
-        indicador.className = "status-rede rede-online";
-        indicador.innerText = "⚡ Conectado à Internet";
-        setTimeout(() => indicador.style.display = "none", 2000);
-        sincronizarPontosOffline();
-      } else {
-        indicador.className = "status-rede rede-offline";
-        indicador.innerText = "⚠️ Modo Offline Ativo (Os pontos serão salvos localmente)";
-        indicador.style.display = "block";
+    function cancelarFluxoFoto() {
+      if(streamCamera) {
+        streamCamera.getTracks().forEach(track => track.stop());
+        streamCamera = null;
+      }
+      document.getElementById("bloco-camera").style.display = "none";
+      if(document.getElementById("colaborador").value) {
+        document.getElementById("bloco-botoes").style.display = "block";
       }
     }
-    window.addEventListener('online', atualizarStatusRede);
-    window.addEventListener('offline', atualizarStatusRede);
 
-    function buscarHistoricoESequenciaBotoes(nome) {
-      const hoje = new Date();
-      const diaChave = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+    function tirarFotoEValidarPonto() {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       
-      document.getElementById("titHist").innerText = `Suas batidas de hoje (${hoje.getDate()}/${hoje.getMonth()+1}):`;
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      database.ref('pontos_registrados').once('value', snapshot => {
-        let pontosDeHoje = { "Entrada": "--", "Saída Almoço": "--", "Retorno Almoço": "--", "Saída Fim": "--" };
-        
-        snapshot.forEach(child => {
-          let p = child.val();
-          let pData = p.dataChave || "";
-          if(pData.includes('/')) {
-            let pt = pData.split('/'); pData = `${pt[2]}-${pt[1]}-${pt[0]}`;
-          }
-          if (p.colaborador === nome && pData === diaChave) {
-            pontosDeHoje[p.tipo] = p.horario;
-          }
-        });
+      const fotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
 
-        let pendentes = JSON.parse(localStorage.getItem("points_offline") || "[]");
-        pendentes.forEach(p => {
-          if(p.colaborador === nome && p.dataChave === diaChave) {
-            pontosDeHoje[p.tipo] = p.horario + " (Aguardando Internet)";
-          }
-        });
+      if(streamCamera) {
+        streamCamera.getTracks().forEach(track => track.stop());
+      }
 
-        const containerHist = document.getElementById("corpoHistorico");
-        containerHist.innerHTML = "";
-        Object.keys(pontosDeHoje).forEach(tipo => {
-          let hora = pontosDeHoje[tipo];
-          let classe = hora !== "--" ? "status-ok" : "status-pendente";
-          containerHist.innerHTML += `
-            <div class="linha-hist">
-              <span>${tipo}:</span>
-              <span class="${classe}">${hora}</span>
-            </div>
-          `;
-        });
-        document.getElementById("blocoHistorico").style.display = "block";
-
-        document.querySelectorAll(".btn-ponto").forEach(btn => btn.style.display = "none");
-        
-        if (pontosDeHoje["Entrada"] === "--") {
-          document.getElementById("btn-Entrada").style.display = "block";
-        } else if (pontosDeHoje["Saída Almoço"] === "--") {
-          document.getElementById("btn-Saída Almoço").style.display = "block";
-        } else if (pontosDeHoje["Retorno Almoço"] === "--") {
-          document.getElementById("btn-Retorno Almoço").style.display = "block";
-        } else if (pontosDeHoje["Saída Fim"] === "--") {
-          document.getElementById("btn-Saída Fim").style.display = "block";
-        }
-
-        document.getElementById("areaBotoes").style.display = "flex";
-      });
+      document.getElementById("bloco-camera").style.display = "none";
+      validarEProcurarGPS(tipoPontoAtual, fotoBase64);
     }
 
     function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; 
-      const phi1 = lat1 * Math.PI / 180;
-      const phi2 = lat2 * Math.PI / 180;
-      const deltaPhi = (lat2 - lat1) * Math.PI / 180;
-      const deltaLambda = (lon2 - lon1) * Math.PI / 180;
-
-      const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
-                Math.cos(phi1) * Math.cos(phi2) *
-                Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
       return R * c;
     }
 
-    function validarGeolocalizacaoAntesDeBater(tipo) {
-      if (!colaboradorSelecionado) return;
-
-      const botaoClicado = document.getElementById(`btn-${tipo}`);
-      botaoClicado.disabled = true;
-      botaoClicado.innerText = "VERIFICANDO GPS...";
-
-      if (!navigator.geolocation) {
-        alert("O navegador deste aparelho não suporta leitura de GPS. Fale com a gerência.");
-        finalizarProcessoBatida();
-        return;
-      }
+    function validarEProcurarGPS(tipo, fotoData) {
+      if (!navigator.geolocation) { alert("Seu navegador não possui suporte a GPS."); return; }
+      
+      document.getElementById("status").style.display = "block";
+      document.getElementById("status").innerHTML = "Validando localização de Cerca Virtual via GPS...";
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const latDispositivo = position.coords.latitude;
-          const lonDispositivo = position.coords.longitude;
+        pos => {
+          let lat = pos.coords.latitude;
+          let lon = pos.coords.longitude;
+          let distancia = calcularDistanciaMetros(lat, lon, MERCADO_LAT, MERCADO_LON);
 
-          const distanciaDaLoja = calcularDistanciaMetros(latDispositivo, lonDispositivo, SUPERMERCADO_LAT, SUPERMERCADO_LON);
-
-          if (distanciaDaLoja <= RAIO_MAXIMO_METROS) {
-            registrarPontoValidado(tipo, latDispositivo, lonDispositivo);
-          } else {
-            alert(`❌ ACESSO NEGADO!\nVocê está fora da loja (${Math.round(distanciaDaLoja)} metros de distância).\nO ponto só pode ser registrado a menos de 50 metros do supermercado.`);
-            finalizarProcessoBatida();
+          if (distancia > DISTANCIA_MAX_METROS) {
+            document.getElementById("status").innerHTML = "❌ <strong>ACESSO BLOQUEADO POR DISTÂNCIA!</strong>";
+            alert(`Bloqueado: Você precisa estar no supermercado para registrar o ponto (Distância atual: ${distancia.toFixed(1)} metros).`);
+            verificarFluxoPontoDoDia();
+            return;
           }
+
+          gravarPonto(tipo, lat, lon, fotoData);
         },
-        (error) => {
-          alert("⚠️ ERRO DE LOCALIZAÇÃO!\nNão foi possível ler o GPS do aparelho. Certifique-se de ativar a localização e dar permissão para este site.");
-          finalizarProcessoBatida();
+        err => {
+          alert("GPS Desativado. Ative a localização de alta precisão do seu smartphone.");
+          verificarFluxoPontoDoDia();
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 12000 }
       );
     }
 
-    function registrarPontoValidado(tipo, lat, lon) {
-      const agora = new Date();
-      const dataChave = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
-      const dataExibir = `${String(agora.getDate()).padStart(2,'0')}/${String(agora.getMonth()+1).padStart(2,'0')}/${agora.getFullYear()}`;
-      const horario = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}:${String(agora.getSeconds()).padStart(2,'0')}`;
+    function gravarPonto(tipo, lat, lon, fotoData) {
+      let nome = document.getElementById("colaborador").value;
+      let setorTexto = document.getElementById("setor").options[document.getElementById("setor").selectedIndex].text;
+      
+      let agora = new Date();
+      let dataFormatada = agora.toLocaleDateString('pt-BR');
+      let horaFormatada = agora.toLocaleTimeString('pt-BR');
+      let dataChave = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
 
-      const dadosPonto = {
-        colaborador: colaboradorSelecionado,
-        data: dataExibir,
-        dataChave: dataChave,
-        horario: horario,
-        tipo: tipo,
-        fotoSelfie: "", 
-        latitude: lat.toString(), 
-        longitude: lon.toString()
-      };
+      let minutesAtraso = 0;
+      let mensagemAtraso = "";
+      let hora = agora.getHours();
+      let minuto = agora.getMinutes();
+      let totalMinutosDia = (hora * 60) + minuto;
 
-      if (navigator.onLine) {
-        database.ref('pontos_registrados').push(dadosPonto)
-          .then(() => {
-            alert(`Sucesso! Ponto de ${tipo} registrado às ${horario}.`);
-            finalizarProcessoBatida();
-          })
-          .catch(() => {
-            guardarNoCacheOffline(dadosPonto);
-          });
-      } else {
-        guardarNoCacheOffline(dadosPonto);
+      if (tipo === "Entrada Manhã") {
+        if (totalMinutosDia < 510) { 
+          if (totalMinutosDia > 425) minutesAtraso = totalMinutosDia - 420;
+        } else { 
+          if (totalMinutosDia > 605) minutesAtraso = totalMinutosDia - 600;
+        }
       }
-    }
 
-    function guardarNoCacheOffline(dados) {
-      let fila = JSON.parse(localStorage.getItem("points_offline") || "[]");
-      fila.push(dados);
-      localStorage.setItem("points_offline", JSON.stringify(fila));
-      alert(`Ponto salvo no aparelho! Sem Wi-Fi no momento, mas o registro de ${dados.tipo} foi validado por GPS e armazenado localmente. Subirá sozinho assim que a internet voltar.`);
-      finalizarProcessoBatida();
-    }
+      if (minutesAtraso > 0) {
+        mensagemAtraso = `⚠️ PONTO REGISTRADO COM ATRASO DE ${minutesAtraso} MINUTOS!`;
+        let textoWpp = encodeURIComponent(`🚨 *Notificação Meu Ponto SR*:\nO colaborador *${nome}* (${setorTexto}) registrou a *Entrada* hoje às ${horaFormatada} com *${minutesAtraso} minutos de atraso*.`);
+        document.getElementById("notificacaoWpp").innerHTML = `<a href="https://api.whatsapp.com/send?text=${textoWpp}" target="_blank" class="btn-wpp">📲 Enviar Notificação de Atraso para a Gerência</a>`;
+      }
 
-    function sincronizarPontosOffline() {
-      let fila = JSON.parse(localStorage.getItem("points_offline") || "[]");
-      if (fila.length === 0) return;
+      document.getElementById("status").innerHTML = `<strong>${tipo}</strong> gravado com sucesso!`;
+      document.getElementById("nuvem").style.display = "block";
 
-      let promessas = fila.map(p => database.ref('pontos_registrados').push(p));
-
-      Promise.all(promessas).then(() => {
-        localStorage.removeItem("points_offline");
-        if(colaboradorSelecionado) buscarHistoricoESequenciaBotoes(colaboradorSelecionado);
-      }).catch(err => console.log("Aguardando rede firme...", err));
-    }
-
-    function finalizarProcessoBatida() {
-      document.querySelectorAll(".btn-ponto").forEach(btn => {
-        btn.disabled = false;
-        if(btn.id === "btn-Entrada") btn.innerText = "➡️ ENTRADA EXPEDIENTE";
-        if(btn.id === "btn-Saída Almoço") btn.innerText = "🥪 SAÍDA PARA ALMOÇO";
-        if(btn.id === "btn-Retorno Almoço") btn.innerText = "↩️ RETORNO DO ALMOÇO";
-        if(btn.id === "btn-Saída Fim") btn.innerText = "🛑 SAÍDA ENCERRAMENTO";
+      let novoPonto = database.ref('pontos_registrados').push();
+      novoPonto.set({
+        colaborador: nome,
+        setor: setorTexto,
+        tipo: tipo,
+        data: dataFormatada,
+        dataChave: dataChave,
+        horario: horaFormatada,
+        latitude: lat,
+        longitude: lon,
+        atrasoMinutos: minutesAtraso,
+        fotoSelfie: fotoData
+      }, function(error) {
+        if (!error) {
+          document.getElementById("nuvem").innerHTML = "✅ Sincronizado com o Meu Ponto SR!";
+          verificarFluxoPontoDoDia(); 
+        }
       });
-      if (colaboradorSelecionado) buscarHistoricoESequenciaBotoes(colaboradorSelecionado);
     }
-
-    // Inicialização do sistema
-    carregarListaColaboradores();
-    atualizarStatusRede();
   </script>
 </body>
 </html>
