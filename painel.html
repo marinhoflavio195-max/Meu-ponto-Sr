@@ -191,7 +191,7 @@
           <th style="text-align: center;">Dias Trab.</th>
           <th style="text-align: center;">Faltas Presumidas</th>
           <th style="text-align: center;">Total Atrasos</th>
-          <th style="text-align: center;">Assinatura do Funcionário</th>
+          <th>Assinatura do Funcionário</th>
         </tr>
       </thead>
       <tbody id="corpoTabelaPrint">
@@ -347,7 +347,7 @@
               
               let idFoto = child.key;
               if (p.fotoSelfie) mapaFotosMemoria[idFoto] = p.fotoSelfie;
-              let gpsLink = (p.latitude && p.longitude) ? `https://www.google.com/maps?q=${p.latitude},${p.longitude}` : null;
+              let gpsLink = (p.latitude && p.longitude) ? `http://maps.google.com/maps?q=${p.latitude},${p.longitude}` : null;
 
               let tipoNorm = normalizarTexto(p.tipo);
               if (tipoNorm.includes("entrada") && !tipoNorm.includes("alm")) { 
@@ -360,7 +360,7 @@
               }
               else if (tipoNorm.includes("saidaalm") || tipoNorm === "almoco" || (tipoNorm.includes("saida") && tipoNorm.includes("alm"))) { 
                 batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; 
-                batidasDoBanco[child.key] ? null : batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; 
+                batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; 
                 batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; 
               }
               else if (tipoNorm.includes("retorno") || tipoNorm.includes("retalm") || (tipoNorm.includes("volta") && tipoNorm.includes("alm"))) { 
@@ -412,7 +412,7 @@
 
         corpoPrint.innerHTML = "";
         Object.keys(resumoConsolidadoGlobal).sort().forEach(nomeKey => {
-          let rc = resumoConsolidadoGlobal[nomeKey];
+          let rc = resumoConsolidatedGlobal[nomeKey];
           corpoPrint.innerHTML += `
             <tr>
               <td><strong>${rc.nome}</strong></td>
@@ -436,9 +436,19 @@
       let htmlAcoes = "";
 
       if(l.entrada === "FALTA") {
-        tr.innerHTML = `<td>${l.data}</td><td><strong>${l.funcionario}</strong></td><td colspan="6"><span class="status-falta">❌ FALTA SEM JUSTIFICATIVA</span></td><td>--</td>`;
+        tr.innerHTML = `
+          <td>${l.data}</td>
+          <td><strong>${l.funcionario}</strong></td>
+          <td colspan="6" style="text-align: left;"><span class="status-falta">❌ FALTA SEM JUSTIFICATIVA</span></td>
+          <td style="text-align: center; color: #999;">--</td>
+        `;
       } else if (l.entrada === "FOLGA") {
-        tr.innerHTML = `<td>${l.data}</td><td><strong>${l.funcionario}</strong></td><td colspan="6"><span class="status-folga">⚽ FOLGA ESCALADA</span></td><td>--</td>`;
+        tr.innerHTML = `
+          <td>${l.data}</td>
+          <td><strong>${l.funcionario}</strong></td>
+          <td colspan="6" style="text-align: left;"><span class="status-folga">⚽ FOLGA ESCALADA</span></td>
+          <td style="text-align: center; color: #999;">--</td>
+        `;
       } else {
         htmlAcoes += criarBlocoBotao("Entrada", l.auditoria.idFotoEntrada, l.auditoria.gpsEntrada);
         htmlAcoes += criarBlocoBotao("S.Almoço", l.auditoria.idFotoSaidaAlm, l.auditoria.gpsSaidaAlm);
