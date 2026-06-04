@@ -45,13 +45,10 @@
     .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 5px 10px; border-radius: 4px; font-size: 12px; }
     .status-folga { color: #006430; font-weight: bold; background: #e8f5e9; padding: 5px 10px; border-radius: 4px; font-size: 12px; border: 1px solid #a5d6a7; }
     
-    .col-atraso { color: #c62828; font-weight: bold; background-color: #fff5f5; }
-    .col-extra { color: #006430; font-weight: bold; background-color: #f0f7f1; }
-    
     .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 5px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; min-width: 75px; border: 1px solid #d0dfd5; }
     .titulo-acao-btd { font-size: 9px; font-weight: bold; color: #004a26; margin-bottom: 3px; text-transform: uppercase; }
     .btn-foto { background: #673ab7; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
-    .btn-mapa { background: #0b5394; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: block; }
+    .btn-mapa { background: #0b5394; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
     .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
@@ -61,11 +58,11 @@
     /* Área Oculta na tela - Aparece somente ao mandar Imprimir */
     #areaImpressaoConsolidada { display: none; }
 
-    /* ESTRUTURA REVOLUCIONÁRIA DE IMPRESSÃO - Reduz o mês a poucas linhas por funcionário */
+    /* ESTRUTURA DE IMPRESSÃO */
     @media print {
       body { background: white; padding: 0; margin: 0; }
-      .painel-container { display: none !important; } /* Esconde o painel detalhado da tela */
-      #areaImpressaoConsolidada { display: block !important; width: 100%; } /* Ativa a folha de assinaturas enxuta */
+      .painel-container { display: none !important; }
+      #areaImpressaoConsolidada { display: block !important; width: 100%; }
       table.tab-print { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
       table.tab-print th, table.tab-print td { border: 1px solid #000 !important; padding: 8px 6px; text-align: left; }
       table.tab-print th { background-color: #f2f2f2 !important; color: #000 !important; font-size: 11px; text-transform: uppercase; }
@@ -212,7 +209,7 @@
   </div>
 
   <script>
-    // Inicialização do Firebase
+    // Configurações do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -225,7 +222,6 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Mapeamento mantido para cálculos precisos
     const mapeamentoEquipes = {
       "Irene": "EQUIP_1", "Rose": "EQUIP_1", "Debora": "EQUIP_1", "Gabriel": "EQUIP_1", "Jaki": "EQUIP_1",
       "Alice": "EQUIP_1", "Thalice": "EQUIP_1", "Raimundo Q": "EQUIP_1", "Andre": "EQUIP_1", "Rone Fruta": "EQUIP_1",
@@ -256,7 +252,7 @@
 
     let relatorioFinal = [];
     let mapaFotosMemoria = {};
-    let resumoConsolidadoGlobal = {}; // Usado para gerar o PDF enxuto
+    let resumoConsolidadoGlobal = {};
 
     const hojeObj = new Date();
     document.getElementById('filtroMes').value = hojeObj.getFullYear() + '-' + String(hojeObj.getMonth() + 1).padStart(2, '0');
@@ -314,6 +310,11 @@
       const corpo = document.getElementById('corpoTabela');
       const corpoPrint = document.getElementById('corpoTabelaPrint');
       
+      if (!mesRef) {
+        alert("Por favor, selecione o mês de fechamento!");
+        return;
+      }
+
       document.getElementById('tituloPrintMes').innerText = `FOLHA DE ASSINATURA - PERÍODO REF: ${mesRef.split('-')[1]}/${mesRef.split('-')[0]}`;
       corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Carregando e processando batidas do banco...</td></tr>";
 
@@ -327,7 +328,6 @@
         mapaFotosMemoria = {};
         resumoConsolidadoGlobal = {};
 
-        // Inicia o acumulador para todos os colaboradores selecionados
         listaParaProcessar.forEach(nome => {
           resumoConsolidadoGlobal[nome] = { nome, setor: mapeamentoEquipes[nome] || "GERAL", diasTrabalhados: 0, faltas: 0, totalAtrasos: 0 };
         });
@@ -354,11 +354,13 @@
                 batidasDoBanco[chaveAgrupada].entrada = p.horario; 
                 batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; 
                 batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; 
-                if(p.atrasoMinutos) resumoConsolidadoGlobal[p.colaborador].totalAtrasos += parseInt(p.atrasoMinutos);
+                if(p.atrasoMinutos && resumoConsolidadoGlobal[p.colaborador]) {
+                  resumoConsolidadoGlobal[p.colaborador].totalAtrasos += parseInt(p.atrasoMinutos);
+                }
               }
               else if (tipoNorm.includes("saidaalm") || tipoNorm === "almoco" || (tipoNorm.includes("saida") && tipoNorm.includes("alm"))) { 
                 batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; 
-                batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; 
+                batidasDoBanco[child.key] ? null : batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; 
                 batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; 
               }
               else if (tipoNorm.includes("retorno") || tipoNorm.includes("retalm") || (tipoNorm.includes("volta") && tipoNorm.includes("alm"))) { 
@@ -378,7 +380,6 @@
         relatorioFinal = [];
         corpo.innerHTML = "";
 
-        // Alimenta a tabela detalhada da TELA
         for (let d = 1; d <= totalDias; d++) {
           let diaStr = String(d).padStart(2, '0');
           let dataLoopStr = `${mesRef}-${diaStr}`;
@@ -392,12 +393,12 @@
             let folga = checarSeEstaDeFolga(func, dataObj);
 
             if (b) {
-              resumoConsolidadoGlobal[func].diasTrabalhados++;
+              if (resumoConsolidadoGlobal[func]) resumoConsolidadoGlobal[func].diasTrabalhados++;
               let linha = { data: dataFormatadaExibir, funcionario: func, entrada: b.entrada, saidaAlm: b.saidaAlm, retAlm: b.retAlm, saidaFim: b.saidaFim, auditoria: b };
               relatorioFinal.push(linha);
               renderizarLinhaTabela(linha, corpo);
             } else if (!folga) {
-              resumoConsolidadoGlobal[func].faltas++;
+              if (resumoConsolidadoGlobal[func]) resumoConsolidadoGlobal[func].faltas++;
               let linhaFalta = { data: dataFormatadaExibir, funcionario: func, entrada: "FALTA", saidaAlm: "--", retAlm: "--", saidaFim: "--", auditoria: null };
               relatorioFinal.push(linhaFalta);
               renderizarLinhaTabela(linhaFalta, corpo);
@@ -409,7 +410,6 @@
           });
         }
 
-        // Alimenta a tabela de IMPRESSÃO enxuta
         corpoPrint.innerHTML = "";
         Object.keys(resumoConsolidadoGlobal).sort().forEach(nomeKey => {
           let rc = resumoConsolidadoGlobal[nomeKey];
@@ -418,12 +418,16 @@
               <td><strong>${rc.nome}</strong></td>
               <td>${rc.setor}</td>
               <td style="text-align: center;">${rc.diasTrabalhados} dias</td>
-              <td style="text-align: center; color: red;">${rc.faltas}</td>
+              <td style="text-align: center; color: red; font-weight:bold;">${rc.faltas}</td>
               <td style="text-align: center;">${rc.totalAtrasos} min</td>
               <td><div class="linha-assinatura"></div></td>
             </tr>
           `;
         });
+
+        if (corpo.innerHTML === "") {
+          corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Nenhum registro encontrado para este período.</td></tr>";
+        }
       });
     }
 
@@ -476,6 +480,10 @@
     function fecharModal() { document.getElementById('modalFoto').style.display = 'none'; }
 
     function baixarPDFConsolidado() {
+      if (Object.keys(resumoConsolidadoGlobal).length === 0) {
+        alert("Gere a consulta na tela antes de exportar o PDF!");
+        return;
+      }
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       
@@ -504,6 +512,10 @@
     }
 
     function baixarExcel() {
+      if (relatorioFinal.length === 0) {
+        alert("Consulte os dados primeiro!");
+        return;
+      }
       let dadosExcel = [];
       relatorioFinal.forEach(l => {
         dadosExcel.push({
@@ -514,7 +526,7 @@
       let ws = XLSX.utils.json_to_sheet(dadosExcel);
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Registros");
-      XLSX.utils.book_export_excel(wb, ws, `Ponto_Detalhado_${document.getElementById('filtroMes').value}.xlsx`);
+      XLSX.writeFile(wb, `Ponto_Detalhado_${document.getElementById('filtroMes').value}.xlsx`);
     }
   </script>
 </body>
