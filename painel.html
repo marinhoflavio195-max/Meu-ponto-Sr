@@ -3,94 +3,216 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Administrativo - São Raimundo</title>
+  <title>Painel Administrativo - Meu Ponto SR</title>
   
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f4f7f5; margin: 0; padding: 20px; color: #333; }
-    .painel-container { max-width: 1100px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-top: 6px solid #006430; }
+    body { font-family: Arial, sans-serif; background-color: #f0f4f1; margin: 0; padding: 20px; color: #333; }
+    .painel-container { width: 98%; max-width: 100%; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,74,38,0.1); box-sizing: border-box; border-top: 6px solid #006430; }
     
-    h2 { color: #006430; margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
+    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 10px; font-size: 28px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
     
-    .filtros-area { display: flex; gap: 15px; background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; align-items: flex-end; }
-    .grupo-filtro { display: flex; flex-direction: column; gap: 5px; }
-    .grupo-filtro label { font-size: 12px; font-weight: bold; color: #004a26; }
-    select, input { padding: 10px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 14px; background: white; outline: none; }
-    
-    .btn-acao { background: #006430; color: white; border: none; padding: 11px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
-    .btn-acao:hover { background: #004a26; }
-    .btn-imprimir { background: #0288d1; }
-    .btn-imprimir:hover { background: #01579b; }
+    .bloco-folgas-hoje { background: #e8f5e9; border: 2px solid #006430; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; color: #004a26; }
+    .bloco-folgas-hoje h3 { margin: 0 0 10px 0; font-size: 18px; display: flex; align-items: center; gap: 8px; color: #006430; }
+    .lista-folguistas { font-weight: bold; font-size: 15px; color: #006430; line-height: 1.5; }
 
-    /* Tabela de Relatório Consolidado */
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    th { background-color: #006430; color: white; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
-    tr:nth-child(even) { background-color: #f9f9f9; }
+    .filtros-topo { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; background: #f7fbf7; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
+    .campo-filtro { flex: 1; min-width: 240px; }
+    .campo-filtro label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #004a26; }
+    .campo-filtro select, .campo-filtro input { width: 100%; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 16px; box-sizing: border-box; background-color: #ffffff; }
     
-    .campo-assinatura { width: 220px; border-bottom: 1px solid #333; height: 35px; }
-    .destaque-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 2px 6px; border-radius: 4px; }
-    .destaque-atraso { color: #f57c00; font-weight: bold; }
+    .botoes-acoes { display: flex; gap: 15px; margin-bottom: 25px; }
+    .btn { padding: 14px 25px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; color: white; transition: background 0.2s; }
+    .btn-filtrar { background-color: #006430; border-bottom: 3px solid #004a26; }
+    .btn-filtrar:hover { background-color: #004a26; }
+    .btn-excel { background-color: #2e7d32; border-bottom: 3px solid #1b5e20; }
+    .btn-excel:hover { background-color: #1b5e20; }
+    .btn-pdf { background-color: #0b5394; border-bottom: 3px solid #073763; }
+    .btn-pdf:hover { background-color: #073763; }
+    .btn-imprimir { background-color: #757575; border-bottom: 3px solid #424242; }
+    .btn-imprimir:hover { background-color: #424242; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th { background-color: #006430; color: white; padding: 12px 8px; text-align: left; font-size: 14px; border-bottom: 3px solid #ffd700; }
+    td { padding: 12px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
+    tr:hover { background-color: #f1f8f3; }
+    
+    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 5px 10px; border-radius: 4px; font-size: 12px; }
+    .status-folga { color: #006430; font-weight: bold; background: #e8f5e9; padding: 5px 10px; border-radius: 4px; font-size: 12px; border: 1px solid #a5d6a7; }
+    
+    .col-atraso { color: #c62828; font-weight: bold; background-color: #fff5f5; }
+    .col-extra { color: #006430; font-weight: bold; background-color: #f0f7f1; }
+    
+    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 5px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; min-width: 75px; border: 1px solid #d0dfd5; }
+    .titulo-acao-btd { font-size: 9px; font-weight: bold; color: #004a26; margin-bottom: 3px; text-transform: uppercase; }
+    .btn-foto { background: #673ab7; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
+    .btn-mapa { background: #0b5394; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: block; }
 
-    /* Estilização focada para Impressão limpa */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-content img { width: 100%; border-radius: 8px; border: 3px solid #006430; margin-bottom: 15px; }
+    .btn-fechar-modal { background: #006430; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
+
+    /* Área Oculta na tela - Aparece somente ao mandar Imprimir */
+    #areaImpressaoConsolidada { display: none; }
+
+    /* ESTRUTURA REVOLUCIONÁRIA DE IMPRESSÃO - Reduz o mês a poucas linhas por funcionário */
     @media print {
-      body { background: white; padding: 0; }
-      .painel-container { box-shadow: none; border: none; max-width: 100%; padding: 0; }
-      .filtros-area, .btn-imprimir, .btn-acao { display: none !important; }
-      th { background-color: #f2f2f2 !important; color: black !important; border: 1px solid #000; }
-      td { border: 1px solid #000; }
+      body { background: white; padding: 0; margin: 0; }
+      .painel-container { display: none !important; } /* Esconde o painel detalhado da tela */
+      #areaImpressaoConsolidada { display: block !important; width: 100%; } /* Ativa a folha de assinaturas enxuta */
+      table.tab-print { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+      table.tab-print th, table.tab-print td { border: 1px solid #000 !important; padding: 8px 6px; text-align: left; }
+      table.tab-print th { background-color: #f2f2f2 !important; color: #000 !important; font-size: 11px; text-transform: uppercase; }
+      .linha-assinatura { width: 180px; border-bottom: 1px solid #000; height: 25px; }
     }
   </style>
 </head>
 <body>
 
   <div class="painel-container">
-    <h2>
-      <span>📋 Relatório Mensal de Faltas e Assinaturas</span>
-      <button class="btn-acao btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha</button>
-    </h2>
+    <h1>MEU PONTO SR - PAINEL ADMINISTRATIVO</h1>
 
-    <div class="filtros-area">
-      <div class="grupo-filtro">
-        <label for="filtroMes">SELECIONE O MÊS/ANO:</label>
-        <input type="month" id="filtroMes" onchange="gerarRelatorioConsolidado()">
-      </div>
-      <div class="grupo-filtro">
-        <label for="filtroSetor">FILTRAR POR SETOR:</label>
-        <select id="filtroSetor" onchange="gerarRelatorioConsolidado()">
-          <option value="TODOS">-- Todos os Setores --</option>
-          <option value="EQUIPE 01">EQUIPE 01</option>
-          <option value="EQUIPE 02">EQUIPE 02</option>
-          <option value="DEPÓSITO">DEPÓSITO</option>
-        </select>
-      </div>
-      <button class="btn-acao" onclick="gerarRelatorioConsolidado()">🔄 Atualizar Dados</button>
+    <div class="bloco-folgas-hoje" id="blocoFolgas">
+      <h3 id="tituloFolgasDoDia">⚽ Escalados para Folga hoje</h3>
+      <div class="lista-folguistas" id="listaFolguistasContainer">Carregando escalação de folgas...</div>
     </div>
 
-    <table>
+    <div class="filtros-topo">
+      <div class="campo-filtro">
+        <label for="filtroColaborador">SELECIONE O FUNCIONÁRIO PARA FILTRAR:</label>
+        <select id="filtroColaborador">
+          <option value="TODOS">-- Todos os Funcionários --</option>
+          <option value="Adrissa">Adrissa</option>
+          <option value="Alan">Alan</option>
+          <option value="Alice">Alice</option>
+          <option value="Alisson">Alisson</option>
+          <option value="Altemar">Altemar</option>
+          <option value="Andre">André</option>
+          <option value="Carlos">Carlos</option>
+          <option value="Dayana">Dayana</option>
+          <option value="Debora">Débora</option>
+          <option value="Debora Sabao">Débora Sabão</option>
+          <option value="Denilson">Denilson</option>
+          <option value="Dulce">Dulce</option>
+          <option value="Edete">Edete</option>
+          <option value="Edmilson">Edmilson</option>
+          <option value="Erica">Érica</option>
+          <option value="Erisvana">Erisvana</option>
+          <option value="Eudes">Eudes</option>
+          <option value="Felipe Frente">Felipe Frente</option>
+          <option value="Flavia">Flávia</option>
+          <option value="Flavio">Flávio</option>
+          <option value="Fran">Fran</option>
+          <option value="Francisca Souza">Francisca Souza</option>
+          <option value="Gabriel">Gabriel</option>
+          <option value="Genilson">Genilson</option>
+          <option value="Henrique">Henrique Dep.</option>
+          <option value="Henrrique">Henrique</option>
+          <option value="Hilaria">Hilária</option>
+          <option value="Irene">Irene</option>
+          <option value="Jaki">Jaki</option>
+          <option value="Jeferson">Jeferson</option>
+          <option value="Karine">Karine</option>
+          <option value="Keverson">Keverson</option>
+          <option value="Leandro">Leandro</option>
+          <option value="Marcelo">Marcelo</option>
+          <option value="Marcos">Marcos</option>
+          <option value="Marta">Marta</option>
+          <option value="Netim">Netim</option>
+          <option value="Patricia">Patrícia</option>
+          <option value="Raimundo Q">Raimundo Q</option>
+          <option value="Rayana">Rayana</option>
+          <option value="Raylma">Raylma</option>
+          <option value="Rita">Rita</option>
+          <option value="Rone Fruta">Rone Fruta</option>
+          <option value="Rose">Rose</option>
+          <option value="Ruan">Ruan</option>
+          <option value="Samira">Samira</option>
+          <option value="Sueli">Suely</option>
+          <option value="Talison">Talison</option>
+          <option value="Thalice">Thalice</option>
+          <option value="Tharles">Tharles</option>
+          <option value="Valdimiro">Valdimiro</option>
+          <option value="Victor">Victor</option>
+          <option value="Vilson">Vilson</option>
+          <option value="Vinicios">Vinícius</option>
+        </select>
+      </div>
+      <div class="campo-filtro">
+        <label for="filtroMes">MÊS DE FECHAMENTO:</label>
+        <input type="month" id="filtroMes">
+      </div>
+      <div class="campo-filtro">
+        <label for="filtroDataFolga">VER FOLGAS DE UM DIA ESPECÍFICO:</label>
+        <input type="date" id="filtroDataFolga" onchange="window.atualizarPainelFolgasDiario()">
+      </div>
+    </div>
+
+    <div class="botoes-acoes">
+      <button class="btn btn-filtrar" onclick="processarFechamentoMensal()">🔍 Consultar Período</button>
+      <button class="btn btn-excel" onclick="baixarExcel()">📊 Baixar Excel</button>
+      <button class="btn btn-pdf" onclick="baixarPDFConsolidado()">📄 Gerar PDF Resumido</button>
+      <button class="btn btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha Enxuta</button>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table id="tabelaFechamento">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Funcionário</th>
+            <th>Entrada</th>
+            <th>S. Almoço</th>
+            <th>R. Almoço</th>
+            <th>Saída Fim</th>
+            <th>Atraso / Débito</th>
+            <th>Hora Extra</th>
+            <th>Auditoria Inteligente</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela">
+          <tr><td colspan="9" style="text-align:center; padding:30px; font-size: 16px;">Selecione os parâmetros e clique em Consultar.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="areaImpressaoConsolidada">
+    <h2 style="text-align: center; color: #006430; margin-bottom: 5px;">SUPERMERCADO SÃO RAIMUNDO</h2>
+    <h3 style="text-align: center; margin-top: 0; margin-bottom: 20px;" id="tituloPrintMes">FOLHA DE ASSINATURA E RESUMO DE REGISTROS</h3>
+    <table class="tab-print">
       <thead>
         <tr>
           <th>Colaborador</th>
-          <th>Setor / Equipe</th>
+          <th>Setor/Equipe</th>
           <th style="text-align: center;">Dias Trab.</th>
-          <th style="text-align: center;">Faltas Estimadas*</th>
-          <th style="text-align: center;">Atrasos (Minutos)</th>
+          <th style="text-align: center;">Faltas Presumidas</th>
+          <th style="text-align: center;">Total Atrasos</th>
           <th style="text-align: center;">Assinatura do Funcionário</th>
         </tr>
       </thead>
-      <tbody id="tabelaCorpo">
-        <tr>
-          <td colspan="6" style="text-align: center; color: #666; padding: 20px;">Escolha um mês acima para processar os dados...</td>
-        </tr>
-      </tbody>
+      <tbody id="corpoTabelaPrint">
+        </tbody>
     </table>
-    <p style="font-size: 11px; color: #777; margin-top: 15px;">* Nota: As faltas estimadas são calculadas baseadas nos dias do mês em que o funcionário não registrou nenhuma batida de ponto.</p>
+    <p style="font-size: 10px; margin-top: 20px; color: #444;">Declaramos para os devidos fins a exatidão dos dados compilados acima referentes ao período selecionado.</p>
+  </div>
+
+  <div id="modalFoto" class="modal">
+    <div class="modal-content">
+      <h3 id="modalTitulo" style="margin-top:0; color:#006430; font-size: 18px;">Selfie de Verificação</h3>
+      <img id="modalImg" src="" alt="Selfie do Funcionário">
+      <button class="btn-fechar-modal" onclick="fecharModal()">Fechar Visualização</button>
+    </div>
   </div>
 
   <script>
-    // Configuração do Firebase (IDÊNTICA ao seu index.html)
+    // Inicialização do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -103,125 +225,296 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Banco de dados oficial de colaboradores para cruzar e achar faltas
-    const listaFuncionariosCompleta = [
-      { nome: "Alice", setor: "EQUIPE 01" }, { nome: "Andre", setor: "EQUIPE 01" }, { nome: "Carlos", setor: "EQUIPE 01" },
-      { nome: "Debora", setor: "EQUIPE 01" }, { nome: "Edete", setor: "EQUIPE 01" }, { nome: "Gabriel", setor: "EQUIPE 01" },
-      { nome: "Genilson", setor: "EQUIPE 01" }, { nome: "Irene", setor: "EQUIPE 01" }, { nome: "Jaki", setor: "EQUIPE 01" },
-      { nome: "Patricia", setor: "EQUIPE 01" }, { nome: "Raimundo Q", setor: "EQUIPE 01" }, { nome: "Rita", setor: "EQUIPE 01" },
-      { nome: "Rose", setor: "EQUIPE 01" }, { nome: "Sueli", setor: "EQUIPE 01" }, { nome: "Thalice", setor: "EQUIPE 01" },
-      { nome: "Valdimiro", setor: "EQUIPE 01" }, { nome: "Vinicios", setor: "EQUIPE 01" },
-      { nome: "Adrissa", setor: "EQUIPE 02" }, { nome: "Alisson", setor: "EQUIPE 02" }, { nome: "Dayana", setor: "EQUIPE 02" },
-      { nome: "Debora Sabao", setor: "EQUIPE 02" }, { nome: "Dulce", setor: "EQUIPE 02" }, { nome: "Erica", setor: "EQUIPE 02" },
-      { nome: "Erisvana", setor: "EQUIPE 02" }, { nome: "Eudes", setor: "EQUIPE 02" }, { nome: "Felipe Frente", setor: "EQUIPE 02" },
-      { nome: "Fran", setor: "EQUIPE 02" }, { nome: "Francisca Souza", setor: "EQUIPE 02" }, { nome: "Henrrique", setor: "EQUIPE 02" },
-      { nome: "Hilaria", setor: "EQUIPE 02" }, { nome: "Jeferson", setor: "EQUIPE 02" }, { nome: "Karine", setor: "EQUIPE 02" },
-      { nome: "Leandro", setor: "EQUIPE 02" }, { nome: "Marcos", setor: "EQUIPE 02" }, { nome: "Marta", setor: "EQUIPE 02" },
-      { nome: "Rayana", setor: "EQUIPE 02" }, { nome: "Raylma", setor: "EQUIPE 02" }, { nome: "Rone Fruta", setor: "EQUIPE 02" },
-      { nome: "Ruan", setor: "EQUIPE 02" }, { nome: "Samira", setor: "EQUIPE 02" }, { nome: "Victor", setor: "EQUIPE 02" },
-      { nome: "Alan", setor: "DEPÓSITO" }, { nome: "Altemar", setor: "DEPÓSITO" }, { nome: "Flavia", setor: "DEPÓSITO" },
-      { nome: "Flavio", setor: "DEPÓSITO" }, { nome: "Henrique", setor: "DEPÓSITO" }, { nome: "Keverson", setor: "DEPÓSITO" },
-      { nome: "Marcelo", setor: "DEPÓSITO" }, { nome: "Netim", setor: "DEPÓSITO" }, { nome: "Talison", setor: "DEPÓSITO" },
-      { nome: "Tharles", setor: "DEPÓSITO" }, { nome: "Vilson", setor: "DEPÓSITO" }
-    ];
-
-    // Define o mês atual como padrão ao carregar a página
-    window.onload = function() {
-      const hoje = new Date();
-      const ano = hoje.getFullYear();
-      const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-      document.getElementById('filtroMes').value = `${ano}-${mes}`;
-      gerarRelatorioConsolidado();
+    // Mapeamento mantido para cálculos precisos
+    const mapeamentoEquipes = {
+      "Irene": "EQUIP_1", "Rose": "EQUIP_1", "Debora": "EQUIP_1", "Gabriel": "EQUIP_1", "Jaki": "EQUIP_1",
+      "Alice": "EQUIP_1", "Thalice": "EQUIP_1", "Raimundo Q": "EQUIP_1", "Andre": "EQUIP_1", "Rone Fruta": "EQUIP_1",
+      "Rita": "EQUIP_1", "Sueli": "EQUIP_1", "Edete": "EQUIP_1", "Genilson": "EQUIP_1", "Patricia": "EQUIP_1",
+      "Carlos": "EQUIP_1", "Vinicios": "EQUIP_1", "Valdimiro": "EQUIP_1",
+      
+      "Marta": "EQUIP_2", "Dayana": "EQUIP_2", "Fran": "EQUIP_2", "Erica": "EQUIP_2", "Alisson": "EQUIP_2",
+      "Adrissa": "EQUIP_2", "Ruan": "EQUIP_2", "Rayana": "EQUIP_2", "Debora Sabao": "EQUIP_2", "Marcos": "EQUIP_2",
+      "Raylma": "EQUIP_2", "Francisca Souza": "EQUIP_2", "Samira": "EQUIP_2", "Henrrique": "EQUIP_2", "Edmilson": "EQUIP_2",
+      "Erisvana": "EQUIP_2", "Leandro": "EQUIP_2", "Victor": "EQUIP_2", "Hilaria": "EQUIP_2", "Karine": "EQUIP_2",
+      "Jeferson": "EQUIP_2", "Dulce": "EQUIP_2", "Eudes": "EQUIP_2", "Felipe Frente": "EQUIP_2",
+      
+      "Netim": "DEPOSITO", "Vilson": "DEPOSITO", "Tharles": "DEPOSITO", "Marcelo": "DEPOSITO", "Flavia": "DEPOSITO",
+      "Keverson": "DEPOSITO", "Talison": "DEPOSITO", "Alan": "DEPOSITO", "Henrique": "DEPOSITO",
+      "Flavio": "DEPOSITO", "Altemar": "DEPOSITO"
     };
 
-    function obterDiasUteisNoMes(ano, mes) {
-      // Retorna o número total de dias do mês selecionado
-      return new Date(ano, mes, 0).getDate();
+    const escalaFolgasFixas = {
+      "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1],
+      "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2],
+      "Raylma": [3], "Francisca Souza": [3], "Samira": [3], "Henrrique": [3], "Henrique": [3], "Edmilson": [3], "Rone Fruta": [3],
+      "Erisvana": [4], "Leandro": [4], "Victor": [4], "Hilaria": [4],
+      "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5],
+      "Irene": [1], "Rose": [1], "Debora": [2], "Gabriel": [2],
+      "Rita": [4], "Sueli": [4], "Edete": [4], "Genilson": [4],
+      "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5]
+    };
+
+    let relatorioFinal = [];
+    let mapaFotosMemoria = {};
+    let resumoConsolidadoGlobal = {}; // Usado para gerar o PDF enxuto
+
+    const hojeObj = new Date();
+    document.getElementById('filtroMes').value = hojeObj.getFullYear() + '-' + String(hojeObj.getMonth() + 1).padStart(2, '0');
+    document.getElementById('filtroDataFolga').value = hojeObj.toISOString().split('T')[0];
+
+    function normalizarTexto(txt) {
+      if(!txt) return "";
+      let t = txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      if (t.includes("francisca souza") || t.includes("franc.acou")) return "franciscasouza";
+      if (t.includes("roni") || t.includes("rone")) return "ronefruta";
+      return t.replace(/\s+/g, "");
     }
 
-    function gerarRelatorioConsolidado() {
-      const filtroMesAno = document.getElementById("filtroMes").value; 
-      const setorSelecionado = document.getElementById("filtroSetor").value;
-      const tabelaCorpo = document.getElementById("tabelaCorpo");
+    function obterNumeroSemanaAno(data) {
+      const d = new Date(Date.UTC(data.getFullYear(), data.getMonth(), data.getDate()));
+      const diaNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - diaNum);
+      const anoInicio = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+      return Math.ceil((((d - anoInicio) / 86400000) + 1) / 7);
+    }
+
+    function checarSeEstaDeFolga(colaborador, dataObj) {
+      const diaSemana = dataObj.getDay(); 
+      const eq = mapeamentoEquipes[colaborador];
+      if (eq === "DEPOSITO") return diaSemana === 0;
+      if (diaSemana === 0) {
+        const numSemanaAno = obterNumeroSemanaAno(dataObj);
+        return (numSemanaAno % 2 === 0 ? (eq === "EQUIP_1" ? "07:00" : "10:00") : (eq === "EQUIP_1" ? "10:00" : "07:00")) === "10:00";
+      }
+      return !!(escalaFolgasFixas[colaborador] && escalaFolgasFixas[colaborador].includes(diaSemana));
+    }
+
+    window.atualizarPainelFolgasDiario = function() {
+      const dataSelecionadaStr = document.getElementById('filtroDataFolga').value;
+      if (!dataSelecionadaStr) return;
+      const partes = dataSelecionadaStr.split('-');
+      const dataFocada = new Date(partes[0], partes[1] - 1, partes[2]);
+      const diaSemana = dataFocada.getDay();
+      let dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      document.getElementById('tituloFolgasDoDia').innerHTML = `⚽ COLABORADORES DE FOLGA NO DIA (${dataFormatada}):`;
+      let folguistas = [];
+      Object.keys(mapeamentoEquipes).forEach(f => {
+        if (checarSeEstaDeFolga(f, dataFocada)) {
+          let eq = mapeamentoEquipes[f];
+          folguistas.push(eq === "DEPOSITO" ? `${f} (Depósito)` : (diaSemana === 0 ? `${f} (Dom)` : f));
+        }
+      });
+      document.getElementById('listaFolguistasContainer').innerHTML = folguistas.length === 0 ? "Nenhum funcionário de folga." : folguistas.sort().join(' • ');
+    }
+    setTimeout(() => { window.atualizarPainelFolgasDiario(); }, 800);
+
+    function processarFechamentoMensal() {
+      const funcSelecionado = document.getElementById('filtroColaborador').value;
+      const mesRef = document.getElementById('filtroMes').value; 
+      const corpo = document.getElementById('corpoTabela');
+      const corpoPrint = document.getElementById('corpoTabelaPrint');
       
-      if (!filtroMesAno) return;
+      document.getElementById('tituloPrintMes').innerText = `FOLHA DE ASSINATURA - PERÍODO REF: ${mesRef.split('-')[1]}/${mesRef.split('-')[0]}`;
+      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Carregando e processando batidas do banco...</td></tr>";
 
-      tabelaCorpo.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">📊 Computando dados do Firebase... Aguarde.</td></tr>`;
-
-      const [ano, mes] = filtroMesAno.split("-");
-      const totalDiasMes = obterDiasUteisNoMes(parseInt(ano), parseInt(mes));
+      let ano = parseInt(mesRef.split('-')[0]);
+      let mes = parseInt(mesRef.split('-')[1]) - 1;
+      let totalDias = new Date(ano, mes + 1, 0).getDate();
+      let listaParaProcessar = funcSelecionado === "TODOS" ? Object.keys(mapeamentoEquipes) : [funcSelecionado];
 
       database.ref('pontos_registrados').once('value', snapshot => {
-        // Objeto para consolidar os registros por funcionário
-        let resumoColaboradores = {};
+        let batidasDoBanco = {};
+        mapaFotosMemoria = {};
+        resumoConsolidadoGlobal = {};
 
-        // Inicializa a lista com base na estrutura ativa da empresa
-        listaFuncionariosCompleta.forEach(f => {
-          if (setorSelecionado !== "TODOS" && f.setor !== setorSelecionado) return;
-          
-          resumoColaboradores[f.nome] = {
-            nome: f.nome,
-            setor: f.setor,
-            diasComPresenca: new Set(), // Set impede duplicar o mesmo dia
-            totalAtrasos: 0
-          };
+        // Inicia o acumulador para todos os colaboradores selecionados
+        listaParaProcessar.forEach(nome => {
+          resumoConsolidadoGlobal[nome] = { nome, setor: mapeamentoEquipes[nome] || "GERAL", diasTrabalhados: 0, faltas: 0, totalAtrasos: 0 };
         });
-
-        // Varre os dados do Firebase acumulando os valores
+        
         snapshot.forEach(child => {
-          const ponto = child.val();
-          let pData = ponto.dataChave || "";
-          
-          // Compatibilidade caso a data esteja gravada em formato PT-BR no banco antigo
-          if(pData.includes('/')) {
-            let pt = pData.split('/'); pData = `${pt[2]}-${pt[1]}-${pt[0]}`;
-          }
+          let p = child.val();
+          if (p.colaborador && p.horario && p.tipo) {
+            let dataChaveLimpa = p.dataChave ? (p.dataChave.includes('/') ? `${p.dataChave.split('/')[2]}-${p.dataChave.split('/')[1]}-${p.dataChave.split('/')[0]}` : p.dataChave) : (p.data ? `${p.data.split('/')[2]}-${p.data.split('/')[1]}-${p.data.split('/')[0]}` : "");
 
-          // Filtra se a batida pertence ao mês e ano selecionado
-          if (pData.startsWith(filtroMesAno)) {
-            if (resumoColaboradores[ponto.colaborador]) {
-              resumoColaboradores[ponto.colaborador].diasComPresenca.add(pData);
+            if (dataChaveLimpa.startsWith(mesRef)) {
+              let nFunc = normalizarTexto(p.colaborador);
+              let chaveAgrupada = `${dataChaveLimpa}_${nFunc}`;
               
-              if (ponto.atrasoMinutos && parseInt(ponto.atrasoMinutos) > 0) {
-                resumoColaboradores[ponto.colaborador].totalAtrasos += parseInt(ponto.atrasoMinutos);
+              if (!batidasDoBanco[chaveAgrupada]) {
+                batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
+              }
+              
+              let idFoto = child.key;
+              if (p.fotoSelfie) mapaFotosMemoria[idFoto] = p.fotoSelfie;
+              let gpsLink = (p.latitude && p.longitude) ? `https://www.google.com/maps?q=${p.latitude},${p.longitude}` : null;
+
+              let tipoNorm = normalizarTexto(p.tipo);
+              if (tipoNorm.includes("entrada") && !tipoNorm.includes("alm")) { 
+                batidasDoBanco[chaveAgrupada].entrada = p.horario; 
+                batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; 
+                batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; 
+                if(p.atrasoMinutos) resumoConsolidadoGlobal[p.colaborador].totalAtrasos += parseInt(p.atrasoMinutos);
+              }
+              else if (tipoNorm.includes("saidaalm") || tipoNorm === "almoco" || (tipoNorm.includes("saida") && tipoNorm.includes("alm"))) { 
+                batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; 
+                batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; 
+                batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; 
+              }
+              else if (tipoNorm.includes("retorno") || tipoNorm.includes("retalm") || (tipoNorm.includes("volta") && tipoNorm.includes("alm"))) { 
+                batidasDoBanco[chaveAgrupada].retAlm = p.horario; 
+                batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; 
+                batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; 
+              }
+              else if (tipoNorm.includes("expediente") || tipoNorm.includes("fim") || tipoNorm.includes("saidafim") || (tipoNorm.includes("saida") && !tipoNorm.includes("alm"))) { 
+                batidasDoBanco[chaveAgrupada].saidaFim = p.horario; 
+                batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; 
+                batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; 
               }
             }
           }
         });
 
-        // Monta as linhas da tabela de maneira compacta
-        tabelaCorpo.innerHTML = "";
-        let chavesOrdenadas = Object.keys(resumoColaboradores).sort();
+        relatorioFinal = [];
+        corpo.innerHTML = "";
 
-        if (chavesOrdenadas.length === 0) {
-          tabelaCorpo.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">Nenhum funcionário localizado para este filtro.</td></tr>`;
-          return;
+        // Alimenta a tabela detalhada da TELA
+        for (let d = 1; d <= totalDias; d++) {
+          let diaStr = String(d).padStart(2, '0');
+          let dataLoopStr = `${mesRef}-${diaStr}`;
+          let dataObj = new Date(ano, mes, d);
+          let dataFormatadaExibir = `${diaStr}/${String(mes+1).padStart(2, '0')}/${ano}`;
+
+          listaParaProcessar.forEach(func => {
+            let nFunc = normalizarTexto(func);
+            let chave = `${dataLoopStr}_${nFunc}`;
+            let b = batidasDoBanco[chave];
+            let folga = checarSeEstaDeFolga(func, dataObj);
+
+            if (b) {
+              resumoConsolidadoGlobal[func].diasTrabalhados++;
+              let linha = { data: dataFormatadaExibir, funcionario: func, entrada: b.entrada, saidaAlm: b.saidaAlm, retAlm: b.retAlm, saidaFim: b.saidaFim, auditoria: b };
+              relatorioFinal.push(linha);
+              renderizarLinhaTabela(linha, corpo);
+            } else if (!folga) {
+              resumoConsolidadoGlobal[func].faltas++;
+              let linhaFalta = { data: dataFormatadaExibir, funcionario: func, entrada: "FALTA", saidaAlm: "--", retAlm: "--", saidaFim: "--", auditoria: null };
+              relatorioFinal.push(linhaFalta);
+              renderizarLinhaTabela(linhaFalta, corpo);
+            } else {
+              let linhaFolga = { data: dataFormatadaExibir, funcionario: func, entrada: "FOLGA", saidaAlm: "--", retAlm: "--", saidaFim: "--", auditoria: null };
+              relatorioFinal.push(linhaFolga);
+              renderizarLinhaTabela(linhaFolga, corpo);
+            }
+          });
         }
 
-        chavesOrdenadas.forEach(nomeFunc => {
-          const dados = resumoColaboradores[nomeFunc];
-          const qtdDiasTrabalhados = dados.diasComPresenca.size;
-          
-          // Cálculo simples de faltas presumidas baseadas nos dias do mês
-          // Ajustável caso sua escala deduza domingos/folgas fixas
-          let faltasEstimadas = totalDiasMes - qtdDiasTrabalhados;
-          if (faltasEstimadas < 0) faltasEstimadas = 0;
-
-          const classeFalta = faltasEstimadas > 0 ? "class='destaque-falta'" : "";
-          const classeAtraso = dados.totalAtrasos > 0 ? "class='destaque-atraso'" : "";
-
-          tabelaCorpo.innerHTML += `
+        // Alimenta a tabela de IMPRESSÃO enxuta
+        corpoPrint.innerHTML = "";
+        Object.keys(resumoConsolidadoGlobal).sort().forEach(nomeKey => {
+          let rc = resumoConsolidadoGlobal[nomeKey];
+          corpoPrint.innerHTML += `
             <tr>
-              <td><strong>${dados.nome}</strong></td>
-              <td>${dados.setor}</td>
-              <td style="text-align: center; font-weight: bold;">${qtdDiasTrabalhados} dias</td>
-              <td style="text-align: center;"><span ${classeFalta}>${faltasEstimadas}</span></td>
-              <td style="text-align: center;"><span ${classeAtraso}>${dados.totalAtrasos} min</span></td>
-              <td><div class="campo-assinatura"></div></td>
+              <td><strong>${rc.nome}</strong></td>
+              <td>${rc.setor}</td>
+              <td style="text-align: center;">${rc.diasTrabalhados} dias</td>
+              <td style="text-align: center; color: red;">${rc.faltas}</td>
+              <td style="text-align: center;">${rc.totalAtrasos} min</td>
+              <td><div class="linha-assinatura"></div></td>
             </tr>
           `;
         });
       });
+    }
+
+    function renderizarLinhaTabela(l, tabelaElemento) {
+      let tr = document.createElement('tr');
+      let htmlAcoes = "";
+
+      if(l.entrada === "FALTA") {
+        tr.innerHTML = `<td>${l.data}</td><td><strong>${l.funcionario}</strong></td><td colspan="6"><span class="status-falta">❌ FALTA SEM JUSTIFICATIVA</span></td><td>--</td>`;
+      } else if (l.entrada === "FOLGA") {
+        tr.innerHTML = `<td>${l.data}</td><td><strong>${l.funcionario}</strong></td><td colspan="6"><span class="status-folga">⚽ FOLGA ESCALADA</span></td><td>--</td>`;
+      } else {
+        htmlAcoes += criarBlocoBotao("Entrada", l.auditoria.idFotoEntrada, l.auditoria.gpsEntrada);
+        htmlAcoes += criarBlocoBotao("S.Almoço", l.auditoria.idFotoSaidaAlm, l.auditoria.gpsSaidaAlm);
+        htmlAcoes += criarBlocoBotao("R.Almoço", l.auditoria.idFotoRetAlm, l.auditoria.gpsRetAlm);
+        htmlAcoes += criarBlocoBotao("Saída Fim", l.auditoria.idFotoSaidaFim, l.auditoria.gpsSaidaFim);
+
+        tr.innerHTML = `
+          <td>${l.data}</td>
+          <td><strong>${l.funcionario}</strong></td>
+          <td>${l.entrada}</td>
+          <td>${l.saidaAlm}</td>
+          <td>${l.retAlm}</td>
+          <td>${l.saidaFim}</td>
+          <td>--</td>
+          <td>--</td>
+          <td>${htmlAcoes}</td>
+        `;
+      }
+      tabelaElemento.appendChild(tr);
+    }
+
+    function criarBlocoBotao(titulo, idFoto, gpsLink) {
+      if(!idFoto && !gpsLink) return "";
+      let btnF = idFoto ? `<button class="btn-foto" onclick="verFoto('${idFoto}')">📷 FOTO</button>` : "";
+      let btnM = gpsLink ? `<a href="${gpsLink}" target="_blank" class="btn-mapa">🗺️ MAPA</a>` : "";
+      return `<div class="bloco-ponto-acoes"><span class="titulo-acao-btd">${titulo}</span>${btnF}${btnM}</div>`;
+    }
+
+    function verFoto(idKey) {
+      let dadosB64 = mapaFotosMemoria[idKey];
+      if(dadosB64) {
+        document.getElementById('modalImg').src = dadosB64;
+        document.getElementById('modalFoto').style.display = 'flex';
+      } else {
+        alert("Foto não localizada.");
+      }
+    }
+
+    function fecharModal() { document.getElementById('modalFoto').style.display = 'none'; }
+
+    function baixarPDFConsolidado() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFont("Arial", "bold");
+      doc.setFontSize(16);
+      doc.text("SUPERMERCADO SÃO RAIMUNDO", 14, 15);
+      doc.setFontSize(11);
+      doc.text(`RELATÓRIO MENSAL - FECHAMENTO DE FALTAS E ASSINATURAS (${document.getElementById('filtroMes').value})`, 14, 22);
+
+      let dadosTabela = [];
+      Object.keys(resumoConsolidadoGlobal).sort().forEach(nome => {
+        let r = resumoConsolidadoGlobal[nome];
+        dadosTabela.push([r.nome, r.setor, `${r.diasTrabalhados} dias`, r.faltas.toString(), `${r.totalAtrasos} min`, "___________________________"]);
+      });
+
+      doc.autoTable({
+        startY: 28,
+        head: [['Colaborador', 'Setor/Equipe', 'Dias Trab.', 'Faltas', 'Total Atrasos', 'Assinatura']],
+        body: dadosTabela,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 100, 48] },
+        styles: { fontSize: 9, cellPadding: 4 }
+      });
+
+      doc.save(`Fechamento_Assinaturas_${document.getElementById('filtroMes').value}.pdf`);
+    }
+
+    function baixarExcel() {
+      let dadosExcel = [];
+      relatorioFinal.forEach(l => {
+        dadosExcel.push({
+          "Data": l.data, "Funcionário": l.funcionario, "Entrada": l.entrada,
+          "Saída Almoço": l.saidaAlm, "Retorno Almoço": l.retAlm, "Saída Fim": l.saidaFim
+        });
+      });
+      let ws = XLSX.utils.json_to_sheet(dadosExcel);
+      let wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Registros");
+      XLSX.utils.book_export_excel(wb, ws, `Ponto_Detalhado_${document.getElementById('filtroMes').value}.xlsx`);
     }
   </script>
 </body>
