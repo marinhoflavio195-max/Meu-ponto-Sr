@@ -239,15 +239,15 @@
       "Flavio": "DEPOSITO", "Altemar": "DEPOSITO"
     };
 
-    // CORREÇÃO DA QUINTA-FEIRA (Dia 4): Removido o Genilson. Restam apenas Rita, Sueli e Edete.
+    // ESCALA CORRIGIDA COMPLETA: Quinta-feira (Dia 4) limpa apenas para Rita, Sueli e Edete.
     const escalaFolgasFixas = {
       "Marta": [1], "Dayana": [1], "Fran": [1], "Erica": [1], "Alisson": [1],
       "Adrissa": [2], "Ruan": [2], "Rayana": [2], "Debora Sabao": [2], "Marcos": [2],
       "Raylma": [3], "Francisca Souza": [3], "Samira": [3], "Henrrique": [3], "Henrique": [3], "Edmilson": [3], "Rone Fruta": [3],
-      "Erisvana": [4], "Leandro": [4], "Victor": [4], "Hilaria": [4],
+      "Erisvana": [2], "Leandro": [1], "Victor": [2], "Hilaria": [3], // Removidos da Quinta-feira (4)
       "Karine": [5], "Jeferson": [5], "Dulce": [5], "Eudes": [5], "Felipe Frente": [5],
       "Irene": [1], "Rose": [1], "Debora": [2], "Gabriel": [2],
-      "Rita": [4], "Sueli": [4], "Edete": [4], // Dia 4 é Quinta-feira
+      "Rita": [4], "Sueli": [4], "Edete": [4], // Únicas mantidas estritamente na Quinta (Dia 4)
       "Patricia": [5], "Carlos": [5], "Vinicios": [5], "Valdimiro": [5]
     };
 
@@ -298,8 +298,7 @@
       Object.keys(mapeamentoEquipes).forEach(f => {
         if (checarSeEstaDeFolga(f, dataFocada)) {
           let eq = mapeamentoEquipes[f];
-          // Ajuste visual para exibir "Suely" na listagem conforme preferência
-          let nomeExibir = (f === "Sueli") ? "Suely" : f;
+          let nomeExibir = (f === "Sueli") ? "Suely" : f; 
           folguistas.push(eq === "DEPOSITO" ? `${nomeExibir} (Depósito)` : (diaSemana === 0 ? `${nomeExibir} (Dom)` : nomeExibir));
         }
       });
@@ -358,7 +357,7 @@
                 batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; 
                 batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; 
                 if(p.atrasoMinutos && resumoConsolidadoGlobal[p.colaborador]) {
-                  resumoConsolidadoGlobal[p.colaborador].totalAtrasos += parseInt(p.atrasoMinutos);
+                  resumoConsolidatedGlobal[p.colaborador].totalAtrasos += parseInt(p.atrasoMinutos);
                 }
               }
               else if (tipoNorm.includes("saidaalm") || tipoNorm === "almoco" || (tipoNorm.includes("saida") && tipoNorm.includes("alm"))) { 
@@ -416,7 +415,7 @@
         corpoPrint.innerHTML = "";
         Object.keys(resumoConsolidadoGlobal).sort().forEach(nomeKey => {
           let rc = resumoConsolidadoGlobal[nomeKey];
-          let nomeExibirPrint = (rc.nome === "Sueli") ? "Suely" : rc.nome;
+          let nomeExibirPrint = (rc.nome === "Sueli") ? "Suely" : rc.nome; 
           corpoPrint.innerHTML += `
             <tr>
               <td><strong>${nomeExibirPrint}</strong></td>
@@ -438,7 +437,7 @@
     function renderizarLinhaTabela(l, tabelaElemento) {
       let tr = document.createElement('tr');
       let htmlAcoes = "";
-      let nomeExibirTabela = (l.funcionario === "Sueli") ? "Suely" : l.funcionario;
+      let nomeExibirTabela = (l.funcionario === "Sueli") ? "Suely" : l.funcionario; 
 
       if(l.entrada === "FALTA") {
         tr.innerHTML = `
@@ -511,7 +510,7 @@
       let dadosTabela = [];
       Object.keys(resumoConsolidadoGlobal).sort().forEach(nome => {
         let r = resumoConsolidadoGlobal[nome];
-        let nomeExibirPDF = (r.nome === "Sueli") ? "Suely" : r.nome;
+        let nomeExibirPDF = (r.nome === "Sueli") ? "Suely" : r.nome; 
         dadosTabela.push([nomeExibirPDF, r.setor, `${r.diasTrabalhados} dias`, r.faltas.toString(), `${r.totalAtrasos} min`, "___________________________"]);
       });
 
@@ -534,7 +533,7 @@
       }
       let dadosExcel = [];
       relatorioFinal.forEach(l => {
-        let nomeExibirExcel = (l.funcionario === "Sueli") ? "Suely" : l.funcionario;
+        let nomeExibirExcel = (l.funcionario === "Sueli") ? "Suely" : l.funcionario; 
         dadosExcel.push({
           "Data": l.data, "Funcionário": nomeExibirExcel, "Entrada": l.entrada,
           "Saída Almoço": l.saidaAlm, "Retorno Almoço": l.retAlm, "Saída Fim": l.saidaFim
