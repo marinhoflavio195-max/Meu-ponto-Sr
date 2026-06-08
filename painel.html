@@ -91,7 +91,7 @@
     <div class="filtros-topo">
       <div class="campo-filtro">
         <label for="filtroLoja">FILTRAR POR LOJA:</label>
-        <select id="filtroLoja" onchange="atualizarListaFuncionariosFiltro(); window.atualizarPainelFolgasDiario();">
+        <select id="filtroLoja" onchange="atualizarListaFuncionariosFiltro(); atualizarPainelFolgasDiario();">
           <option value="TODAS">-- Todas as Lojas (1, 2, 3 e 4) --</option>
           <option value="1">Loja 1</option>
           <option value="2">Loja 2</option>
@@ -111,7 +111,7 @@
       </div>
       <div class="campo-filtro">
         <label for="filtroDataFolga">VER FOLGAS DE OUTRA DATA:</label>
-        <input type="date" id="filtroDataFolga" onchange="window.atualizarPainelFolgasDiario()">
+        <input type="date" id="filtroDataFolga" onchange="atualizarPainelFolgasDiario()">
       </div>
     </div>
 
@@ -273,7 +273,7 @@
       "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", folgas: [] },
       "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", folgas: [] },
       "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
-      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
+      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", fontStyle: "normal" },
       "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", folgas: [] },
       "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", folgas: [] },
       "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
@@ -333,7 +333,6 @@
           .catch(err => { alert("Erro ao carregar banco: " + err.message); });
       }
     }
-    window.injetarCargaInicialPlanilha = injetarCargaInicialPlanilha;
 
     function escutarFuncionariosFirebase() {
       database.ref('config_funcionarios').on('value', snapshot => {
@@ -342,6 +341,7 @@
         } else {
           funcionariosMemoria = {};
         }
+        // Garante que o menu atualize assim que os dados chegarem da nuvem
         atualizarListaFuncionariosFiltro();
         atualizarPainelFolgasDiario();
         renderizarTabelaGerenciamento();
@@ -351,10 +351,20 @@
     function atualizarListaFuncionariosFiltro() {
       const lojaSel = document.getElementById('filtroLoja').value;
       const combo = document.getElementById('filtroColaborador');
+      if (!combo) return;
+
       combo.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
 
-      Object.keys(funcionariosMemoria).sort().forEach(nome => {
-        if(lojaSel === "TODAS" || funcionariosMemoria[nome].loja === lojaSel) {
+      // Se a memória estiver vazia, tenta usar temporariamente a carga inicial para não travar a tela
+      const baseDados = (Object.keys(funcionariosMemoria).length > 0) ? funcionariosMemoria : cargaInicialPlanilha;
+
+      Object.keys(baseDados).sort().forEach(nome => {
+        const item = baseDados[nome];
+        // Força a verificação de segurança transformando o valor em String
+        const lojaFunc = String(item.loja || "1").trim();
+        const lojaAlvo = String(lojaSel).trim();
+
+        if(lojaSel === "TODAS" || lojaFunc === lojaAlvo) {
           combo.innerHTML += `<option value="${nome}">${nome}</option>`;
         }
       });
@@ -428,27 +438,31 @@
       const container = document.getElementById('listaFolguistasContainer');
       const titulo = document.getElementById('tituloFolgasDoDia');
 
-      if(!dataFiltroStr) return;
+      if(!dataFiltroStr || !container) return;
 
       const partes = dataFiltroStr.split('-');
       const dataObj = new Date(partes[0], partes[1] - 1, partes[2]);
       const diaDaSemana = dataObj.getDay(); 
 
-      titulo.innerHTML = `⚽ COLABORADORES DE FOLGA NO DIA (${partes[2]}/${partes[1]}/${partes[0]}):`;
+      if(titulo) titulo.innerHTML = `⚽ COLABORADORES DE FOLGA NO DIA (${partes[2]}/${partes[1]}/${partes[0]}):`;
 
+      const baseDados = (Object.keys(funcionariosMemoria).length > 0) ? funcionariosMemoria : cargaInicialPlanilha;
       let folguistasDoDia = [];
-      Object.keys(funcionariosMemoria).forEach(nome => {
-        const f = funcionariosMemoria[nome];
-        if(lojaFiltro === "TODAS" || f.loja === lojaFiltro) {
+
+      Object.keys(baseDados).forEach(nome => {
+        const f = baseDados[nome];
+        const lojaFunc = String(f.loja || "1").trim();
+        const lojaAlvo = String(lojaFiltro).trim();
+
+        if(lojaFiltro === "TODAS" || lojaFunc === lojaAlvo) {
           if(f.folgas && f.folgas.includes(diaDaSemana)) {
-            folguistasDoDia.push(`${nome} (L${f.loja})`);
+            folguistasDoDia.push(`${nome} (L${lojaFunc})`);
           }
         }
       });
 
       container.innerHTML = folguistasDoDia.length > 0 ? folguistasDoDia.sort().join(' • ') : "Nenhum colaborador escalado para folga fixa nesta data.";
     }
-    window.atualizarPainelFolgasDiario = atualizarPainelFolgasDiario;
 
     function processarFechamentoMensal() {
       const lojaSel = document.getElementById('filtroLoja').value;
@@ -483,12 +497,16 @@
           });
         }
 
-        let listaNomesUnificados = new Set(Object.keys(funcionariosMemoria));
+        const baseDados = (Object.keys(funcionariosMemoria).length > 0) ? funcionariosMemoria : cargaInicialPlanilha;
+        let listaNomesUnificados = new Set(Object.keys(baseDados));
         funcionariosComPontoEncontrados.forEach(n => listaNomesUnificados.add(n));
 
         let listaFuncionariosFiltrados = Array.from(listaNomesUnificados).filter(nome => {
-          const f = funcionariosMemoria[nome] || { loja: "1", setor: "REPOSITOR", folgas: [] }; 
-          if(lojaSel !== "TODAS" && f.loja !== lojaSel) return false;
+          const f = baseDados[nome] || { loja: "1", setor: "REPOSITOR", folgas: [] }; 
+          const lojaFunc = String(f.loja || "1").trim();
+          const lojaAlvo = String(lojaSel).trim();
+
+          if(lojaSel !== "TODAS" && lojaFunc !== lojaAlvo) return false;
           if(funcSel !== "TODOS" && nome !== funcSel) return false;
           return true;
         }).sort();
@@ -503,7 +521,7 @@
         let htmlPrint = "";
 
         listaFuncionariosFiltrados.forEach(nome => {
-          const dadosF = funcionariosMemoria[nome] || { setor: "NÃO CADASTRADO", loja: "-", folgas: [] };
+          const dadosF = baseDados[nome] || { setor: "NÃO CADASTRADO", loja: "-", folgas: [] };
           let diasTrabalhadosCont = 0;
           let faltasCont = 0;
 
@@ -587,7 +605,6 @@
         document.getElementById('tituloPrintMes').innerHTML = `RELAÇÃO DE FECHAMENTO MENSAL - MÊS DE ${mesesNomes[mesZeroB]} DE ${ano}`;
       });
     }
-    window.processarFechamentoMensal = processarFechamentoMensal;
 
     function visualizarSelfie(idPonto) {
       database.ref('pontos_registrados/' + idPonto).once('value', snapshot => {
@@ -599,17 +616,14 @@
         }
       });
     }
-    window.visualizarSelfie = visualizarSelfie;
 
     function fecharModal() { document.getElementById('modalFoto').style.display = 'none'; }
-    window.fecharModal = fecharModal;
 
     function baixarExcel() {
       const tab = document.getElementById('tabelaFechamento');
       let wb = XLSX.utils.table_to_book(tab, { sheet: "ResumoSR" });
       XLSX.writeFile(wb, `Fechamento_Pontos_SaoRaimundo_${document.getElementById('filtroMes').value}.xlsx`);
     }
-    window.baixarExcel = baixarExcel;
 
     function baixarPDFConsolidado() {
       const { jsPDF } = window.jspdf;
@@ -631,7 +645,6 @@
       });
       doc.save(`Resumo_Pontos_SR_${document.getElementById('filtroMes').value}.pdf`);
     }
-    window.baixarPDFConsolidado = baixarPDFConsolidado;
 
     escutarFuncionariosFirebase();
   </script>
