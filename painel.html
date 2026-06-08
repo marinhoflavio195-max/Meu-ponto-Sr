@@ -40,7 +40,7 @@
     .btn-admin { background-color: #e65100; border-bottom: 3px solid #b53d00; }
     .btn-admin:hover { background-color: #b53d00; }
     .btn-salvar { background-color: #006430; padding: 10px 20px; }
-    .btn-excluir { background-color: #d32f2f; padding: 4px 8px; font-size: 11px; border-radius: 4px; }
+    .btn-excluir { background-color: #d32f2f; padding: 6px 10px; font-size: 11px; border-radius: 4px; color: white; border: none; cursor: pointer; font-weight: bold; }
     .btn-excluir:hover { background-color: #c62828; }
 
     /* Seção de Gerenciamento de Funcionários */
@@ -156,11 +156,11 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-salvar" onclick="salvarNovoFuncionário()">💾 Adicionar à Base de Dados</button>
+      <button class="btn btn-salvar" onclick="salvarNovoFuncionario()">💾 Adicionar à Base de Dados</button>
       
       <h3 style="margin-top: 25px; color: #e65100;">Lista Completa de Cadastrados (Para Exclusão)</h3>
       <div style="max-height: 250px; overflow-y: auto; background: white; padding: 10px; border-radius: 6px; border: 1px solid #ffcc80;">
-        <table style="font-size: 12px;">
+        <table style="font-size: 12px; width:100%;">
           <thead>
             <tr><th>Nome</th><th>Setor</th><th>Loja</th><th>Folgas</th><th>Ação</th></tr>
           </thead>
@@ -218,472 +218,339 @@
   </div>
 
   <script>
-    // Inicialização do Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
-      authDomain: "meu-ponto-sr.firebaseapp.com",
-      databaseURL: "https://meu-ponto-sr-default-rtdb.firebaseio.com",
-      projectId: "meu-ponto-sr",
-      storageBucket: "meu-ponto-sr.appspot.com",
-      messagingSenderId: "356930006135",
-      appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    let funcionariosMemoria = {};
 
-    // BANCO DE DADOS INICIAL DO SÃO RAIMUNDO (Baseado nas fotos das planilhas)
-    let funcionariosBase = {
-      "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [2] },
-      "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
-      "ANDRE KENNEDY COSTA SILVA": { setor: "CPD/TI", loja: "1", folgas: [] },
-      "ANDREIA REGO LIMA": { setor: "OPERADORA DE CAIXA", loja: "3", folgas: [] },
-      "ANTONIA EDILENE DOS SANTOS": { setor: "OPERADORA DE CAIXA", loja: "3", folgas: [4] }, 
-      "ANTONIO FRANCISCO ARAUJO VIEIRA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "ANTONIO MARCOS CRUZ CUNHA": { setor: "GERENCIA", loja: "3", folgas: [] },
-      "ANTONY THALISON FERNADES GUIMARAES": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "CARLOS JOSE DA COSTA RIBEIRO": { setor: "AÇOUGUE", loja: "1", folgas: [5] },
-      "CRISTIANE LIMA TORRES": { setor: "REPOSITOR", loja: "2", folgas: [] },
-      "DENILSON ANDRADE SILVA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "EDUARDO DOS SANTOS RODRIGUES": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
-      "ERISVANA CHAVES SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [2] },
-      "EUDES DAS MERCES CORTE": { setor: "MOTORISTA", loja: "1", folgas: [5] },
-      "EVERTON LEANDRO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3", folgas: [1] },
-      "FELIPE SILVA QUEIROZ": { setor: "SERVIÇOS GERAIS", loja: "1", folgas: [] },
-      "FELIPE VIEIRA DA SILVA": { setor: "MOTORISTA", loja: "3", folgas: [] },
-      "FLAVIA DA SILVA LIMA SILVA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "FLAVIO DA SILVA MARINHO": { setor: "GERENCIA", loja: "1", folgas: [] },
-      "FRANCISCA ANDRADE VIEIRA": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
-      "FRANCISCA DAS CHAGAS ARAUJO BORGES": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
-      "FRANCISCA MILENA DE PAIVA TEIXEIRA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
-      "FRANCISCA ROSA CANTANHEIDE DOS SANTOS": { setor: "AÇOUGUE", loja: "1", folgas: [] },
-      "FRANCISCO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3", folgas: [] },
-      "FRANCISCO GABRIEL TORRES DA LUZ": { setor: "REPOSITOR", loja: "1", folgas: [2] },
-      "GABRIEL MAX NASCIMENTO ROCHA": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
-      "GENILSON DA CONCEIÇÃO ARAUJO": { setor: "HORTIFRUTI", loja: "1", folgas: [] },
-      "INES RODRIGUES FONTES": { setor: "RH", loja: "1", folgas: [] },
-      "IRENE MACHADO NETA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [1] },
-      "ISMAEL PONTES CARDOSO": { setor: "MOTORISTA", loja: "2", folgas: [] },
-      "JAQUELINE REIS DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [2] },
-      "JOICE VALE DA CONCEIÇÃO": { setor: "OPERADORA DE CAIXA", loja: "3", folgas: [] },
-      "JOSECLEIA SANTOS FERREIRA": { setor: "REPOSITOR", loja: "2", folgas: [] },
-      "KARINE MENDES DOS SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [5] },
-      "KARLENE DA SILVA COSTA": { setor: "REPOSITOR", loja: "3", folgas: [] },
-      "LEANDRO ALVES DA CONCEIÇÃO": { setor: "AÇOUGUE", loja: "1", folgas: [1] },
-      "LEILA CRISTINA ALVES SABA": { setor: "AÇOUGUE", loja: "3", folgas: [] },
-      "LETICIA DA CONCEIÇÃO FARIAS": { setor: "OPERADORA DE CAIXA", loja: "3", folgas: [] },
-      "MARCOS ANTONIO QUEIROZ AMARANTE": { setor: "HORTIFRUTI", loja: "1", folgas: [2] },
-      "MARIA DAS DORES DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
-      "MARIA DO CARMO SANTOS DA SILVA": { setor: "AÇOUGUE", loja: "2", folgas: [] },
-      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", folgas: [] },
-      "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", folgas: [] },
-      "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
-      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
-      "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", folgas: [] },
-      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", folgas: [] },
-      "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [5] },
-      "PEDRO PEREIRA QUADROS JUNIOR": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
-      "PEDRO SALAZAR DA CONCEICAO": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
-      "RAIANA SILVA ALVES VIERA": { setor: "REPOSITOR", loja: "1", folgas: [] },
-      "RAIMUNDO QUEIROZ MARINHO": { setor: "EMPACOTADOR", loja: "1", folgas: [1] },
-      "RICKELMY SILVA DE SOUSA": { setor: "REPOSITOR", loja: "2", folgas: [] },
-      "RITA DE CASSIA DA SILVA PACHECO": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [4] },
-      "ROBERT MARLON PEREIRA MOTA": { setor: "HORTIFRUTI", loja: "3", folgas: [] },
-      "ROBERTO SANTOS PINHEIRO": { setor: "SEGURANÇA", loja: "1", folgas: [] },
-      "ROSIMAR DA LUZ ALVES": { setor: "REPOSITOR", loja: "1", folgas: [] },
-      "SERGIO AZEVEDO DA SILVA": { setor: "MOTORISTA", loja: "2", folgas: [] },
-      "SOLANGE DA COSTA ANDRADE": { setor: "REPOSITOR", loja: "2", folgas: [] },
-      "SUELY ALVES": { setor: "AÇOUGUE", loja: "1", folgas: [4] }, 
-      "TAYSA SILVA NASCIMENTO": { setor: "REPOSITOR", loja: "3", folgas: [] },
-      "THALICE DA LUZ SOUSA": { setor: "REPOSITOR", loja: "1", folgas: [] },
-      "THARLES FERNADO DA SILVA RAMOS": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "VALDIMIRO CUNHA DE OLIVEIRA NETO": { setor: "MOTORISTA", loja: "1", folgas: [5] },
-      "VANIA CRISTINA REGO DA SILVA LIMA": { setor: "GERENCIA", loja: "3", folgas: [] },
-      "VILSON ANTONIO SALES DE SOUSA FILHO": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "VINICIUS GABRIEL DA CONCEIÇÃO RIBEIRO": { setor: "REPOSITOR", loja: "1", folgas: [5] },
-      "EDMLSON": { setor: "EMPACOTADOR", loja: "1", folgas: [] },
-      "MARCELO BRITO DA COSTA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "ANTONIO KEVESON SANTOS DOS REIS": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "ALAN FRANCISCO MEDEIROS MILITAR": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "CARLOS HENRRIQUE GRANDÃO": { setor: "REPOSITOR", loja: "1", folgas: [] },
-      "JOSENILTON DA SILVA PAZ": { setor: "REPOSITOR", loja: "3", folgas: [] },
-      "SAMIRA NASCIMENTO SILVA DA SILVA": { setor: "REPOSITOR", loja: "1", folgas: [] },
-      "DEBORA CRISTINA DE PAIVA DA SILVA": { setor: "REPOSITOR", loja: "1", folgas: [2] },
-      "RONE HORTIFRUTI": { setor: "HORTIFRUTI", loja: "1", folgas: [3] },
-      "MAYCON RUAN AZEVEDO DE ABREU": { setor: "CPD/TI", loja: "1", folgas: [] },
-      "HENRIQUE - DEPOSITO INST MIX": { setor: "ALMOXERIFADO", loja: "1", folgas: [3] },
-      "VICTOR HUGGO MORAIS DOS SANTOS": { setor: "REPOSITOR", loja: "1", folgas: [2] },
-      "ERIKA LARISSA DO NASCIMENTO DA SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
-      "HILLARIA OLIVEIRA RIBEIRO": { setor: "RH", loja: "1", folgas: [] }
-    };
-
-    let relatorioFinal = [];
-    let mapaFotosMemoria = {};
-    let resumoConsolidadoGlobal = {};
-
-    // Sincronização com o Firebase para salvar alterações personalizadas
-    function inicializarBancoDados() {
-      database.ref('config_funcionarios').on('value', snapshot => {
-        if(snapshot.exists()) {
-          funcionariosBase = snapshot.val();
-        } else {
-          database.ref('config_funcionarios').set(funcionariosBase);
-        }
-        atualizarListaFuncionariosFiltro();
-        window.atualizarPainelFolgasDiario();
-        renderizarListaGerenciamento();
-      });
-    }
-
-    // Configurações de datas iniciais
-    const hojeObj = new Date();
-    document.getElementById('filtroMes').value = hojeObj.getFullYear() + '-' + String(hojeObj.getMonth() + 1).padStart(2, '0');
-    document.getElementById('filtroDataFolga').value = hojeObj.toISOString().split('T')[0];
+    // Define o mês atual nos filtros ao carregar a página
+    const dAtual = new Date();
+    document.getElementById('filtroMes').value = `${dAtual.getFullYear()}-${String(dAtual.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('filtroDataFolga').value = dAtual.toISOString().split('T')[0];
 
     function alternarSecaoCadastro() {
-      let s = document.getElementById('secaoCadastro');
-      s.style.display = (s.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function salvarNovoFuncionário() {
-      let nome = document.getElementById('cadNome').value.trim().toUpperCase();
-      let setor = document.getElementById('cadSetor').value.trim().toUpperCase();
-      let loja = document.getElementById('cadLoja').value;
-      
-      if(!nome || !setor) {
-        alert("Preencha o Nome e o Setor do colaborador!");
-        return;
-      }
-
-      let folgasSelecionadas = [];
-      document.querySelectorAll('.check-dia:checked').forEach(el => {
-        folgasSelecionadas.push(parseInt(el.value));
-      });
-
-      funcionariosBase[nome] = { setor: setor, loja: loja, folgas: folgasSelecionadas };
-      database.ref('config_funcionarios').set(funcionariosBase).then(() => {
-        alert("Funcionário adicionado com sucesso!");
-        document.getElementById('cadNome').value = "";
-        document.getElementById('cadSetor').value = "";
-        document.querySelectorAll('.check-dia').forEach(c => c.checked = false);
-      });
-    }
-
-    function excluirFuncionario(nomeKey) {
-      if(confirm(`Tem certeza que deseja remover ${nomeKey} do sistema?`)) {
-        delete funcionariosBase[nomeKey];
-        database.ref('config_funcionarios').set(funcionariosBase);
+      const secao = document.getElementById('secaoCadastro');
+      secao.style.display = (secao.style.display === 'block') ? 'none' : 'block';
+      if(secao.style.display === 'block') {
+        renderizarTabelaGerenciamento();
       }
     }
 
-    function renderizarListaGerenciamento() {
-      let t = document.getElementById('tabelaGerenciarLista');
-      t.innerHTML = "";
-      Object.keys(funcionariosBase).sort().forEach(k => {
-        let f = funcionariosBase[k];
-        let diasNome = f.folgas.map(d => ["","Seg","Ter","Qua","Qui","Sex","Sáb"][d]).join(', ') || "Nenhuma";
-        t.innerHTML += `<tr>
-          <td><strong>${k}</strong></td>
-          <td>${f.setor}</td>
-          <td>Loja ${f.loja}</td>
-          <td>${diasNome}</td>
-          <td><button class="btn btn-excluir" onclick="excluirFuncionario('${k}')">❌ Excluir</button></td>
-        </tr>`;
+    // Inicializa e sincroniza os dados do Firebase em Tempo Real
+    function escutarFuncionariosFirebase() {
+      database.ref('config_funcionarios').on('value', snapshot => {
+        if(snapshot.exists()) {
+          funcionariosMemoria = snapshot.val();
+        } else {
+          funcionariosMemoria = {};
+        }
+        atualizarListaFuncionariosFiltro();
+        atualizarPainelFolgasDiario();
+        renderizarTabelaGerenciamento();
       });
     }
 
     function atualizarListaFuncionariosFiltro() {
-      let lojaSel = document.getElementById('filtroLoja').value;
-      let combo = document.getElementById('filtroColaborador');
+      const lojaSel = document.getElementById('filtroLoja').value;
+      const combo = document.getElementById('filtroColaborador');
       combo.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
-      
-      Object.keys(funcionariosBase).sort().forEach(nome => {
-        if(lojaSel === "TODAS" || funcionariosBase[nome].loja === lojaSel) {
+
+      Object.keys(funcionariosMemoria).sort().forEach(nome => {
+        if(lojaSel === "TODAS" || funcionariosMemoria[nome].loja === lojaSel) {
           combo.innerHTML += `<option value="${nome}">${nome}</option>`;
         }
       });
     }
 
-    function normalizarTexto(txt) {
-      if(!txt) return "";
-      let t = txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-      if(t.includes("suely") || t.includes("sueli")) return "suelyalves";
-      return t.replace(/\s+/g, "");
-    }
+    const diasSemanaNomes = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    
+    // CORREÇÃO: Agora renderiza perfeitamente a lista completa puxando do Firebase
+    function renderizarTabelaGerenciamento() {
+      const tabela = document.getElementById('tabelaGerenciarLista');
+      if(!tabela) return;
+      tabela.innerHTML = "";
 
-    function obterNumeroSemanaAno(data) {
-      const d = new Date(Date.UTC(data.getFullYear(), data.getMonth(), data.getDate()));
-      const diaNum = d.getUTCDay() || 7;
-      d.setUTCDate(d.getUTCDate() + 4 - diaNum);
-      const anoInicio = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-      return Math.ceil((((d - anoInicio) / 86400000) + 1) / 7);
-    }
+      const nomesCadastrados = Object.keys(funcionariosMemoria).sort();
 
-    function checarSeEstaDeFolga(colaborador, dataObj) {
-      const diaSemana = dataObj.getDay(); 
-      const fData = funcionariosBase[colaborador];
-      if(!fData) return false;
-
-      if (fData.setor === "ALMOXERIFADO" || fData.setor === "DEPOSITO") {
-        return diaSemana === 0; // Depósito folga no domingo fixo
+      if(nomesCadastrados.length === 0) {
+        tabela.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#666;">Nenhum funcionário cadastrado na nuvem.</td></tr>`;
+        return;
       }
-      if (diaSemana === 0) {
-        // Regra de revezamento de domingos para as equipes gerais
-        const numSemanaAno = obterNumeroSemanaAno(dataObj);
-        let equipeFicticia = (fData.loja === "1") ? "EQUIP_1" : "EQUIP_2";
-        return (numSemanaAno % 2 === 0 ? (equipeFicticia === "EQUIP_1" ? "07:00" : "10:00") : (equipeFicticia === "EQUIP_1" ? "10:00" : "07:00")) === "10:00";
-      }
-      return !!(fData.folgas && fData.folgas.includes(diaSemana));
+
+      nomesCadastrados.forEach(nome => {
+        const dados = funcionariosMemoria[nome];
+        let txtFolgas = "";
+        if(dados.folgas && dados.folgas.length > 0) {
+          txtFolgas = dados.folgas.map(d => diasSemanaNomes[d]).join(', ');
+        } else {
+          txtFolgas = "Nenhuma";
+        }
+
+        tabela.innerHTML += `
+          <tr>
+            <td style="font-weight:bold; color:#004a26;">${nome}</td>
+            <td>${dados.setor || "Não Informado"}</td>
+            <td style="text-align:center;">Loja ${dados.loja || "-"}</td>
+            <td style="color:#666;">${txtFolgas}</td>
+            <td style="text-align:center;">
+              <button class="btn-excluir" onclick="deletarColaboradorFirebase('${nome.replace(/'/g, "\\'")}')">❌ Excluir</button>
+            </td>
+          </tr>
+        `;
+      });
     }
 
-    window.atualizarPainelFolgasDiario = function() {
-      const dataSelecionadaStr = document.getElementById('filtroDataFolga').value;
-      const lojaSel = document.getElementById('filtroLoja').value;
-      if (!dataSelecionadaStr) return;
-      
-      const partes = dataSelecionadaStr.split('-');
-      const dataFocada = new Date(partes[0], partes[1] - 1, partes[2]);
-      const diaSemana = dataFocada.getDay();
-      let dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-      
-      document.getElementById('tituloFolgasDoDia').innerHTML = `⚽ COLABORADORES DE FOLGA NO DIA (${dataFormatada}):`;
-      let folguistas = [];
+    function salvarNovoFuncionario() {
+      const nome = document.getElementById('cadNome').value.trim().toUpperCase();
+      const setor = document.getElementById('cadSetor').value.trim().toUpperCase();
+      const loja = document.getElementById('cadLoja').value;
 
-      Object.keys(funcionariosBase).forEach(f => {
-        if (lojaSel === "TODAS" || funcionariosBase[f].loja === lojaSel) {
-          if (checarSeEstaDeFolga(f, dataFocada)) {
-            folguistas.push(`${f} (L${funcionariosBase[f].loja})`);
+      if(!nome || !setor) {
+        alert("Por favor, preencha o Nome e o Setor do colaborador!");
+        return;
+      }
+
+      let folgasSelecionadas = [];
+      document.querySelectorAll('.check-dia:checked').forEach(chk => {
+        folgasSelecionadas.push(parseInt(chk.value));
+      });
+
+      const novoObjeto = {
+        setor: setor,
+        loja: loja,
+        folgas: folgasSelecionadas
+      };
+
+      database.ref('config_funcionarios/' + nome).set(novoObjeto)
+        .then(() => {
+          alert(`✅ ${nome} adicionado com sucesso à base de dados!`);
+          document.getElementById('cadNome').value = "";
+          document.getElementById('cadSetor').value = "";
+          document.querySelectorAll('.check-dia').forEach(chk => chk.checked = false);
+        })
+        .catch(err => { alert("Erro ao salvar no Firebase: " + err.message); });
+    }
+
+    function deletarColaboradorFirebase(nomeExcluir) {
+      if(confirm(`⚠️ Atenção Mickey!\nTem certeza absoluta que deseja remover permanentemente o funcionário "${nomeExcluir}" do sistema?`)) {
+        database.ref('config_funcionarios/' + nomeExcluir).remove()
+          .then(() => { alert("🚀 Funcionário removido com sucesso!"); })
+          .catch(err => { alert("Erro ao excluir: " + err.message); });
+      }
+    }
+
+    function atualizarPainelFolgasDiario() {
+      const dataFiltroStr = document.getElementById('filtroDataFolga').value;
+      const lojaFiltro = document.getElementById('filtroLoja').value;
+      const container = document.getElementById('listaFolguistasContainer');
+      const titulo = document.getElementById('tituloFolgasDoDia');
+
+      if(!dataFiltroStr) return;
+
+      const partes = dataFiltroStr.split('-');
+      const dataObj = new Date(partes[0], partes[1] - 1, partes[2]);
+      const diaDaSemana = dataObj.getDay(); 
+
+      const dFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      titulo.innerHTML = `⚽ COLABORADORES DE FOLGA NO DIA (${dFormatada}):`;
+
+      let folguistasDoDia = [];
+      Object.keys(funcionariosMemoria).forEach(nome => {
+        const f = funcionariosMemoria[nome];
+        if(lojaFiltro === "TODAS" || f.loja === lojaFiltro) {
+          if(f.folgas && f.folgas.includes(diaDaSemana)) {
+            folguistasDoDia.push(`${nome} (L${f.loja})`);
           }
         }
       });
-      document.getElementById('listaFolguistasContainer').innerHTML = folguistas.length === 0 ? "Nenhum funcionário cadastrado de folga para os filtros selecionados." : folguistas.sort().join(' • ');
+
+      if(folguistasDoDia.length > 0) {
+        container.innerHTML = folguistasDoDia.sort().join(' • ');
+      } else {
+        container.innerHTML = "Nenhum colaborador escalado para folga fixa nesta data.";
+      }
     }
+    window.atualizarPainelFolgasDiario = atualizarPainelFolgasDiario;
 
     function processarFechamentoMensal() {
       const lojaSel = document.getElementById('filtroLoja').value;
-      const funcSelecionado = document.getElementById('filtroColaborador').value;
-      const mesRef = document.getElementById('filtroMes').value; 
+      const funcSel = document.getElementById('filtroColaborador').value;
+      const mesSel = document.getElementById('filtroMes').value; 
+
+      if(!mesSel) { alert("Selecione o Mês de Fechamento!"); return; }
+
+      const partesMes = mesSel.split('-');
+      const ano = parseInt(partesMes[0]);
+      const mes ZeroB = parseInt(partesMes[1]) - 1;
+
+      const totalDias = new Date(ano, mesZeroB + 1, 0).getDate();
       const corpo = document.getElementById('corpoTabela');
-      const corpoPrint = document.getElementById('corpoTabelaPrint');
-      
-      if (!mesRef) { alert("Selecione o mês!"); return; }
-
-      document.getElementById('tituloPrintMes').innerText = `FOLHA DE ASSINATURA - REF: ${mesRef.split('-')[1]}/${mesRef.split('-')[0]}`;
-      corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Buscando batidas do banco de dados...</td></tr>";
-
-      let ano = parseInt(mesRef.split('-')[0]);
-      let mes = parseInt(mesRef.split('-')[1]) - 1;
-      let totalDias = new Date(ano, mes + 1, 0).getDate();
-
-      // Montar lista de pessoas filtradas
-      let listaParaProcessar = [];
-      if (funcSelecionado !== "TODOS") {
-        listaParaProcessar = [funcSelecionado];
-      } else {
-        Object.keys(funcionariosBase).forEach(nome => {
-          if(lojaSel === "TODAS" || funcionariosBase[nome].loja === lojaSel) {
-            listaParaProcessar.push(nome);
-          }
-        });
-      }
+      corpo.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Puxando registros e cruzando auditoria inteligente...</td></tr>`;
 
       database.ref('pontos_registrados').once('value', snapshot => {
-        let batidasDoBanco = {};
-        mapaFotosMemoria = {};
-        resumoConsolidadoGlobal = {};
-
-        listaParaProcessar.forEach(nome => {
-          resumoConsolidadoGlobal[nome] = { nome, setor: funcionariosBase[nome].setor, loja: funcionariosBase[nome].loja, diasTrabalhados: 0, faltas: 0, totalAtrasos: 0 };
-        });
-
-        snapshot.forEach(child => {
-          let p = child.val();
-          if (p.colaborador && p.horario && p.tipo) {
-            let dataChaveLimpa = p.dataChave ? (p.dataChave.includes('/') ? `${p.dataChave.split('/')[2]}-${p.dataChave.split('/')[1]}-${p.dataChave.split('/')[0]}` : p.dataChave) : (p.data ? `${p.data.split('/')[2]}-${p.data.split('/')[1]}-${p.data.split('/')[0]}` : "");
-
-            if (dataChaveLimpa.startsWith(mesRef)) {
-              let nFunc = normalizarTexto(p.colaborador);
-              let chaveAgrupada = `${dataChaveLimpa}_${nFunc}`;
+        let pontosMap = {};
+        if(snapshot.exists()) {
+          snapshot.forEach(child => {
+            const p = child.val();
+            if(p.dataChave && p.dataChave.startsWith(mesSel)) {
+              if(!pontosMap[p.colaborador]) pontosMap[p.colaborador] = {};
+              if(!pontosMap[p.colaborador][p.dataChave]) pontosMap[p.colaborador][p.dataChave] = [];
               
-              if (!batidasDoBanco[chaveAgrupada]) {
-                batidasDoBanco[chaveAgrupada] = { entrada: "--", saidaAlm: "--", retAlm: "--", saidaFim: "--" };
-              }
-              
-              let idFoto = child.key;
-              if (p.fotoSelfie) mapaFotosMemoria[idFoto] = p.fotoSelfie;
-              let gpsLink = (p.latitude && p.longitude) ? `https://www.google.com/maps?q=${p.latitude},${p.longitude}` : null;
-
-              let tipoNorm = normalizarTexto(p.tipo);
-              if (tipoNorm.includes("entrada") && !tipoNorm.includes("alm")) { 
-                batidasDoBanco[chaveAgrupada].entrada = p.horario; 
-                batidasDoBanco[chaveAgrupada].idFotoEntrada = idFoto; 
-                batidasDoBanco[chaveAgrupada].gpsEntrada = gpsLink; 
-                if(p.atrasoMinutos) {
-                  listaParaProcessar.forEach(f => {
-                    if(normalizarTexto(f) === nFunc) resumoConsolidadoGlobal[f].totalAtrasos += parseInt(p.atrasoMinutos);
-                  });
-                }
-              }
-              else if (tipoNorm.includes("saidaalm") || tipoNorm === "almoco") { 
-                batidasDoBanco[chaveAgrupada].saidaAlm = p.horario; 
-                batidasDoBanco[chaveAgrupada].idFotoSaidaAlm = idFoto; 
-                batidasDoBanco[chaveAgrupada].gpsSaidaAlm = gpsLink; 
-              }
-              else if (tipoNorm.includes("retorno") || tipoNorm.includes("retalm")) { 
-                batidasDoBanco[chaveAgrupada].retAlm = p.horario; 
-                batidasDoBanco[chaveAgrupada].idFotoRetAlm = idFoto; 
-                batidasDoBanco[chaveAgrupada].gpsRetAlm = gpsLink; 
-              }
-              else if (tipoNorm.includes("fim") || tipoNorm.includes("saidafim")) { 
-                batidasDoBanco[chaveAgrupada].saidaFim = p.horario; 
-                batidasDoBanco[chaveAgrupada].idFotoSaidaFim = idFoto; 
-                batidasDoBanco[chaveAgrupada].gpsSaidaFim = gpsLink; 
-              }
-            }
-          }
-        });
-
-        relatorioFinal = [];
-        corpo.innerHTML = "";
-
-        for (let d = 1; d <= totalDias; d++) {
-          let diaStr = String(d).padStart(2, '0');
-          let dataLoopStr = `${mesRef}-${diaStr}`;
-          let dataObj = new Date(ano, mes, d);
-          let dataFormatadaExibir = `${diaStr}/${String(mes+1).padStart(2, '0')}/${ano}`;
-
-          listaParaProcessar.forEach(func => {
-            let nFunc = normalizarTexto(func);
-            let chave = `${dataLoopStr}_${nFunc}`;
-            let b = batidasDoBanco[chave];
-            let folga = checarSeEstaDeFolga(func, dataObj);
-
-            if (b) {
-              resumoConsolidadoGlobal[func].diasTrabalhados++;
-              let linha = { data: dataFormatadaExibir, funcionario: func, loja: funcionariosBase[func].loja, entrada: b.entrada, saidaAlm: b.saidaAlm, retAlm: b.retAlm, saidaFim: b.saidaFim, auditoria: b };
-              relatorioFinal.push(linha);
-              renderizarLinhaTabela(linha, corpo);
-            } else if (!folga) {
-              resumoConsolidadoGlobal[func].faltas++;
-              let linhaFalta = { data: dataFormatadaExibir, funcionario: func, loja: funcionariosBase[func].loja, entrada: "FALTA", saidaAlm: "--", retAlm: "--", saidaFim: "--", auditoria: null };
-              relatorioFinal.push(linhaFalta);
-              renderizarLinhaTabela(linhaFalta, corpo);
-            } else {
-              let linhaFolga = { data: dataFormatadaExibir, funcionario: func, loja: funcionariosBase[func].loja, entrada: "FOLGA", saidaAlm: "--", retAlm: "--", saidaFim: "--", auditoria: null };
-              relatorioFinal.push(linhaFolga);
-              renderizarLinhaTabela(linhaFolga, corpo);
+              let objPonto = { ...p, idReal: child.key };
+              pontosMap[p.colaborador][p.dataChave].push(objPonto);
             }
           });
         }
 
-        corpoPrint.innerHTML = "";
-        Object.keys(resumoConsolidadoGlobal).sort().forEach(nomeKey => {
-          let rc = resumoConsolidadoGlobal[nomeKey];
-          corpoPrint.innerHTML += `
+        let htmlPrincipal = "";
+        let htmlPrint = "";
+
+        let listaFuncionariosFiltrados = Object.keys(funcionariosMemoria).filter(nome => {
+          const f = funcionariosMemoria[nome];
+          if(lojaSel !== "TODAS" && f.loja !== lojaSel) return false;
+          if(funcSel !== "TODOS" && nome !== funcSel) return false;
+          return true;
+        }).sort();
+
+        if(listaFuncionariosFiltrados.length === 0) {
+          corpo.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:red; font-weight:bold;">Nenhum funcionário encontrado nos filtros aplicados.</td></tr>`;
+          document.getElementById('corpoTabelaPrint').innerHTML = "";
+          return;
+        }
+
+        listaFuncionariosFiltrados.forEach(nome => {
+          const dadosF = funcionariosMemoria[nome];
+          let diasTrabalhadosCont = 0;
+          let faltasCont = 0;
+          let atrasosMinutosCont = 0;
+
+          for(let dia = 1; dia <= totalDias; dia++) {
+            const diaStr = String(dia).padStart(2, '0');
+            const mesStr = String(mesZeroB + 1).padStart(2, '0');
+            const dataChaveLoop = `${ano}-${mesStr}-${diaStr}`;
+            const dataExibicao = `${diaStr}/${mesStr}/${ano}`;
+
+            const dataObjLoop = new Date(ano, mesZeroB, dia);
+            const diaSemanaLoop = dataObjLoop.getDay();
+
+            const eFolgaFixa = dadosF.folgas && dadosF.folgas.includes(diaSemanaLoop);
+            const registrosDoDia = (pontosMap[nome] && pontosMap[nome][dataChaveLoop]) ? pontosMap[nome][dataChaveLoop] : [];
+
+            let entrada = "--", sAlmoço = "--", rAlmoço = "--", saidaFim = "--";
+            let auditoriaTexto = "--";
+            let classeEstilo = "";
+
+            registrosDoDia.forEach(reg => {
+              let btnMidia = `<div class="bloco-ponto-acoes">
+                                <span class="titulo-acao-btd">${reg.horario}</span>
+                                ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
+                                ${reg.latitude && reg.latitude !== "Não Autorizado" ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
+                             </div>`;
+
+              if(reg.tipo === "Entrada Expediente") entrada = btnMidia;
+              if(reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço") sAlmoço = btnMidia;
+              if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço") rAlmoço = btnMidia;
+              if(reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente") saidaFim = btnMidia;
+            });
+
+            if(registrosDoDia.length > 0) {
+              diasTrabalhadosCont++;
+              auditoriaTexto = "✅ Regular";
+            } else if (eFolgaFixa) {
+              entrada = `<span class="status-folga">⚽ FOLGA ESCALADA</span>`;
+              auditoriaTexto = "Folga";
+            } else {
+              const hojeCheck = new Date();
+              const loopCheck = new Date(ano, mesZeroB, dia, 23, 59);
+              if(loopCheck < hojeCheck) {
+                entrada = `<span class="status-falta">❌ FALTA SEM JUSTIFICATIVA</span>`;
+                auditoriaTexto = "Falta";
+                faltasCont++;
+              }
+            }
+
+            htmlPrincipal += `
+              <tr ${classeEstilo}>
+                <td>${dataExibicao}</td>
+                <td style="font-weight:bold; color:#004a26;">${nome}</td>
+                <td style="text-align:center; font-weight:bold; color:#666;">L${dadosF.loja}</td>
+                <td>${entrada}</td>
+                <td>${sAlmoço}</td>
+                <td>${rAlmoço}</td>
+                <td>${saidaFim}</td>
+                <td style="text-align:center;">-</td>
+                <td style="font-weight:bold;">${auditoriaTexto}</td>
+              </tr>
+            `;
+          }
+
+          htmlPrint += `
             <tr>
-              <td><strong>${rc.nome}</strong></td>
-              <td>${rc.setor} (Loja ${rc.loja})</td>
-              <td style="text-align: center;">${rc.diasTrabalhados} d</td>
-              <td style="text-align: center; color: red; font-weight:bold;">${rc.faltas}</td>
-              <td style="text-align: center;">${rc.totalAtrasos} min</td>
-              <td><div class="linha-assinatura"></div></td>
+              <td style="font-weight:bold; text-transform:uppercase;">${nome}</td>
+              <td>${dadosF.setor} (Loja ${dadosF.loja})</td>
+              <td style="text-align:center; font-weight:bold;">${diasTrabalhadosCont}</td>
+              <td style="text-align:center; color:red; font-weight:bold;">${faltasCont}</td>
+              <td style="text-align:center;">-</td>
+              <td><div class="linha-signature"></div></td>
             </tr>
           `;
         });
 
-        if (corpo.innerHTML === "") {
-          corpo.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:25px;'>Nenhum registro encontrado para o filtro.</td></tr>";
+        corpo.innerHTML = htmlPrincipal;
+        document.getElementById('corpoTabelaPrint').innerHTML = htmlPrint;
+        
+        const mesesNomes = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+        document.getElementById('tituloPrintMes').innerHTML = `RELAÇÃO DE FECHAMENTO MENSAL - MÊS DE ${mesesNomes[mesZeroB]} DE ${ano}`;
+      });
+    }
+    window.processarFechamentoMensal = processarFechamentoMensal;
+
+    function visualizarSelfie(idPonto) {
+      database.ref('pontos_registrados/' + idPonto).once('value', snapshot => {
+        if(snapshot.exists() && snapshot.val().fotoSelfie) {
+          document.getElementById('modalImg').src = snapshot.val().fotoSelfie;
+          document.getElementById('modalFoto').style.display = 'flex';
+        } else {
+          alert("A foto deste registro não foi encontrada.");
         }
       });
     }
-
-    function renderizarLinhaTabela(l, tabelaElemento) {
-      let tr = document.createElement('tr');
-      let htmlAcoes = "";
-
-      if(l.entrada === "FALTA") {
-        tr.innerHTML = `<td>${l.data}</td><td><strong>${l.funcionario}</strong></td><td>L${l.loja}</td><td colspan="5"><span class="status-falta">❌ FALTA</span></td><td>--</td>`;
-      } else if (l.entrada === "FOLGA") {
-        tr.innerHTML = `<td>${l.data}</td><td><strong>${l.funcionario}</strong></td><td>L${l.loja}</td><td colspan="5"><span class="status-folga">⚽ FOLGA ESCALADA</span></td><td>--</td>`;
-      } else {
-        htmlAcoes += criarBlocoBotao("Ent", l.auditoria.idFotoEntrada, l.auditoria.gpsEntrada);
-        htmlAcoes += criarBlocoBotao("Alm", l.auditoria.idFotoSaidaAlm, l.auditoria.gpsSaidaAlm);
-        htmlAcoes += criarBlocoBotao("Ret", l.auditoria.idFotoRetAlm, l.auditoria.gpsRetAlm);
-        htmlAcoes += criarBlocoBotao("Fim", l.auditoria.idFotoSaidaFim, l.auditoria.gpsSaidaFim);
-
-        tr.innerHTML = `
-          <td>${l.data}</td>
-          <td><strong>${l.funcionario}</strong></td>
-          <td>Loja ${l.loja}</td>
-          <td>${l.entrada}</td>
-          <td>${l.saidaAlm}</td>
-          <td>${l.retAlm}</td>
-          <td>${l.saidaFim}</td>
-          <td>--</td>
-          <td>${htmlAcoes}</td>
-        `;
-      }
-      tabelaElemento.appendChild(tr);
-    }
-
-    function criarBlocoBotao(titulo, idFoto, gpsLink) {
-      if(!idFoto && !gpsLink) return "";
-      let btnF = idFoto ? `<button class="btn-foto" onclick="verFoto('${idFoto}')">📷 FOTO</button>` : "";
-      let btnM = gpsLink ? `<a href="${gpsLink}" target="_blank" class="btn-mapa">🗺️ MAPA</a>` : "";
-      return `<div class="bloco-ponto-acoes"><span class="titulo-acao-btd">${titulo}</span>${btnF}${btnM}</div>`;
-    }
-
-    function verFoto(idKey) {
-      let dadosB64 = mapaFotosMemoria[idKey];
-      if(dadosB64) {
-        document.getElementById('modalImg').src = dadosB64;
-        document.getElementById('modalFoto').style.display = 'flex';
-      } else { alert("Foto indisponível."); }
-    }
+    window.visualizarSelfie = visualizarSelfie;
 
     function fecharModal() { document.getElementById('modalFoto').style.display = 'none'; }
-
-    function baixarPDFConsolidado() {
-      if (Object.keys(resumoConsolidadoGlobal).length === 0) { alert("Consulte os dados primeiro!"); return; }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFont("Arial", "bold"); doc.setFontSize(14);
-      doc.text("SUPERMERCADO SÃO RAIMUNDO", 14, 15);
-      doc.setFontSize(10); doc.text(`FECHAMENTO CONSOLIDADO DAS LOJAS - REFERÊNCIA: ${document.getElementById('filtroMes').value}`, 14, 21);
-
-      let dadosTabela = [];
-      Object.keys(resumoConsolidadoGlobal).sort().forEach(nome => {
-        let r = resumoConsolidadoGlobal[nome];
-        dadosTabela.push([nome, `${r.setor} (L${r.loja})`, `${r.diasTrabalhados} d`, r.faltas.toString(), `${r.totalAtrasos} min`, "___________________________"]);
-      });
-
-      doc.autoTable({
-        startY: 26,
-        head: [['Colaborador', 'Setor / Loja', 'Dias Trab.', 'Faltas', 'Atrasos', 'Assinatura']],
-        body: dadosTabela,
-        theme: 'grid',
-        headStyles: { fillColor: [0, 100, 48] },
-        styles: { fontSize: 8, cellPadding: 3 }
-      });
-      doc.save(`Fechamento_Lojas_SR_${document.getElementById('filtroMes').value}.pdf`);
-    }
+    window.fecharModal = fecharModal;
 
     function baixarExcel() {
-      if (relatorioFinal.length === 0) { alert("Consulte os dados na tela antes!"); return; }
-      let dadosExcel = [];
-      relatorioFinal.forEach(l => {
-        dadosExcel.push({
-          "Data": l.data, "Funcionário": l.funcionario, "Loja": "Loja " + l.loja, "Entrada": l.entrada,
-          "Saída Almoço": l.saidaAlm, "Retorno Almoço": l.retAlm, "Saída Fim": l.saidaFim
-        });
-      });
-      let ws = XLSX.utils.json_to_sheet(dadosExcel);
-      let wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Registros SR");
-      XLSX.writeFile(wb, `Ponto_Geral_Lojas_SR_${document.getElementById('filtroMes').value}.xlsx`);
+      const tab = document.getElementById('tabelaFechamento');
+      let wb = XLSX.utils.table_to_book(tab, { sheet: "ResumoSR" });
+      XLSX.writeFile(wb, `Fechamento_Pontos_SaoRaimundo_${document.getElementById('filtroMes').value}.xlsx`);
     }
+    window.baixarExcel = baixarExcel;
 
-    // Inicializar o sistema unificado
-    inicializarBancoDados();
+    function baixarPDFConsolidado() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'pt', 'a4');
+      
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(0, 100, 48);
+      doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 45);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Relatório Consolidado de Faltas e Dias Trabalhados - Período: ${document.getElementById('filtroMes').value}`, 40, 65);
+      
+      doc.autoTable({
+        html: '.tab-print',
+        startY: 85,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 6 },
+        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' }
+      });
+      
+      doc.save(`Resumo_Pontos_SR_${document.getElementById('filtroMes').value}.pdf`);
+    }
+    window.baixarPDFConsolidado = baixarPDFConsolidado;
+
+    // Dispara a leitura inicial ao carregar a página
+    escutarFuncionariosFirebase();
   </script>
 </body>
 </html>
