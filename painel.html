@@ -75,7 +75,7 @@
       table.tab-print { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
       table.tab-print th, table.tab-print td { border: 1px solid #000 !important; padding: 8px 6px; text-align: left; }
       table.tab-print th { background-color: #f2f2f2 !important; color: #000 !important; font-size: 11px; text-transform: uppercase; }
-      .linha-assinatura { width: 180px; border-bottom: 1px solid #000; height: 25px; }
+      .linha-signature { width: 180px; border-bottom: 1px solid #000; height: 25px; }
     }
   </style>
 </head>
@@ -261,7 +261,6 @@
 
     const diasSemanaNomes = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     
-    // CORREÇÃO: Agora renderiza perfeitamente a lista completa puxando do Firebase
     function renderizarTabelaGerenciamento() {
       const tabela = document.getElementById('tabelaGerenciarLista');
       if(!tabela) return;
@@ -378,7 +377,7 @@
 
       const partesMes = mesSel.split('-');
       const ano = parseInt(partesMes[0]);
-      const mes ZeroB = parseInt(partesMes[1]) - 1;
+      const mesZeroB = parseInt(partesMes[1]) - 1;
 
       const totalDias = new Date(ano, mesZeroB + 1, 0).getDate();
       const corpo = document.getElementById('corpoTabela');
@@ -419,7 +418,6 @@
           const dadosF = funcionariosMemoria[nome];
           let diasTrabalhadosCont = 0;
           let faltasCont = 0;
-          let atrasosMinutosCont = 0;
 
           for(let dia = 1; dia <= totalDias; dia++) {
             const diaStr = String(dia).padStart(2, '0');
@@ -435,13 +433,12 @@
 
             let entrada = "--", sAlmoço = "--", rAlmoço = "--", saidaFim = "--";
             let auditoriaTexto = "--";
-            let classeEstilo = "";
 
             registrosDoDia.forEach(reg => {
               let btnMidia = `<div class="bloco-ponto-acoes">
                                 <span class="titulo-acao-btd">${reg.horario}</span>
                                 ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
-                                ${reg.latitude && reg.latitude !== "Não Autorizado" ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
+                                ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
                              </div>`;
 
               if(reg.tipo === "Entrada Expediente") entrada = btnMidia;
@@ -467,7 +464,7 @@
             }
 
             htmlPrincipal += `
-              <tr ${classeEstilo}>
+              <tr>
                 <td>${dataExibicao}</td>
                 <td style="font-weight:bold; color:#004a26;">${nome}</td>
                 <td style="text-align:center; font-weight:bold; color:#666;">L${dadosF.loja}</td>
@@ -549,7 +546,6 @@
     }
     window.baixarPDFConsolidado = baixarPDFConsolidado;
 
-    // Dispara a leitura inicial ao carregar a página
     escutarFuncionariosFirebase();
   </script>
 </body>
