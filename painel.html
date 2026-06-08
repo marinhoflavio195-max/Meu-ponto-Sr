@@ -275,7 +275,7 @@
       "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
       "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
       "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", folgas: [] },
-      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", font-size: "14px", folgas: [] },
+      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", folgas: [] },
       "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
       "PEDRO PEREIRA QUADROS JUNIOR": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
       "PEDRO SALAZAR DA CONCEICAO": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
@@ -516,9 +516,8 @@
             const dataObjLoop = new Date(ano, mesZeroB, dia);
             const diaSemanaLoop = dataObjLoop.getDay();
 
-            // CORREÇÃO AQUI: Verifica se dadosF.folgas existe antes de rodar o .includes() para não travar o loop
             const eFolgaFixa = (dadosF.folgas && Array.isArray(dadosF.folgas)) ? dadosF.folgas.includes(diaSemanaLoop) : false;
-            const registrosDoDia = (pontosMap[nome] && pontosMap[nome][dataChaveLoop]) ? pointsMap[nome][dataChaveLoop] : (pontosMap[nome] && pontosMap[nome][dataChaveLoop] === undefined ? [] : (pontosMap[nome] ? pontosMap[nome][dataChaveLoop] || [] : []));
+            const registrosDoDia = (pontosMap[nome] && pontosMap[nome][dataChaveLoop]) ? pontosMap[nome][dataChaveLoop] : [];
 
             let entrada = "--", sAlmoço = "--", rAlmoço = "--", saidaFim = "--";
             let auditoriaTexto = "--";
@@ -528,7 +527,7 @@
                 let btnMidia = `<div class="bloco-ponto-acoes">
                                   <span class="titulo-acao-btd">${reg.horario}</span>
                                   ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
-                                  ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="http://google.com/maps?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
+                                  ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://maps.google.com/?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
                                </div>`;
 
                 if(reg.tipo === "Entrada Expediente" || reg.tipo === "Entrada") entrada = btnMidia;
