@@ -270,10 +270,10 @@
       "MARCOS ANTONIO QUEIROZ AMARANTE": { setor: "HORTIFRUTI", loja: "1", folgas: [] },
       "MARIA DAS DORES DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
       "MARIA DO CARMO SANTOS DA SILVA": { setor: "AÇOUGUE", loja: "2", folgas: [] },
-      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", folgas: [] },
+      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", fontStyle: "normal" },
       "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", folgas: [] },
       "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
-      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", fontStyle: "normal" },
+      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
       "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", folgas: [] },
       "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", folgas: [] },
       "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
@@ -462,7 +462,7 @@
 
     function processarFechamentoMensal() {
       const lojaSel = document.getElementById('filtroLoja').value;
-      const funcSel = document.getElementById('filtroColaborador').value;
+      const funcSel = document.getElementById('filtroColaborador').value.trim().toUpperCase();
       const mesSel = document.getElementById('filtroMes').value; 
 
       if(!mesSel) { alert("Selecione o Mês!"); return; }
@@ -540,13 +540,12 @@
               registrosDoDia.forEach(reg => {
                 let btnMidia = `<div class="bloco-ponto-acoes">
                                   <span class="titulo-acao-btd">${reg.horario}</span>
-                                  \${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('\${reg.idReal}')">📸 FOTO</button>` : ''}
-                                  \${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=\${reg.latitude},\${reg.longitude}">🗺️ MAPA</a>` : ''}
+                                  ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
+                                  ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://maps.google.com/?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
                                </div>`;
 
                 if(reg.tipo === "Entrada Expediente" || reg.tipo === "Entrada") entrada = btnMidia;
                 if(reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço" || reg.tipo === "Intervalo Saída") sAlmoço = btnMidia;
-                if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço" || reg.tipo === "Intervalo Retorno") rAlmoExternal = btnMidia;
                 if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço" || reg.tipo === "Intervalo Retorno") rAlmoço = btnMidia;
                 if(reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente" || reg.tipo === "Saída") saidaFim = btnMidia;
               });
