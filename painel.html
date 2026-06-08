@@ -158,7 +158,7 @@
     }
     const database = firebase.database();
 
-    // Carga inicial nativa estruturada (NOME DO FLÁVIO CORRIGIDO NA LISTA RAÍZ)
+    // Carga inicial nativa estruturada (NOME DO FLÁVIO TOTALMENTE CORRIGIDO)
     const cargaInicialPlanilha = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1" },
       "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1" },
@@ -247,7 +247,7 @@
 
     // Ajustar campos de datas iniciais
     const dAtual = new Date();
-    document.getElementById('filtroMes').value = `${dAtual.getFullYear()}-${String(dAtual.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('filtroMes').value = dAtual.getFullYear() + '-' + String(dAtual.getMonth() + 1).padStart(2, '0');
 
     function atualizarListaFuncionariosFiltro() {
       const lojaSel = document.getElementById('filtroLoja').value;
@@ -261,7 +261,7 @@
         const lojaFunc = String(item.loja || "1").trim();
 
         if(lojaSel === "TODAS" || lojaFunc === String(lojaSel).trim()) {
-          combo.innerHTML += `<option value="${nome}">${nome}</option>`;
+          combo.innerHTML += '<option value="' + nome + '">' + nome + '</option>';
         }
       });
     }
@@ -279,7 +279,7 @@
       const totalDias = new Date(ano, mesZeroB + 1, 0).getDate();
 
       const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Puxando registros do banco de dados...</td></tr>`;
+      corpo.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Puxando registros do banco de dados...</td></tr>';
 
       database.ref('pontos_registrados').once('value', snapshot => {
         let pontosMap = {};
@@ -290,13 +290,22 @@
             if(p.dataChave && p.dataChave.startsWith(mesSel)) {
               let colab = p.colaborador ? p.colaborador.trim().toUpperCase() : "DESCONHECIDO";
               
-              // Compatibilidade caso o Firebase ainda possua registros salvos como "FLAVIA"
-              if (colab === "FLAVIA DA SILVA MARINHO") { colab = "FLÁVIO DA SILVA MARINHO"; }
+              // Se no banco ainda tiver o nome antigo salvo como FLAVIA, o código converte para FLÁVIO na hora de puxar
+              if (colab === "FLAVIA DA SILVA MARINHO") { 
+                colab = "FLÁVIO DA SILVA MARINHO"; 
+              }
 
               if(!pontosMap[colab]) pontosMap[colab] = {};
               if(!pontosMap[colab][p.dataChave]) pontosMap[colab][p.dataChave] = [];
               
-              pontosMap[colab][p.dataChave].push({ ...p, idReal: child.key });
+              pontosMap[colab][p.dataChave].push({ 
+                tipo: p.tipo,
+                horario: p.horario,
+                fotoSelfie: p.fotoSelfie,
+                latitude: p.latitude,
+                longitude: p.longitude,
+                idReal: child.key 
+              });
             }
           });
         }
@@ -311,7 +320,7 @@
         }).sort();
 
         if(listaFuncionariosFiltrados.length === 0) {
-          corpo.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:red; font-weight:bold;">Nenhum registro encontrado.</td></tr>`;
+          corpo.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:red; font-weight:bold;">Nenhum registro encontrado.</td></tr>';
           document.getElementById('corpoTabelaPrint').innerHTML = "";
           return;
         }
@@ -327,8 +336,8 @@
           for(let dia = 1; dia <= totalDias; dia++) {
             const diaStr = String(dia).padStart(2, '0');
             const mesStr = String(mesZeroB + 1).padStart(2, '0');
-            const dataChaveLoop = `${ano}-${mesStr}-${diaStr}`;
-            const dataExibicao = `${diaStr}/${mesStr}/${ano}`;
+            const dataChaveLoop = ano + '-' + mesStr + '-' + diaStr;
+            const dataExibicao = diaStr + '/' + mesStr + '/' + ano;
 
             const registrosDoDia = (pontosMap[nome] && pontosMap[nome][dataChaveLoop]) ? pontosMap[nome][dataChaveLoop] : [];
 
@@ -340,12 +349,17 @@
               auditoriaTexto = "✅ Regular";
 
               registrosDoDia.forEach(reg => {
-                // CORREÇÃO DEFINITIVA DA INTERPOLAÇÃO DO LINK DO MAPA
-                let btnMidia = `<div class="bloco-ponto-acoes">
-                                  <span class="titulo-acao-btd">${reg.horario}</span>
-                                  \${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('\${reg.idReal}')">📸 FOTO</button>` : ''}
-                                  \${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=\${reg.latitude},\${reg.longitude}">🗺️ MAPA</a>` : ''}
-                               </div>`;
+                // REESCRITO EM FORMATO TRADICIONAL SEGURO (Impossível quebrar o script)
+                let btnMidia = '<div class="bloco-ponto-acoes">';
+                btnMidia += '<span class="titulo-acao-btd">' + reg.horario + '</span>';
+                
+                if(reg.fotoSelfie) {
+                  btnMidia += '<button class="btn-foto" onclick="visualizarSelfie(\'' + reg.idReal + '\')">📸 FOTO</button>';
+                }
+                if(reg.latitude) {
+                  btnMidia += '<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=' + reg.latitude + ',' + reg.longitude + '">🗺️ MAPA</a>';
+                }
+                btnMidia += '</div>';
 
                 if(reg.tipo === "Entrada Expediente" || reg.tipo === "Entrada") entrada = btnMidia;
                 if(reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço" || reg.tipo === "Intervalo Saída") sAlmoço = btnMidia;
@@ -356,44 +370,40 @@
               const hojeCheck = new Date();
               const loopCheck = new Date(ano, mesZeroB, dia, 23, 59);
               if(loopCheck < hojeCheck) {
-                entrada = `<span class="status-falta">❌ FALTA</span>`;
+                entrada = '<span class="status-falta">❌ FALTA</span>';
                 auditoriaTexto = "Falta";
                 faltasCont++;
               }
             }
 
-            htmlPrincipal += `
-              <tr>
-                <td>${dataExibicao}</td>
-                <td style="font-weight:bold; color:#004a26;">${nome}</td>
-                <td style="text-align:center; font-weight:bold; color:#666;">L${dadosF.loja}</td>
-                <td>${entrada}</td>
-                <td>${sAlmoço}</td>
-                <td>${rAlmoço}</td>
-                <td>${saidaFim}</td>
-                <td style="text-align:center;">-</td>
-                <td style="font-weight:bold;">${auditoriaTexto}</td>
-              </tr>
-            `;
+            htmlPrincipal += '<tr>' +
+              '<td>' + dataExibicao + '</td>' +
+              '<td style="font-weight:bold; color:#004a26;">' + nome + '</td>' +
+              '<td style="text-align:center; font-weight:bold; color:#666;">L' + dadosF.loja + '</td>' +
+              '<td>' + entrada + '</td>' +
+              '<td>' + sAlmoço + '</td>' +
+              '<td>' + rAlmoço + '</td>' +
+              '<td>' + saidaFim + '</td>' +
+              '<td style="text-align:center;">-</td>' +
+              '<td style="font-weight:bold;">' + auditoriaTexto + '</td>' +
+              '</tr>';
           }
 
-          htmlPrint += `
-            <tr>
-              <td style="font-weight:bold; text-transform:uppercase;">${nome}</td>
-              <td>${dadosF.setor} (Loja ${dadosF.loja})</td>
-              <td style="text-align:center; font-weight:bold;">${diasTrabalhadosCont}</td>
-              <td style="text-align:center; color:red; font-weight:bold;">${faltasCont}</td>
-              <td style="text-align:center;">-</td>
-              <td><div class="linha-signature"></div></td>
-            </tr>
-          `;
+          htmlPrint += '<tr>' +
+            '<td style="font-weight:bold; text-transform:uppercase;">' + nome + '</td>' +
+            '<td>' + dadosF.setor + ' (Loja ' + dadosF.loja + ')</td>' +
+            '<td style="text-align:center; font-weight:bold;">' + diasTrabalhadosCont + '</td>' +
+            '<td style="text-align:center; color:red; font-weight:bold;">' + faltasCont + '</td>' +
+            '<td style="text-align:center;">-</td>' +
+            '<td><div class="linha-signature"></div></td>' +
+            '</tr>';
         });
 
         corpo.innerHTML = htmlPrincipal;
         document.getElementById('corpoTabelaPrint').innerHTML = htmlPrint;
         
         const mesesNomes = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-        document.getElementById('tituloPrintMes').innerHTML = `RELAÇÃO DE FECHAMENTO MENSAL - MÊS DE ${mesesNomes[mesZeroB]} DE ${ano}`;
+        document.getElementById('tituloPrintMes').innerHTML = 'RELAÇÃO DE FECHAMENTO MENSAL - MÊS DE ' + mesesNomes[mesZeroB] + ' DE ' + ano;
       });
     }
 
@@ -413,7 +423,7 @@
     function baixarExcel() {
       const tab = document.getElementById('tabelaFechamento');
       let wb = XLSX.utils.table_to_book(tab, { sheet: "ResumoSR" });
-      XLSX.writeFile(wb, `Fechamento_Pontos_SR_${document.getElementById('filtroMes').value}.xlsx`);
+      XLSX.writeFile(wb, 'Fechamento_Pontos_SR_' + document.getElementById('filtroMes').value + '.xlsx');
     }
 
     function baixarPDFConsolidado() {
@@ -427,9 +437,8 @@
       
       doc.setFontSize(11);
       doc.setTextColor(100, 100, 100);
-      doc.text(`Relatório Consolidado de Faltas - Período: ${document.getElementById('filtroMes').value}`, 40, 65);
+      doc.text('Relatório Consolidado de Faltas - Período: ' + document.getElementById('filtroMes').value, 40, 65);
       
-      // CORREÇÃO DA ID DA TABELA OCULTA DO PDF (Garantindo sincronia total dos dados)
       doc.autoTable({
         html: '#tabelaPrintInvisivel',
         startY: 85,
@@ -438,7 +447,7 @@
         headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' }
       });
       
-      doc.save(`Resumo_Pontos_SR_${document.getElementById('filtroMes').value}.pdf`);
+      doc.save('Resumo_Pontos_SR_' + document.getElementById('filtroMes').value + '.pdf');
     }
 
     // Carrega a lista no select assim que a página abre
