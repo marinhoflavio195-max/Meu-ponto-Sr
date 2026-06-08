@@ -21,32 +21,34 @@
     .campo-grupo select:focus { border-color: #006430; outline: none; }
     .campo-grupo select:disabled { background-color: #e8f5e9; border-color: #c8e6c9; color: #888; }
 
-    .btn-prosseguir { width: 100%; padding: 14px; background-color: #006430; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
-    .btn-prosseguir:hover { background-color: #004a26; }
-    
-    /* Área da Câmera (Oculta até selecionar o nome) */
+    /* Alertas de Perímetro Geográfico */
+    .status-gps { padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 15px; display: none; }
+    .gps-sucesso { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .gps-erro { background-color: #ffebee; color: #c62828; border: 1px solid #ffbaf2; }
+
     .area-camera { display: none; text-align: center; margin-top: 20px; border-top: 2px dashed #a5d6a7; padding-top: 20px; }
     #video { width: 100%; max-width: 320px; height: auto; border-radius: 8px; border: 3px solid #006430; background: #222; transform: scaleX(-1); }
     #canvas { display: none; }
     
     .btn-bater { width: 100%; padding: 15px; background-color: #2e7d32; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
     .btn-bater:hover { background-color: #1b5e20; }
+    .btn-bater:disabled { background-color: #9e9e9e !important; cursor: not-allowed; box-shadow: none; }
   </style>
 </head>
 <body>
 
   <div class="container-ponto">
     <h2>SUPERMERCADO SÃO RAIMUNDO</h2>
-    <div class="subtitulo">Registro de Ponto Eletrônico</div>
+    <div class="subtitulo">Registro de Ponto com Trava GPS</div>
 
     <div class="campo-grupo">
       <label for="selecaoLoja">1. SELECIONE A SUA LOJA:</label>
       <select id="selecaoLoja" onchange="configurarFiltroSetores()">
         <option value="">-- Escolha a Loja --</option>
-        <option value="1">Loja 1</option>
+        <option value="1">Loja 1 (Centro)</option>
         <option value="2">Loja 2</option>
         <option value="3">Loja 3</option>
-        <option value="4">Loja 4</option>
+        <option value="4">Loja 4 (SR Moto Peças)</option>
       </select>
     </div>
 
@@ -59,7 +61,7 @@
 
     <div class="campo-grupo">
       <label for="selecaoNome">3. SELECIONE SEU NOME COMPLETO:</label>
-      <select id="selecaoNome" onchange="liberarCamera()" disabled>
+      <select id="selecaoNome" onchange="verificarLocalizacaoEValida()" disabled>
         <option value="">-- Aguardando Setor... --</option>
       </select>
     </div>
@@ -74,17 +76,19 @@
       </select>
     </div>
 
+    <div id="caixaStatusGps" class="status-gps"></div>
+
     <div class="area-camera" id="blocoValidacao">
       <label style="display:block; font-weight:bold; color:#004a26; margin-bottom:10px;">OLHE PARA A CÂMERA PARA CONFIRMAÇÃO:</label>
       <video id="video" autoplay playsinline></video>
       <canvas id="canvas" width="320" height="240"></canvas>
       
-      <button class="btn-bater" onclick="registrarPontoFinal()">📸 CONFIRMAR E REGISTRAR PONTO</button>
+      <button id="btnRegistrarPonto" class="btn-bater" onclick="registrarPontoFinal()" disabled>📸 CONFIRMAR E REGISTRAR PONTO</button>
     </div>
   </div>
 
   <script>
-    // Configurações do Firebase (Mesmo banco do Painel)
+    // Configurações do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -97,40 +101,41 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // Coordenadas Exatas fornecidas por você (Codó-MA)
+    const coordenadasLojas = {
+      "1": { lat: -4.4515049, lon: -43.8762104 },
+      "2": { lat: -4.4680240, lon: -43.8895061 },
+      "3": { lat: -4.4665202, lon: -43.8833122 },
+      "4": { lat: -4.4514327, lon: -43.8758061 }
+    };
+
+    const RAIO_MAXIMO_METROS = 100; // Raio permitido para bater o ponto
     let funcionariosMemoria = {};
     let streamCamera = null;
     let latAtual = null;
     let lonAtual = null;
 
-    // 1. Captura a lista de funcionários em tempo real do Firebase
     function carregarDadosDoServidor() {
       database.ref('config_funcionarios').on('value', snapshot => {
         if(snapshot.exists()) {
           funcionariosMemoria = snapshot.val();
-          // Se a loja já estiver selecionada, atualiza os próximos combos dinamicamente
-          if(document.getElementById('selecaoLoja').value) {
-            configurarFiltroSetores();
-          }
+          if(document.getElementById('selecaoLoja').value) { configuringFiltroSetores(); }
         }
       });
     }
 
-    // 2. Filtra os Setores baseando-se na Loja escolhida
-    function configurarFiltroSetores() {
+    function configuringFiltroSetores() {
       const lojaSelecionada = document.getElementById('selecaoLoja').value;
       const comboSetor = document.getElementById('selecaoSetor');
       const comboNome = document.getElementById('selecaoNome');
       
-      // Resetar os campos seguintes
       comboSetor.innerHTML = '<option value="">-- Escolha o Setor --</option>';
       comboNome.innerHTML = '<option value="">-- Aguardando Setor... --</option>';
-      comboSetor.disabled = true;
-      comboNome.disabled = true;
+      comboSetor.disabled = true; comboNome.disabled = true;
       fecharCamera();
 
       if(!lojaSelecionada) return;
 
-      // Pegar setores únicos dessa loja
       let setoresUnicos = new Set();
       Object.keys(funcionariosMemoria).forEach(nome => {
         if(funcionariosMemoria[nome].loja === lojaSelecionada) {
@@ -138,15 +143,12 @@
         }
       });
 
-      // Ordenar e preencher combo de setores
       Array.from(setoresUnicos).sort().forEach(setor => {
         comboSetor.innerHTML += `<option value="${setor}">${setor}</option>`;
       });
-
       comboSetor.disabled = false;
     }
 
-    // 3. Filtra os Nomes baseando-se na Loja E no Setor escolhidos
     function configurarFiltroNomes() {
       const lojaSelecionada = document.getElementById('selecaoLoja').value;
       const comboSetor = document.getElementById('selecaoSetor').value;
@@ -158,53 +160,95 @@
 
       if(!comboSetor) return;
 
-      // Filtrar os funcionários que pertencem àquela loja e àquele setor especificamente
       Object.keys(funcionariosMemoria).sort().forEach(nome => {
         let f = funcionariosMemoria[nome];
         if(f.loja === lojaSelecionada && f.setor === comboSetor) {
           comboNome.innerHTML += `<option value="${nome}">${nome}</option>`;
         }
       });
-
       comboNome.disabled = false;
     }
 
-    // 4. Ativa a câmera e o GPS quando o nome é finalmente selecionado
-    function liberarCamera() {
-      const nomeSel = document.getElementById('selecaoNome').value;
-      const bloco = document.getElementById('blocoValidacao');
-      const grupoTipo = document.getElementById('grupoTipoBatida');
+    // Função matemática de Haversine para calcular distância real em metros entre dois pontos GPS
+    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // Raio da Terra em metros
+      const phi1 = lat1 * Math.PI / 180;
+      const phi2 = lat2 * Math.PI / 180;
+      const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+      const deltaLambda = (lon2 - lon1) * Math.PI / 180;
 
-      if(!nomeSel) {
-        fecharCamera();
+      const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c; // Retorna a distância em metros
+    }
+
+    function verificarLocalizacaoEValida() {
+      const nomeSel = document.getElementById('selecaoNome').value;
+      const lojaSel = document.getElementById('selecaoLoja').value;
+      const statusBox = document.getElementById('caixaStatusGps');
+      const btnRegistrar = document.getElementById('btnRegistrarPonto');
+
+      if(!nomeSel) { fecharCamera(); return; }
+
+      statusBox.style.display = 'block';
+      statusBox.className = "status-gps gps-erro";
+      statusBox.innerHTML = "📡 Obtendo localização precisa do GPS...";
+      btnRegistrar.disabled = true;
+
+      if (!navigator.geolocation) {
+        statusBox.innerHTML = "❌ Erro: Seu aparelho não suporta Geolocalização.";
         return;
       }
 
-      grupoTipo.style.display = 'block';
-      bloco.style.display = 'block';
+      navigator.geolocation.getCurrentPosition(position => {
+        latAtual = position.coords.latitude;
+        lonAtual = position.coords.longitude;
 
-      // Inicializa a Câmera frontal
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-        .then(stream => {
-          streamCamera = stream;
-          document.getElementById('video').srcObject = stream;
-        })
-        .catch(err => {
-          alert("Aviso: Ative a permissão de câmera para registrar o ponto!");
-        });
+        // Localização alvo da filial escolhida
+        const alvo = coordenadasLojas[lojaSel];
+        const distanciaM = calcularDistanciaMetros(latAtual, lonAtual, alvo.lat, alvo.lon);
 
-      // Captura a geolocalização (GPS)
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-          latAtual = position.coords.latitude;
-          lonAtual = position.coords.longitude;
-        }, err => {
-          console.log("GPS desativado ou recusado.");
-        }, { enableHighAccuracy: true });
+        if(distanciaM <= RAIO_MAXIMO_METROS) {
+          // Dentro do perímetro permitido!
+          statusBox.className = "status-gps gps-sucesso";
+          statusBox.innerHTML = `✅ Perímetro Confirmado! Você está na área da Loja (Distância: ${Math.round(distanciaM)} metros).`;
+          btnRegistrar.disabled = false;
+          abrirCameraAparato();
+        } else {
+          // Fora da loja! Bloqueado!
+          statusBox.className = "status-gps gps-erro";
+          statusBox.innerHTML = `⚠️ ACESSO BLOQUEADO!<br>Você está fora da área da Loja selecionada.<br>Distância atual: ${Math.round(distanciaM)} metros de distância da filial.`;
+          fecharCameraApenas();
+        }
+      }, err => {
+        statusBox.className = "status-gps gps-erro";
+        statusBox.innerHTML = "❌ Ative a localização/GPS do seu aparelho para bater o ponto.";
+        btnRegistrar.disabled = true;
+      }, { enableHighAccuracy: true, timeout: 10000 });
+    }
+
+    function abrirCameraAparato() {
+      document.getElementById('grupoTipoBatida').style.display = 'block';
+      document.getElementById('blocoValidacao').style.display = 'block';
+
+      if(!streamCamera) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+          .then(stream => {
+            streamCamera = stream;
+            document.getElementById('video').srcObject = stream;
+          }).catch(err => { console.log("Sem câmera"); });
       }
     }
 
     function fecharCamera() {
+      document.getElementById('caixaStatusGps').style.display = 'none';
+      fecharCameraApenas();
+    }
+
+    function fecharCameraApenas() {
       document.getElementById('blocoValidacao').style.display = 'none';
       document.getElementById('grupoTipoBatida').style.display = 'none';
       if(streamCamera) {
@@ -213,24 +257,19 @@
       }
     }
 
-    // 5. Captura a foto e salva o registro completo no Firebase
     function registrarPontoFinal() {
       const nomeColaborador = document.getElementById('selecaoNome').value;
       const tipoBatida = document.getElementById('selecaoTipo').value;
       const lojaAtual = document.getElementById('selecaoLoja').value;
       const setorAtual = document.getElementById('selecaoSetor').value;
 
-      if(!nomeColaborador) return;
-
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
 
-      // Tirar foto do vídeo
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const fotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
-      // Gerar marcações de data e hora corretas
       const agora = new Date();
       const diaStr = String(agora.getDate()).padStart(2, '0');
       const mesStr = String(agora.getMonth() + 1).padStart(2, '0');
@@ -240,7 +279,6 @@
       const horaFormatada = agora.toTimeString().split(' ')[0];
       const dataChave = `${anoStr}-${mesStr}-${diaStr}`;
 
-      // Montar objeto que vai para o Painel Administrativo
       const registroPonto = {
         colaborador: nomeColaborador,
         loja: lojaAtual,
@@ -250,25 +288,20 @@
         horario: horaFormatada,
         tipo: tipoBatida,
         fotoSelfie: fotoBase64,
-        latitude: latAtual || "Não Autorizado",
-        longitude: lonAtual || "Não Autorizado",
+        latitude: latAtual,
+        longitude: lonAtual,
         timestamp: firebase.database.ServerValue.TIMESTAMP
       };
 
-      // Enviar ao banco de dados do Firebase
       database.ref('pontos_registrados').push(registroPonto)
         .then(() => {
-          alert(`✅ PONTO REGISTRADO COM SUCESSO!\n\nFuncionário: ${nomeColaborador}\nHorário: ${horaFormatada}\nOperação: ${tipoBatida}`);
-          // Resetar tela para o próximo colaborador bater
+          alert(`✅ PONTO REGISTRADO COM SUCESSO!\n\nFuncionário: ${nomeColaborador}\nHorário: ${horaFormatada}`);
           document.getElementById('selecaoLoja').value = "";
-          configurarFiltroSetores();
+          configuringFiltroSetores();
         })
-        .catch(err => {
-          alert("Erro ao salvar no banco de dados. Verifique a internet.");
-        });
+        .catch(err => { alert("Erro ao salvar."); });
     }
 
-    // Iniciar carregamento dos dados ao abrir a página
     carregarDadosDoServidor();
   </script>
 </body>
