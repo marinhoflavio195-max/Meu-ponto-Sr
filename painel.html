@@ -43,7 +43,6 @@
     .btn-excluir { background-color: #d32f2f; padding: 6px 10px; font-size: 11px; border-radius: 4px; color: white; border: none; cursor: pointer; font-weight: bold; }
     .btn-excluir:hover { background-color: #c62828; }
 
-    /* Seção de Gerenciamento de Funcionários */
     .secao-cadastro { display: none; background: #fff3e0; border: 2px dashed #e65100; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
     .grid-cadastro { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
     .opcao-check { display: flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 5px; }
@@ -122,6 +121,7 @@
       <button class="btn btn-pdf" onclick="baixarPDFConsolidado()">📄 Gerar PDF Resumido</button>
       <button class="btn btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha</button>
       <button class="btn btn-admin" onclick="alternarSecaoCadastro()">⚙️ Gerenciar Funcionários</button>
+      <button class="btn" style="background-color: #004a26;" onclick="injetarCargaInicialPlanilha()">⚡ Injetar Lista Completa</button>
     </div>
 
     <div class="secao-cadastro" id="secaoCadastro">
@@ -218,335 +218,96 @@
   </div>
 
   <script>
+    // Configuração do Firebase incorporada internamente
+    const firebaseConfig = {
+      databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/" 
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const database = firebase.database();
+
     let funcionariosMemoria = {};
 
-    // Define o mês atual nos filtros ao carregar a página
-    const dAtual = new Date();
-    document.getElementById('filtroMes').value = `${dAtual.getFullYear()}-${String(dAtual.getMonth() + 1).padStart(2, '0')}`;
-    document.getElementById('filtroDataFolga').value = dAtual.toISOString().split('T')[0];
-
-    function alternarSecaoCadastro() {
-      const secao = document.getElementById('secaoCadastro');
-      secao.style.display = (secao.style.display === 'block') ? 'none' : 'block';
-      if(secao.style.display === 'block') {
-        renderizarTabelaGerenciamento();
-      }
-    }
-
-    // Inicializa e sincroniza os dados do Firebase em Tempo Real
-    function escutarFuncionariosFirebase() {
-      database.ref('config_funcionarios').on('value', snapshot => {
-        if(snapshot.exists()) {
-          funcionariosMemoria = snapshot.val();
-        } else {
-          funcionariosMemoria = {};
-        }
-        atualizarListaFuncionariosFiltro();
-        atualizarPainelFolgasDiario();
-        renderizarTabelaGerenciamento();
-      });
-    }
-
-    function atualizarListaFuncionariosFiltro() {
-      const lojaSel = document.getElementById('filtroLoja').value;
-      const combo = document.getElementById('filtroColaborador');
-      combo.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
-
-      Object.keys(funcionariosMemoria).sort().forEach(nome => {
-        if(lojaSel === "TODAS" || funcionariosMemoria[nome].loja === lojaSel) {
-          combo.innerHTML += `<option value="${nome}">${nome}</option>`;
-        }
-      });
-    }
-
-    const diasSemanaNomes = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-    
-    function renderizarTabelaGerenciamento() {
-      const tabela = document.getElementById('tabelaGerenciarLista');
-      if(!tabela) return;
-      tabela.innerHTML = "";
-
-      const nomesCadastrados = Object.keys(funcionariosMemoria).sort();
-
-      if(nomesCadastrados.length === 0) {
-        tabela.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#666;">Nenhum funcionário cadastrado na nuvem.</td></tr>`;
-        return;
-      }
-
-      nomesCadastrados.forEach(nome => {
-        const dados = funcionariosMemoria[nome];
-        let txtFolgas = "";
-        if(dados.folgas && dados.folgas.length > 0) {
-          txtFolgas = dados.folgas.map(d => diasSemanaNomes[d]).join(', ');
-        } else {
-          txtFolgas = "Nenhuma";
-        }
-
-        tabela.innerHTML += `
-          <tr>
-            <td style="font-weight:bold; color:#004a26;">${nome}</td>
-            <td>${dados.setor || "Não Informado"}</td>
-            <td style="text-align:center;">Loja ${dados.loja || "-"}</td>
-            <td style="color:#666;">${txtFolgas}</td>
-            <td style="text-align:center;">
-              <button class="btn-excluir" onclick="deletarColaboradorFirebase('${nome.replace(/'/g, "\\'")}')">❌ Excluir</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function salvarNovoFuncionario() {
-      const nome = document.getElementById('cadNome').value.trim().toUpperCase();
-      const setor = document.getElementById('cadSetor').value.trim().toUpperCase();
-      const loja = document.getElementById('cadLoja').value;
-
-      if(!nome || !setor) {
-        alert("Por favor, preencha o Nome e o Setor do colaborador!");
-        return;
-      }
-
-      let folgasSelecionadas = [];
-      document.querySelectorAll('.check-dia:checked').forEach(chk => {
-        folgasSelecionadas.push(parseInt(chk.value));
-      });
-
-      const novoObjeto = {
-        setor: setor,
-        loja: loja,
-        folgas: folgasSelecionadas
-      };
-
-      database.ref('config_funcionarios/' + nome).set(novoObjeto)
-        .then(() => {
-          alert(`✅ ${nome} adicionado com sucesso à base de dados!`);
-          document.getElementById('cadNome').value = "";
-          document.getElementById('cadSetor').value = "";
-          document.querySelectorAll('.check-dia').forEach(chk => chk.checked = false);
-        })
-        .catch(err => { alert("Erro ao salvar no Firebase: " + err.message); });
-    }
-
-    function deletarColaboradorFirebase(nomeExcluir) {
-      if(confirm(`⚠️ Atenção Mickey!\nTem certeza absoluta que deseja remover permanentemente o funcionário "${nomeExcluir}" do sistema?`)) {
-        database.ref('config_funcionarios/' + nomeExcluir).remove()
-          .then(() => { alert("🚀 Funcionário removido com sucesso!"); })
-          .catch(err => { alert("Erro ao excluir: " + err.message); });
-      }
-    }
-
-    function atualizarPainelFolgasDiario() {
-      const dataFiltroStr = document.getElementById('filtroDataFolga').value;
-      const lojaFiltro = document.getElementById('filtroLoja').value;
-      const container = document.getElementById('listaFolguistasContainer');
-      const titulo = document.getElementById('tituloFolgasDoDia');
-
-      if(!dataFiltroStr) return;
-
-      const partes = dataFiltroStr.split('-');
-      const dataObj = new Date(partes[0], partes[1] - 1, partes[2]);
-      const diaDaSemana = dataObj.getDay(); 
-
-      const dFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-      titulo.innerHTML = `⚽ COLABORADORES DE FOLGA NO DIA (${dFormatada}):`;
-
-      let folguistasDoDia = [];
-      Object.keys(funcionariosMemoria).forEach(nome => {
-        const f = funcionariosMemoria[nome];
-        if(lojaFiltro === "TODAS" || f.loja === lojaFiltro) {
-          if(f.folgas && f.folgas.includes(diaDaSemana)) {
-            folguistasDoDia.push(`${nome} (L${f.loja})`);
-          }
-        }
-      });
-
-      if(folguistasDoDia.length > 0) {
-        container.innerHTML = folguistasDoDia.sort().join(' • ');
-      } else {
-        container.innerHTML = "Nenhum colaborador escalado para folga fixa nesta data.";
-      }
-    }
-    window.atualizarPainelFolgasDiario = atualizarPainelFolgasDiario;
-
-    function processarFechamentoMensal() {
-      const lojaSel = document.getElementById('filtroLoja').value;
-      const funcSel = document.getElementById('filtroColaborador').value;
-      const mesSel = document.getElementById('filtroMes').value; 
-
-      if(!mesSel) { alert("Selecione o Mês de Fechamento!"); return; }
-
-      const partesMes = mesSel.split('-');
-      const ano = parseInt(partesMes[0]);
-      const mesZeroB = parseInt(partesMes[1]) - 1;
-
-      const totalDias = new Date(ano, mesZeroB + 1, 0).getDate();
-      const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Puxando registros e cruzando auditoria inteligente...</td></tr>`;
-
-      database.ref('pontos_registrados').once('value', snapshot => {
-        let pontosMap = {};
-        if(snapshot.exists()) {
-          snapshot.forEach(child => {
-            const p = child.val();
-            if(p.dataChave && p.dataChave.startsWith(mesSel)) {
-              if(!pontosMap[p.colaborador]) pontosMap[p.colaborador] = {};
-              if(!pontosMap[p.colaborador][p.dataChave]) pontosMap[p.colaborador][p.dataChave] = [];
-              
-              let objPonto = { ...p, idReal: child.key };
-              pontosMap[p.colaborador][p.dataChave].push(objPonto);
-            }
-          });
-        }
-
-        let htmlPrincipal = "";
-        let htmlPrint = "";
-
-        let listaFuncionariosFiltrados = Object.keys(funcionariosMemoria).filter(nome => {
-          const f = funcionariosMemoria[nome];
-          if(lojaSel !== "TODAS" && f.loja !== lojaSel) return false;
-          if(funcSel !== "TODOS" && nome !== funcSel) return false;
-          return true;
-        }).sort();
-
-        if(listaFuncionariosFiltrados.length === 0) {
-          corpo.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:red; font-weight:bold;">Nenhum funcionário encontrado nos filtros aplicados.</td></tr>`;
-          document.getElementById('corpoTabelaPrint').innerHTML = "";
-          return;
-        }
-
-        listaFuncionariosFiltrados.forEach(nome => {
-          const dadosF = funcionariosMemoria[nome];
-          let diasTrabalhadosCont = 0;
-          let faltasCont = 0;
-
-          for(let dia = 1; dia <= totalDias; dia++) {
-            const diaStr = String(dia).padStart(2, '0');
-            const mesStr = String(mesZeroB + 1).padStart(2, '0');
-            const dataChaveLoop = `${ano}-${mesStr}-${diaStr}`;
-            const dataExibicao = `${diaStr}/${mesStr}/${ano}`;
-
-            const dataObjLoop = new Date(ano, mesZeroB, dia);
-            const diaSemanaLoop = dataObjLoop.getDay();
-
-            const eFolgaFixa = dadosF.folgas && dadosF.folgas.includes(diaSemanaLoop);
-            const registrosDoDia = (pontosMap[nome] && pontosMap[nome][dataChaveLoop]) ? pontosMap[nome][dataChaveLoop] : [];
-
-            let entrada = "--", sAlmoço = "--", rAlmoço = "--", saidaFim = "--";
-            let auditoriaTexto = "--";
-
-            registrosDoDia.forEach(reg => {
-              let btnMidia = `<div class="bloco-ponto-acoes">
-                                <span class="titulo-acao-btd">${reg.horario}</span>
-                                ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
-                                ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
-                             </div>`;
-
-              if(reg.tipo === "Entrada Expediente") entrada = btnMidia;
-              if(reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço") sAlmoço = btnMidia;
-              if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço") rAlmoço = btnMidia;
-              if(reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente") saidaFim = btnMidia;
-            });
-
-            if(registrosDoDia.length > 0) {
-              diasTrabalhadosCont++;
-              auditoriaTexto = "✅ Regular";
-            } else if (eFolgaFixa) {
-              entrada = `<span class="status-folga">⚽ FOLGA ESCALADA</span>`;
-              auditoriaTexto = "Folga";
-            } else {
-              const hojeCheck = new Date();
-              const loopCheck = new Date(ano, mesZeroB, dia, 23, 59);
-              if(loopCheck < hojeCheck) {
-                entrada = `<span class="status-falta">❌ FALTA SEM JUSTIFICATIVA</span>`;
-                auditoriaTexto = "Falta";
-                faltasCont++;
-              }
-            }
-
-            htmlPrincipal += `
-              <tr>
-                <td>${dataExibicao}</td>
-                <td style="font-weight:bold; color:#004a26;">${nome}</td>
-                <td style="text-align:center; font-weight:bold; color:#666;">L${dadosF.loja}</td>
-                <td>${entrada}</td>
-                <td>${sAlmoço}</td>
-                <td>${rAlmoço}</td>
-                <td>${saidaFim}</td>
-                <td style="text-align:center;">-</td>
-                <td style="font-weight:bold;">${auditoriaTexto}</td>
-              </tr>
-            `;
-          }
-
-          htmlPrint += `
-            <tr>
-              <td style="font-weight:bold; text-transform:uppercase;">${nome}</td>
-              <td>${dadosF.setor} (Loja ${dadosF.loja})</td>
-              <td style="text-align:center; font-weight:bold;">${diasTrabalhadosCont}</td>
-              <td style="text-align:center; color:red; font-weight:bold;">${faltasCont}</td>
-              <td style="text-align:center;">-</td>
-              <td><div class="linha-signature"></div></td>
-            </tr>
-          `;
-        });
-
-        corpo.innerHTML = htmlPrincipal;
-        document.getElementById('corpoTabelaPrint').innerHTML = htmlPrint;
-        
-        const mesesNomes = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-        document.getElementById('tituloPrintMes').innerHTML = `RELAÇÃO DE FECHAMENTO MENSAL - MÊS DE ${mesesNomes[mesZeroB]} DE ${ano}`;
-      });
-    }
-    window.processarFechamentoMensal = processarFechamentoMensal;
-
-    function visualizarSelfie(idPonto) {
-      database.ref('pontos_registrados/' + idPonto).once('value', snapshot => {
-        if(snapshot.exists() && snapshot.val().fotoSelfie) {
-          document.getElementById('modalImg').src = snapshot.val().fotoSelfie;
-          document.getElementById('modalFoto').style.display = 'flex';
-        } else {
-          alert("A foto deste registro não foi encontrada.");
-        }
-      });
-    }
-    window.visualizarSelfie = visualizarSelfie;
-
-    function fecharModal() { document.getElementById('modalFoto').style.display = 'none'; }
-    window.fecharModal = fecharModal;
-
-    function baixarExcel() {
-      const tab = document.getElementById('tabelaFechamento');
-      let wb = XLSX.utils.table_to_book(tab, { sheet: "ResumoSR" });
-      XLSX.writeFile(wb, `Fechamento_Pontos_SaoRaimundo_${document.getElementById('filtroMes').value}.xlsx`);
-    }
-    window.baixarExcel = baixarExcel;
-
-    function baixarPDFConsolidado() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'pt', 'a4');
-      
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(0, 100, 48);
-      doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 45);
-      
-      doc.setFontSize(11);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Relatório Consolidado de Faltas e Dias Trabalhados - Período: ${document.getElementById('filtroMes').value}`, 40, 65);
-      
-      doc.autoTable({
-        html: '.tab-print',
-        startY: 85,
-        theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 6 },
-        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' }
-      });
-      
-      doc.save(`Resumo_Pontos_SR_${document.getElementById('filtroMes').value}.pdf`);
-    }
-    window.baixarPDFConsolidado = baixarPDFConsolidado;
-
-    escutarFuncionariosFirebase();
-  </script>
-</body>
-</html>
+    // Carga de dados completa extraída diretamente da foto da sua planilha
+    const cargaInicialPlanilha = {
+      "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [2] },
+      "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
+      "ANDRE KENNEDY COSTA SILVA": { setor: "CPD/TI", loja: "1", folgas: [] },
+      "ANDREIA REGO LIMA": { setor: "OPERADORA DE CAIXA", loja: "3", folgas: [] },
+      "ANTONIA EDILENE DA CONCEICAO PEREIRA": { setor: "OPERADORA DE CAIXA", loja: "3", folgas: [] },
+      "ANTONIO FRANCISCO ARAUJO VIEIRA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "ANTONIO MARCOS CRUZ CUNHA": { setor: "GERENCIA", loja: "3", folgas: [] },
+      "ANTONY THALISON FERNADES GUIMARAES": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "CARLOS JOSE DA COSTA RIBEIRO": { setor: "AÇOUGUE", loja: "1", folgas: [] },
+      "CRISTIANE LIMA TORRES": { setor: "REPOSITOR", loja: "2", folgas: [] },
+      "DENILSON ANDRADE SILVA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "EDUARDO DOS SANTOS RODRIGUES": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
+      "ERISVANA CHAVES SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "EUDES DAS MERCES CORTE": { setor: "MOTORISTA", loja: "1", folgas: [] },
+      "EVERTON LEANDRO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3", folgas: [] },
+      "FELIPE SILVA QUEIROZ": { setor: "SERVIÇOS GERAIS", loja: "1", folgas: [] },
+      "FELIPE VIEIRA DA SILVA": { setor: "MOTORISTA", loja: "3", folgas: [] },
+      "FLAVIA DA SILVA LIMA SILVA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "FLAVIA DA SILVA MARINHO": { setor: "GERENCIA", loja: "1", folgas: [] },
+      "FRANCISCA ANDRADE VIEIRA": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
+      "FRANCISCA DAS CHAGAS ARAUJO BORGES SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "FRANCISCA MILENA DE PAIVA TEIXEIRA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
+      "FRANCISCA ROSA CANTANHEIDE DOS SANTOS": { setor: "AÇOUGUE", loja: "1", folgas: [] },
+      "FRANCISCO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3", folgas: [] },
+      "FRANCISCO GABRIEL TORRES DA LUZ": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "GABRIEL MAX NASCIMENTO ROCHA": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
+      "GENILSON DA CONCEICAO ARAUJO": { setor: "HORTIFRUTI", loja: "1", folgas: [] },
+      "INES RODRIGUES FONTES": { setor: "RH", loja: "1", folgas: [] },
+      "IRENE MACHADO NETA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "ISMAEL PONTES CARDOSO": { setor: "MOTORISTA", loja: "2", folgas: [] },
+      "JAQUELINE REIS DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "JOICE VALE DA CONCEIÇÃO": { setor: "OPERADORA DE CAIXA", loja: "3", folgas: [] },
+      "JOSECLEIA SANTOS FERREIRA": { setor: "REPOSITOR", loja: "2", folgas: [] },
+      "KARINE MENDES DOS SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "KARLENE DA SILVA COSTA": { setor: "REPOSITOR", loja: "3", folgas: [] },
+      "LEANDRO ALVES DA CONCEIÇÃO": { setor: "AÇOUGUE", loja: "1", folgas: [] },
+      "LEILA CRISTINA ALVES SABA": { setor: "AÇOUGUE", loja: "3", folgas: [] },
+      "LETICIA DA CONCEIÇÃO FARIAS": { setor: "OPERADORA DE CAIXA", loja: "3", folgas: [] },
+      "MARCOS ANTONIO QUEIROZ AMARANTE": { setor: "HORTIFRUTI", loja: "1", folgas: [] },
+      "MARIA DAS DORES DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "MARIA DO CARMO SANTOS DA SILVA": { setor: "AÇOUGUE", loja: "2", folgas: [] },
+      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", folgas: [] },
+      "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
+      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
+      "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", folgas: [] },
+      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", folgas: [] },
+      "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "PEDRO PEREIRA QUADROS JUNIOR": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
+      "PEDRO SALAZAR DA CONCEICAO": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
+      "RAIANA SILVA ALVES VIEIRA": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "RAIMUNDO QUEIROZ MARINHO": { setor: "EMPACOTADOR", loja: "1", folgas: [] },
+      "RICKELMY SILVA DE SOUSA": { setor: "REPOSITOR", loja: "2", folgas: [] },
+      "RITA DE CASSIA DA SILVA PACHECO": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "ROBERT MARLON PEREIRA MOTA": { setor: "HORTIFRUTI", loja: "3", folgas: [] },
+      "ROBERTO SANTOS PINHEIRO": { setor: "SEGURANÇA", loja: "1", folgas: [] },
+      "ROSIMAR DA LUZ ALVES": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "SERGIO AZEVEDO DA SILVA": { setor: "MOTORISTA", loja: "2", folgas: [] },
+      "SOLANGE DA COSTA ANDRADE": { setor: "REPOSITOR", loja: "2", folgas: [] },
+      "SUELY ALVES": { setor: "AÇOUGUE", loja: "1", folgas: [] },
+      "TAYSA SILVA NASCIMENTO": { setor: "REPOSITOR", loja: "3", folgas: [] },
+      "THALICE DA LUZ SOUSA": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "THARLES FERNADO DA SILVA RAMOS": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "VALDIMIRO CUNHA DE OLIVEIRA NETO": { setor: "MOTORISTA", loja: "1", folgas: [] },
+      "VANIA CRISTINA REGO DA SILVA LIMA": { setor: "GERENCIA", loja: "3", folgas: [] },
+      "VILSON ANTONIO SALES DE SOUSA FILHO": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "VINICIUS GABRIEL DA CONCEIÇÃO RIBEIRO": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "EDMLSON": { setor: "EMPACOTADOR", loja: "1", folgas: [] },
+      "MARCELO BRITO DA COSTA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "ANTONIO KEVESON SANTOS DOS REIS": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "ALAN FRANCISCO MEDEIROS MILITAR": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
+      "CARLOS HENRRIQUE GRANDÃO": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "JOSENILTON DA SILVA PAZ": { setor: "REPOSITOR", loja: "3", folgas: [] },
+      "MARIA EDIETE RODRIGUES SANTANA": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "DEBORA LUZIA CORTE GALVÃO": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
+      "SAMIRA NASCIMENTO SILVA DA SILVA": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "DEBORA CRISTINA DE PAIVA DA SILVA": { setor: "REPOSITOR", loja: "1", folgas: [] },
+      "RONE HORTIFRUTI": { setor: "HORTIFRUTI", loja: "1", folgas: [] },
+      "MAYCON RUAN AZEVEDO DE ABREU": { setor: "CPD/TI", loja: "1", folgas: [] },
+      "HENRIQUE - DEPOSITO INST MIX": { setor: "ALMOXERIFADO", loj
