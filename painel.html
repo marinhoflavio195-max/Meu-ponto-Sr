@@ -7,6 +7,7 @@
   
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
@@ -218,6 +219,7 @@
   </div>
 
   <script>
+    // Configuração do Banco Realtime do Firebase
     const firebaseConfig = {
       databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/" 
     };
@@ -228,6 +230,7 @@
 
     let funcionariosMemoria = {};
 
+    // Carga de contingência local estruturada
     const cargaInicialPlanilha = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [2] },
       "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
@@ -247,7 +250,7 @@
       "FELIPE SILVA QUEIROZ": { setor: "SERVIÇOS GERAIS", loja: "1", folgas: [] },
       "FELIPE VIEIRA DA SILVA": { setor: "MOTORISTA", loja: "3", folgas: [] },
       "FLAVIA DA SILVA LIMA SILVA": { setor: "ALMOXERIFADO", loja: "1", folgas: [] },
-      "FLAVIO DA SILVA MARINHO": { setor: "GERENCIA", loja: "1", folgas: [] },
+      "FLAVIA DA SILVA MARINHO": { setor: "GERENCIA", loja: "1", folgas: [] },
       "FRANCISCA ANDRADE VIEIRA": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
       "FRANCISCA DAS CHAGAS ARAUJO BORGES SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
       "FRANCISCA MILENA DE PAIVA TEIXEIRA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
@@ -270,7 +273,7 @@
       "MARCOS ANTONIO QUEIROZ AMARANTE": { setor: "HORTIFRUTI", loja: "1", folgas: [] },
       "MARIA DAS DORES DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
       "MARIA DO CARMO SANTOS DA SILVA": { setor: "AÇOUGUE", loja: "2", folgas: [] },
-      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", fontStyle: "normal" },
+      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", folgas: [] },
       "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", folgas: [] },
       "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
       "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
@@ -314,6 +317,7 @@
       "HILLARIA OLIVEIRA RIBEIRO": { setor: "RH", loja: "1", folgas: [] }
     };
 
+    // Inicialização de datas nos campos de filtro
     const dAtual = new Date();
     document.getElementById('filtroMes').value = `${dAtual.getFullYear()}-${String(dAtual.getMonth() + 1).padStart(2, '0')}`;
     document.getElementById('filtroDataFolga').value = dAtual.toISOString().split('T')[0];
@@ -462,7 +466,7 @@
 
     function processarFechamentoMensal() {
       const lojaSel = document.getElementById('filtroLoja').value;
-      const funcSel = document.getElementById('filtroColaborador').value.trim().toUpperCase();
+      const funcSel = document.getElementById('filtroColaborador').value;
       const mesSel = document.getElementById('filtroMes').value; 
 
       if(!mesSel) { alert("Selecione o Mês!"); return; }
@@ -538,6 +542,8 @@
 
             if (registrosDoDia && registrosDoDia.length > 0) {
               registrosDoDia.forEach(reg => {
+                // AQUI MORA O ERRO DE SINTAXE DAS VERSÕES DE AGORA POUCO:
+                // Se houver barras invertidas como "\${reg.horario}", o JavaScript quebra inteiro.
                 let btnMidia = `<div class="bloco-ponto-acoes">
                                   <span class="titulo-acao-btd">${reg.horario}</span>
                                   ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
@@ -597,52 +603,4 @@
         corpo.innerHTML = htmlPrincipal;
         document.getElementById('corpoTabelaPrint').innerHTML = htmlPrint;
         
-        const mesesNomes = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-        document.getElementById('tituloPrintMes').innerHTML = `RELAÇÃO DE FECHAMENTO MENSAL - MÊS DE ${mesesNomes[mesZeroB]} DE ${ano}`;
-      });
-    }
-
-    function visualizarSelfie(idPonto) {
-      database.ref('pontos_registrados/' + idPonto).once('value', snapshot => {
-        if(snapshot.exists() && snapshot.val().fotoSelfie) {
-          document.getElementById('modalImg').src = snapshot.val().fotoSelfie;
-          document.getElementById('modalFoto').style.display = 'flex';
-        } else {
-          alert("Foto não encontrada.");
-        }
-      });
-    }
-
-    function fecharModal() { document.getElementById('modalFoto').style.display = 'none'; }
-
-    function baixarExcel() {
-      const tab = document.getElementById('tabelaFechamento');
-      let wb = XLSX.utils.table_to_book(tab, { sheet: "ResumoSR" });
-      XLSX.writeFile(wb, `Fechamento_Pontos_SaoRaimundo_${document.getElementById('filtroMes').value}.xlsx`);
-    }
-
-    function baixarPDFConsolidado() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'pt', 'a4');
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(0, 100, 48);
-      doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 45);
-      doc.setFontSize(11);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Relatório Consolidado de Faltas - Período: ${document.getElementById('filtroMes').value}`, 40, 65);
-      
-      doc.autoTable({
-        html: '.tab-print',
-        startY: 85,
-        theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 6 },
-        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' }
-      });
-      doc.save(`Resumo_Pontos_SR_${document.getElementById('filtroMes').value}.pdf`);
-    }
-
-    escutarFuncionariosFirebase();
-  </script>
-</body>
-</html>
+        const mesesNomes =
