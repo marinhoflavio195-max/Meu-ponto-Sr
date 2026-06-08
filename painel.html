@@ -218,7 +218,6 @@
   </div>
 
   <script>
-    // Configuração do Firebase incorporada internamente
     const firebaseConfig = {
       databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/" 
     };
@@ -229,7 +228,6 @@
 
     let funcionariosMemoria = {};
 
-    // Carga de dados completa extraída diretamente da foto da sua planilha
     const cargaInicialPlanilha = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [2] },
       "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
@@ -277,7 +275,7 @@
       "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
       "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
       "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", folgas: [] },
-      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", folgas: [] },
+      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", font-size: "14px", folgas: [] },
       "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
       "PEDRO PEREIRA QUADROS JUNIOR": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
       "PEDRO SALAZAR DA CONCEICAO": { setor: "SR MOTO PEÇAS", loja: "4", folgas: [] },
@@ -316,7 +314,6 @@
       "HILLARIA OLIVEIRA RIBEIRO": { setor: "RH", loja: "1", folgas: [] }
     };
 
-    // Alimenta o filtro de meses
     const dAtual = new Date();
     document.getElementById('filtroMes').value = `${dAtual.getFullYear()}-${String(dAtual.getMonth() + 1).padStart(2, '0')}`;
     document.getElementById('filtroDataFolga').value = dAtual.toISOString().split('T')[0];
@@ -338,7 +335,6 @@
     }
     window.injetarCargaInicialPlanilha = injetarCargaInicialPlanilha;
 
-    // Monitora o Firebase em tempo real
     function escutarFuncionariosFirebase() {
       database.ref('config_funcionarios').on('value', snapshot => {
         if(snapshot.exists()) {
@@ -491,7 +487,7 @@
         funcionariosComPontoEncontrados.forEach(n => listaNomesUnificados.add(n));
 
         let listaFuncionariosFiltrados = Array.from(listaNomesUnificados).filter(nome => {
-          const f = funcionariosMemoria[nome] || { loja: "1", setor: "REPOSITOR" }; 
+          const f = funcionariosMemoria[nome] || { loja: "1", setor: "REPOSITOR", folgas: [] }; 
           if(lojaSel !== "TODAS" && f.loja !== lojaSel) return false;
           if(funcSel !== "TODOS" && nome !== funcSel) return false;
           return true;
@@ -520,26 +516,29 @@
             const dataObjLoop = new Date(ano, mesZeroB, dia);
             const diaSemanaLoop = dataObjLoop.getDay();
 
-            const eFolgaFixa = dadosF.folgas && dadosF.folgas.includes(diaSemanaLoop);
-            const registrosDoDia = (pontosMap[nome] && pontosMap[nome][dataChaveLoop]) ? pontosMap[nome][dataChaveLoop] : [];
+            // CORREÇÃO AQUI: Verifica se dadosF.folgas existe antes de rodar o .includes() para não travar o loop
+            const eFolgaFixa = (dadosF.folgas && Array.isArray(dadosF.folgas)) ? dadosF.folgas.includes(diaSemanaLoop) : false;
+            const registrosDoDia = (pontosMap[nome] && pontosMap[nome][dataChaveLoop]) ? pointsMap[nome][dataChaveLoop] : (pontosMap[nome] && pontosMap[nome][dataChaveLoop] === undefined ? [] : (pontosMap[nome] ? pontosMap[nome][dataChaveLoop] || [] : []));
 
             let entrada = "--", sAlmoço = "--", rAlmoço = "--", saidaFim = "--";
             let auditoriaTexto = "--";
 
-            registrosDoDia.forEach(reg => {
-              let btnMidia = `<div class="bloco-ponto-acoes">
-                                <span class="titulo-acao-btd">${reg.horario}</span>
-                                ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
-                                ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
-                             </div>`;
+            if (registrosDoDia && registrosDoDia.length > 0) {
+              registrosDoDia.forEach(reg => {
+                let btnMidia = `<div class="bloco-ponto-acoes">
+                                  <span class="titulo-acao-btd">${reg.horario}</span>
+                                  ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
+                                  ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="http://google.com/maps?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
+                               </div>`;
 
-              if(reg.tipo === "Entrada Expediente") entrada = btnMidia;
-              if(reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço") sAlmoço = btnMidia;
-              if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço") rAlmoço = btnMidia;
-              if(reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente") saidaFim = btnMidia;
-            });
+                if(reg.tipo === "Entrada Expediente" || reg.tipo === "Entrada") entrada = btnMidia;
+                if(reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço" || reg.tipo === "Intervalo Saída") sAlmoço = btnMidia;
+                if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço" || reg.tipo === "Intervalo Retorno") rAlmoço = btnMidia;
+                if(reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente" || reg.tipo === "Saída") saidaFim = btnMidia;
+              });
+            }
 
-            if(registrosDoDia.length > 0) {
+            if(registrosDoDia && registrosDoDia.length > 0) {
               diasTrabalhadosCont++;
               auditoriaTexto = "✅ Regular";
             } else if (eFolgaFixa) {
@@ -559,7 +558,7 @@
               <tr>
                 <td>${dataExibicao}</td>
                 <td style="font-weight:bold; color:#004a26;">${nome}</td>
-                <td style="text-align:center; font-weight:bold; color:#666;">L${dadosF.loja}</td>
+                <td style="text-align:center; font-weight:bold; color:#666;">L${dadosF.loja || '-'}</td>
                 <td>${entrada}</td>
                 <td>${sAlmoço}</td>
                 <td>${rAlmoço}</td>
@@ -573,7 +572,7 @@
           htmlPrint += `
             <tr>
               <td style="font-weight:bold; text-transform:uppercase;">${nome}</td>
-              <td>${dadosF.setor} (Loja ${dadosF.loja})</td>
+              <td>${dadosF.setor || 'REPOSITOR'} (Loja ${dadosF.loja || '-'})</td>
               <td style="text-align:center; font-weight:bold;">${diasTrabalhadosCont}</td>
               <td style="text-align:center; color:red; font-weight:bold;">${faltasCont}</td>
               <td style="text-align:center;">-</td>
