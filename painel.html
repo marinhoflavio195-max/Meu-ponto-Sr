@@ -341,7 +341,6 @@
         } else {
           funcionariosMemoria = {};
         }
-        // Garante que o menu atualize assim que os dados chegarem da nuvem
         atualizarListaFuncionariosFiltro();
         atualizarPainelFolgasDiario();
         renderizarTabelaGerenciamento();
@@ -354,13 +353,10 @@
       if (!combo) return;
 
       combo.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
-
-      // Se a memória estiver vazia, tenta usar temporariamente a carga inicial para não travar a tela
       const baseDados = (Object.keys(funcionariosMemoria).length > 0) ? funcionariosMemoria : cargaInicialPlanilha;
 
       Object.keys(baseDados).sort().forEach(nome => {
         const item = baseDados[nome];
-        // Força a verificação de segurança transformando o valor em String
         const lojaFunc = String(item.loja || "1").trim();
         const lojaAlvo = String(lojaSel).trim();
 
@@ -544,12 +540,13 @@
               registrosDoDia.forEach(reg => {
                 let btnMidia = `<div class="bloco-ponto-acoes">
                                   <span class="titulo-acao-btd">${reg.horario}</span>
-                                  ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
-                                  ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://maps.google.com/?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
+                                  \${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('\${reg.idReal}')">📸 FOTO</button>` : ''}
+                                  \${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=\${reg.latitude},\${reg.longitude}">🗺️ MAPA</a>` : ''}
                                </div>`;
 
                 if(reg.tipo === "Entrada Expediente" || reg.tipo === "Entrada") entrada = btnMidia;
                 if(reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço" || reg.tipo === "Intervalo Saída") sAlmoço = btnMidia;
+                if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço" || reg.tipo === "Intervalo Retorno") rAlmoExternal = btnMidia;
                 if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço" || reg.tipo === "Intervalo Retorno") rAlmoço = btnMidia;
                 if(reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente" || reg.tipo === "Saída") saidaFim = btnMidia;
               });
