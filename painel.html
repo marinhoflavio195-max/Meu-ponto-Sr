@@ -273,7 +273,7 @@
       "MARIA DAS DORES DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", folgas: [] },
       "MARIA DO CARMO SANTOS DA SILVA": { setor: "AÇOUGUE", loja: "2", folgas: [] },
       "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", folgas: [] },
-      "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", fontStyle: "bold", folgas: [] },
+      "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", folgas: [] },
       "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", folgas: [] },
       "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", folgas: [] },
       "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", folgas: [] },
@@ -329,9 +329,8 @@
       }
     }
 
-    // Se a nuvem estiver vazia, injeta a lista completa automaticamente
     function injetarCargaInicialPlanilha() {
-      if(confirm("Mickey, quer injetar os mais de 60 funcionários da planilha para o banco de dados agora?")) {
+      if(confirm("Deseja injetar os funcionários da planilha para o banco de dados agora?")) {
         database.ref('config_funcionarios').set(cargaInicialPlanilha)
           .then(() => { alert("⚡ Sucesso! Todos os funcionários foram salvos na nuvem."); })
           .catch(err => { alert("Erro ao carregar banco: " + err.message); });
@@ -488,12 +487,11 @@
           });
         }
 
-        // União entre quem está cadastrado no sistema e quem de fato bateu ponto no mês escolhido
         let listaNomesUnificados = new Set(Object.keys(funcionariosMemoria));
         funcionariosComPontoEncontrados.forEach(n => listaNomesUnificados.add(n));
 
         let listaFuncionariosFiltrados = Array.from(listaNomesUnificados).filter(nome => {
-          const f = funcionariosMemoria[nome] || { loja: "1", setor: "REPOSITOR" }; // Fallback preventivo
+          const f = funcionariosMemoria[nome] || { loja: "1", setor: "REPOSITOR" }; 
           if(lojaSel !== "TODAS" && f.loja !== lojaSel) return false;
           if(funcSel !== "TODOS" && nome !== funcSel) return false;
           return true;
@@ -532,7 +530,7 @@
               let btnMidia = `<div class="bloco-ponto-acoes">
                                 <span class="titulo-acao-btd">${reg.horario}</span>
                                 ${reg.fotoSelfie ? `<button class="btn-foto" onclick="visualizarSelfie('${reg.idReal}')">📸 FOTO</button>` : ''}
-                                ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://maps.google.com/?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
+                                ${reg.latitude ? `<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=${reg.latitude},${reg.longitude}">🗺️ MAPA</a>` : ''}
                              </div>`;
 
               if(reg.tipo === "Entrada Expediente") entrada = btnMidia;
@@ -608,7 +606,6 @@
     function fecharModal() { document.getElementById('modalFoto').style.display = 'none'; }
     window.fecharModal = fecharModal;
 
-    // Função corrigida para referenciar o mês selecionado
     function baixarExcel() {
       const tab = document.getElementById('tabelaFechamento');
       let wb = XLSX.utils.table_to_book(tab, { sheet: "ResumoSR" });
