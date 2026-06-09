@@ -123,7 +123,7 @@
   </div>
 
   <script>
-    // 1. Inicialização do Banco de Dados Firebase
+    // IMPORTANTE: Caso o seu banco de dados use outra URL, altere aqui embaixo!
     const firebaseConfig = {
       databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/" 
     };
@@ -132,7 +132,7 @@
     }
     const database = firebase.database();
 
-    // 2. Base de Dados Interna Base Secundária (Lojas, Setores e Colaboradores)
+    // Base de Dados de Funcionários Cadastrados
     const dadosColaboradores = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1" },
       "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1" },
@@ -219,18 +219,15 @@
       "HILLARIA OLIVEIRA RIBEIRO": { setor: "RH", loja: "1" }
     };
 
-    // Objeto global de cache para transferir dados limpos para os relatórios (PDF/Excel)
     let registrosProcessadosCache = [];
 
-    // Define o mês atual como padrão no carregamento inicial da página
+    // Define data atual
     const dataHoje = new Date();
     document.getElementById('filtroMes').value = dataHoje.getFullYear() + '-' + String(dataHoje.getMonth() + 1).padStart(2, '0');
 
-    // 3. Atualização Dinâmica da Lista de Funcionários baseado na Loja Selecionada
     function atualizarListaFuncionarios() {
       const lojaSelecionada = document.getElementById('filtroLoja').value;
       const selectColaborador = document.getElementById('filtroColaborador');
-      
       selectColaborador.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
 
       Object.keys(dadosColaboradores).sort().forEach(nome => {
@@ -244,13 +241,12 @@
       });
     }
 
-    // 4. Consulta e Processamento Principal do Banco Firebase
     function consultarPeriodoBanco() {
       const lojaFiltro = document.getElementById('filtroLoja').value;
       const colabFiltro = document.getElementById('filtroColaborador').value;
       const mesFiltro = document.getElementById('filtroMes').value;
 
-      if (!mesFiltro) { alert("Por favor, selecione o mês de fechamento!"); return; }
+      if (!mesFiltro) { alert("Por favor, selecione o mês!"); return; }
 
       const partes = mesFiltro.split('-');
       const ano = parseInt(partes[0]);
@@ -258,21 +254,23 @@
       const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
       const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Lendo dados do Firebase...</td></tr>';
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Conectando e lendo dados do Firebase...</td></tr>';
 
-      // Limpa a memória de cache global antes da nova consulta
       registrosProcessadosCache = [];
 
+      // Acessa o nó 'pontos_registrados' do Realtime Database
       database.ref('pontos_registrados').once('value').then(snapshot => {
         let mapaPontos = {};
 
         if (snapshot.exists()) {
           snapshot.forEach(child => {
             const ponto = child.val();
+            
+            // Verifica se a batida pertence ao mês selecionado
             if (ponto.dataChave && ponto.dataChave.startsWith(mesFiltro)) {
               let nomeFunc = ponto.colaborador ? ponto.colaborador.trim().toUpperCase() : "DESCONHECIDO";
               
-              // Normalização imediata caso haja registros defasados com "FLAVIA"
+              // Correção caso ainda existam dados antigos como FLAVIA sem acento
               if (nomeFunc === "FLAVIA DA SILVA MARINHO") { nomeFunc = "FLÁVIO DA SILVA MARINHO"; }
 
               if (!mapaPontos[nomeFunc]) mapaPontos[nomeFunc] = {};
@@ -290,18 +288,13 @@
           });
         }
 
-        // Filtra os colaboradores que devem entrar no relatório baseado nos selects da tela
+        // Filtra a lista com base nas seleções da tela
         let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
           const info = dadosColaboradores[nome];
           if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
-          if (colabFiltro !== "TODOS" && nome !== colabFiltro) return false;
+          if (colabFiltro !== "TODOS" && nome.toUpperCase() !== colabFiltro.toUpperCase()) return false;
           return true;
         }).sort();
-
-        if (funcionariosFiltrados.length === 0) {
-          corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:red; font-weight:bold;">Nenhum funcionário elegível encontrado para este filtro.</td></tr>';
-          return;
-        }
 
         let htmlTabela = "";
 
@@ -316,7 +309,8 @@
             const dataChaveDia = ano + '-' + mesFormatado + '-' + diaFormatado;
             const dataExibicao = diaFormatado + '/' + mesFormatado + '/' + ano;
 
-            const registrosDoDia = (mapaPontos[nome] && mapaPontos[nome][dataChaveDia]) ? mapaPontos[nome][dataChaveDia] : [];
+            // Busca as batidas ignorando diferenças de maiúsculas/minúsculas no nome
+            const registrosDoDia = (mapaPontos[nome.toUpperCase()] && mapaPontos[nome.toUpperCase()][dataChaveDia]) ? mapaPontos[nome.toUpperCase()][dataChaveDia] : [];
 
             let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
             let auditoria = "--";
@@ -326,7 +320,6 @@
               auditoria = '<span class="status-regular">✅ OK</span>';
 
               registrosDoDia.forEach(reg => {
-                // Montagem limpa do HTML dos blocos de batida (Sem quebras de string)
                 let containerAcao = '<div class="bloco-ponto-acoes"><span class="titulo-hora">' + reg.horario + '</span>';
                 if (reg.fotoSelfie) {
                   containerAcao += '<button class="btn-foto" onclick="abrirModalFoto(\'' + reg.fotoSelfie + '\')">📸 FOTO</button>';
@@ -346,7 +339,7 @@
               const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
               if (dataComparacao < hoje) {
                 ent = '<span class="status-falta">❌ FALTA</span>';
-                auditoria = "Falta Computada";
+                auditoria = "Falta";
                 faltas++;
               }
             }
@@ -363,7 +356,6 @@
               '</tr>';
           }
 
-          // Adiciona ao repositório de cache consolidado para exportação estável
           registrosProcessadosCache.push({
             nome: nome,
             setor: cadastro.setor,
@@ -375,12 +367,12 @@
 
         corpo.innerHTML = htmlTabela;
       }).catch(erro => {
-        alert("Erro crítico ao ler dados do Firebase: " + erro.message);
-        corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center;">Houve uma falha na conexão.</td></tr>';
+        // Alerta crucial que avisa na tela se houver bloqueio de regras do Firebase
+        alert("⚠️ ERRO DE CONEXÃO COM O FIREBASE:\n" + erro.message + "\n\nVerifique se as Regras de Leitura (.read) do seu banco estão públicas (true).");
+        corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center; font-weight:bold;">Falha na conexão externa com o banco de dados.</td></tr>';
       });
     }
 
-    // 5. Funções Auxiliares de Mídia (Mapa e Fotos)
     function abrirMapaGeolocalizacao(lat, lng) {
       const urlMaps = "https://www.google.com/maps?q=" + lat + "," + lng;
       window.open(urlMaps, '_blank');
@@ -395,10 +387,8 @@
       document.getElementById('modalFoto').style.display = 'none';
     }
 
-    // 6. Motores de Exportação Direct Memory (Previnem relatórios vazios)
     function exportarParaExcel() {
-      if (registrosProcessadosCache.length === 0) { alert("Efetue uma consulta de período antes de baixar o Excel."); return; }
-
+      if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes de baixar o Excel."); return; }
       let dadosFormatadosExcel = registrosProcessadosCache.map(f => ({
         "Colaborador": f.nome,
         "Setor": f.setor,
@@ -406,7 +396,6 @@
         "Dias Trabalhados": f.trabalhados,
         "Total de Faltas": f.faltas
       }));
-
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(dadosFormatadosExcel);
       XLSX.utils.book_append_sheet(wb, ws, "Fechamento Mensal");
@@ -414,26 +403,23 @@
     }
 
     function exportarParaPDF() {
-      if (registrosProcessadosCache.length === 0) { alert("Efetue uma consulta de período antes de gerar o PDF."); return; }
-
+      if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes de gerar o PDF."); return; }
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'pt', 'a4');
-      
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(16);
       doc.setTextColor(0, 100, 48);
       doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 45);
-      
       doc.setFontSize(10);
       doc.setTextColor(110, 110, 110);
-      doc.text("RELATÓRIO CONSOLIDADO DE FECHAMENTO MENSAL DE PONTOS - COMPETÊNCIA: " + document.getElementById('filtroMes').value, 40, 65);
+      doc.text("RELATÓRIO CONSOLIDADO DE FECHAMENTO MENSAL - COMPETÊNCIA: " + document.getElementById('filtroMes').value, 40, 65);
 
       let linhasTabelaPDF = registrosProcessadosCache.map(f => [
         f.nome,
         f.setor + " (Loja " + f.loja + ")",
         f.trabalhados,
         f.faltas,
-        "" // Linha em branco para assinatura física
+        ""
       ]);
 
       doc.autoTable({
@@ -443,15 +429,11 @@
         theme: 'grid',
         styles: { fontSize: 8, cellPadding: 5 },
         headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' },
-        columnStyles: {
-          4: { cellWidth: 150 } // Reserva espaço para assinatura manual
-        }
+        columnStyles: { 4: { cellWidth: 150 } }
       });
-      
       doc.save("Resumo_Pontos_SR_" + document.getElementById('filtroMes').value + ".pdf");
     }
 
-    // Carregamento da lista inicial automática
     atualizarListaFuncionarios();
   </script>
 </body>
