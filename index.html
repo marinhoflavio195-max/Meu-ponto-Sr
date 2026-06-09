@@ -19,6 +19,7 @@
     .campo-grupo label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #004a26; }
     .campo-grupo select { width: 100%; padding: 12px; border: 2px solid #a5d6a7; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #ffffff; color: #333; font-weight: bold; transition: border-color 0.2s; }
     .campo-grupo select:focus { border-color: #006430; outline: none; }
+    .campo-grupo select:disabled { background-color: #f5f5f5; border-color: #e0e0e0; color: #999; }
     
     .status-gps { padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 15px; display: none; }
     .gps-sucesso { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
@@ -30,7 +31,6 @@
     
     .btn-bater { width: 100%; padding: 15px; background-color: #2e7d32; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
     .btn-bater:hover { background-color: #1b5e20; }
-    .btn-bater:disabled { background-color: #9e9e9e !important; cursor: not-allowed; box-shadow: none; }
     
     #statusCarregamentoInicial { text-align: center; color: #006430; font-weight: bold; font-size: 14px; margin-bottom: 15px; background: #e8f5e9; padding: 8px; border-radius: 6px; }
   </style>
@@ -91,7 +91,10 @@
       messagingSenderId: "356930006135",
       appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
     };
-    firebase.initializeApp(firebaseConfig);
+    
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const database = firebase.database();
 
     const coordenadasLojas = {
@@ -108,6 +111,7 @@
     let lonAtual = null;
 
     function carregarDadosDoServidor() {
+      // Captura erros caso as regras do Firebase estejam bloqueando o app
       database.ref('config_funcionarios').on('value', snapshot => {
         if(snapshot.exists()) {
           funcionariosMemoria = snapshot.val();
@@ -121,7 +125,13 @@
           `;
           comboLoja.disabled = false;
           document.getElementById('statusCarregamentoInicial').style.display = 'none';
+        } else {
+          document.getElementById('statusCarregamentoInicial').innerHTML = "⚠️ Nenhuma configuração de funcionário encontrada no Firebase.";
         }
+      }, erro => {
+        document.getElementById('statusCarregamentoInicial').style.backgroundColor = "#ffebee";
+        document.getElementById('statusCarregamentoInicial').style.color = "#c62828";
+        document.getElementById('statusCarregamentoInicial').innerHTML = `❌ Erro de Permissão: Verifique as Regras do Firebase. (${erro.code})`;
       });
     }
 
@@ -140,7 +150,7 @@
 
       let setoresUnicos = new Set();
       Object.keys(funcionariosMemoria).forEach(nome => {
-        if(funcionariosMemoria[nome].loja === lojaSelecionada) {
+        if(String(funcionariosMemoria[nome].loja) === String(lojaSelecionada)) {
           setoresUnicos.add(funcionariosMemoria[nome].setor);
         }
       });
@@ -164,7 +174,7 @@
 
       Object.keys(funcionariosMemoria).sort().forEach(nome => {
         let f = funcionariosMemoria[nome];
-        if(f.loja === lojaSelecionada && f.setor === comboSetor) {
+        if(String(f.loja) === String(lojaSelecionada) && f.setor === comboSetor) {
           comboNome.innerHTML += `<option value="${nome}">${nome}</option>`;
         }
       });
@@ -200,7 +210,7 @@
             });
           }
 
-          let jaCompletou Tudo = false;
+          let jaCompletouTudo = false;
 
           if (!batidasEfetivadas.includes("Entrada Expediente")) {
             comboTipo.innerHTML = `<option value="Entrada Expediente">Entrada Expediente</option>`;
@@ -215,18 +225,17 @@
             comboTipo.innerHTML = `<option value="Saida Fim">Saída Fim de Expediente</option>`;
           } 
           else {
-            jaCompletou Tudo = true;
+            jaCompletouTudo = true;
           }
 
           if (jaCompletouTudo) {
             comboTipo.innerHTML = `<option value="COMPLETO">Expediente Total Concluído!</option>`;
             statusBox.style.display = 'block';
             statusBox.className = "status-gps gps-sucesso";
-            statusBox.innerHTML = `✅ Todos os seus 4 pontos de hoje já foram registrados com sucesso, ${nomeColaborador}!`;
+            statusBox.innerHTML = `✅ Seus 4 pontos de hoje já estão no sistema, ${nomeColaborador}!`;
             blocoValidacao.style.display = 'none';
             fecharCameraApenas();
           } else {
-            // Se tem ponto para bater, FORÇA a exibição do bloco da câmera e do botão
             blocoValidacao.style.display = 'block';
             btnRegistrar.disabled = false;
             abrirCameraAparato();
@@ -271,13 +280,12 @@
 
         if(distanciaM <= RAIO_MAXIMO_METROS) {
           statusBox.className = "status-gps gps-sucesso";
-          statusBox.innerHTML = `✅ Perímetro Confirmado! Você está na área da Loja.`;
-          
+          statusBox.innerHTML = `✅ Perímetro Confirmado!`;
           document.getElementById('grupoTipoBatida').style.display = 'block';
           analisarBatidasDoDia(nomeSel);
         } else {
           statusBox.className = "status-gps gps-erro";
-          statusBox.innerHTML = `⚠️ ACESSO BLOQUEADO!<br>Você está fora do perímetro da loja.<br>Distância: ${Math.round(distanciaM)}m (Máximo permitido: 100m).`;
+          statusBox.innerHTML = `⚠️ Fora do perímetro da loja! Distância: ${Math.round(distanciaM)}m.`;
           fecharCameraApenas();
         }
       }, err => {
@@ -289,15 +297,13 @@
 
     function abrirCameraAparato() {
       const video = document.getElementById('video');
-      
       if(!streamCamera) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
           .then(stream => {
             streamCamera = stream;
             video.srcObject = stream;
-            // Garante o play em navegadores mobile antigos ou rígidos
             video.setAttribute('playsinline', true);
-            video.play().catch(e => console.log("Erro auto-play forçado"));
+            video.play().catch(e => console.log("Erro de autoplay"));
           }).catch(err => { 
             alert("⚠️ Permissão de Câmera Negada! Ative o acesso à câmera nas configurações do seu navegador."); 
           });
@@ -324,10 +330,7 @@
       const lojaAtual = document.getElementById('selecaoLoja').value;
       const setorAtual = document.getElementById('selecaoSetor').value;
 
-      if(tipoBatida === "COMPLETO" || !tipoBatida) {
-        alert("Seleção inválida ou expediente completo.");
-        return;
-      }
+      if(tipoBatida === "COMPLETO" || !tipoBatida) return;
 
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
@@ -337,7 +340,7 @@
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         var fotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
       } catch(e) {
-        var fotoBase64 = ""; // Fallback caso ocorra falha estrita no frame
+        var fotoBase64 = "";
       }
 
       const agora = new Date();
@@ -365,7 +368,7 @@
 
       database.ref('pontos_registrados').push(registroPonto)
         .then(() => {
-          alert(`✅ PONTO REGISTRADO COM SUCESSO!\n\nFuncionário: ${nomeColaborador}\nHorário: ${horaFormatada}\nRegistro: ${tipoBatida}`);
+          alert(`✅ PONTO REGISTRADO COM SUCESSO!\n\n${nomeColaborador}\nHorário: ${horaFormatada}`);
           document.getElementById('selecaoLoja').value = "";
           configurarFiltroSetores();
         })
