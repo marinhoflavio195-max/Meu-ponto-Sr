@@ -62,7 +62,7 @@
       <div class="campo-filtro">
         <label for="filtroLoja">Filtrar por Loja:</label>
         <select id="filtroLoja" onchange="atualizarListaFuncionarios()">
-          <option value="TODAS">-- Todas as Lojas (1, 2, 3 e 4) --</option>
+          <option value="TODAS">-- Todas as Lojas --</option>
           <option value="1">Loja 1</option>
           <option value="2">Loja 2</option>
           <option value="3">Loja 3</option>
@@ -123,10 +123,9 @@
   </div>
 
   <script>
-    // 1. CONFIGURAÇÃO COMPLETA DE AUTENTICAÇÃO DO FIREBASE
-    // Ajuste esses valores com os dados exatos do seu console Firebase para liberar a conexão!
+    // Configurações do Firebase - Verifique se a sua apiKey e databaseURL batem com o Console do Firebase
     const firebaseConfig = {
-      apiKey: "SUA_API_KEY_AQUI",
+      apiKey: "SUA_API_KEY_AQUI", // Se possuir API Key, insira aqui
       authDomain: "meupontosr.firebaseapp.com",
       databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/",
       projectId: "meupontosr",
@@ -138,7 +137,7 @@
     }
     const database = firebase.database();
 
-    // 2. Base de Dados de Funcionários Cadastrados
+    // Base Cadastral de Funcionários
     const dadosColaboradores = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1" },
       "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1" },
@@ -227,7 +226,7 @@
 
     let registrosProcessadosCache = [];
 
-    // Define o mês de junho de 2026 automaticamente baseado no print enviado
+    // Define o mês de junho de 2026 automaticamente como padrão baseado no seu painel
     document.getElementById('filtroMes').value = "2026-06";
 
     function atualizarListaFuncionarios() {
@@ -246,7 +245,15 @@
       });
     }
 
-    function consultarPeriodoBanco() {
+    // Função auxiliar para limpar strings (remover acentos, espaços e padronizar maiúsculas)
+    function normalizarTexto(texto) {
+      if (!texto) return "";
+      return texto.toString().trim().toUpperCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+        .replace(/\s+/g, " "); // Remove espaços duplos
+    }
+
+    async function consultarPeriodoBanco() {
       const lojaFiltro = document.getElementById('filtroLoja').value;
       const colabFiltro = document.getElementById('filtroColaborador').value;
       const mesFiltro = document.getElementById('filtroMes').value;
@@ -259,132 +266,159 @@
       const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
       const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Lendo barramento de dados do Firebase...</td></tr>';
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Varrendo pastas do Firebase...</td></tr>';
 
       registrosProcessadosCache = [];
+      let snapshotEncontrado = null;
 
-      // VARREDURA TOTAL: Lê o nó completo para evitar falhas caso a estrutura mude ligeiramente
-      database.ref('pontos_registrados').once('value').then(snapshot => {
-        let mapaPontos = {};
+      // ESTRUTURA BLINDADA: Tenta ler o nó principal, se falhar, vasculha caminhos alternativos
+      const caminhosParaTestar = ['pontos_registrados', 'pontos', '/'];
+      
+      for (let caminho of caminhosParaTestar) {
+        try {
+          const snap = await database.ref(caminho).once('value');
+          if (snap.exists() && snap.hasChildren()) {
+            snapshotEncontrado = snap;
+            console.log(`Dados localizados com sucesso na pasta: ${caminho}`);
+            break; 
+          }
+        } catch (e) {
+          console.error(`Erro ao tentar ler o caminho ${caminho}:`, e);
+        }
+      }
 
-        if (snapshot.exists()) {
-          snapshot.forEach(child => {
-            const ponto = child.val();
-            let dataAlvo = ponto.dataChave || ponto.data || "";
-            
-            if (dataAlvo && dataAlvo.startsWith(mesFiltro)) {
-              let nomeFunc = ponto.colaborador ? ponto.colaborador.trim().toUpperCase() : "";
-              if (!nomeFunc && ponto.funcionario) nomeFunc = ponto.funcionario.trim().toUpperCase();
-              
-              if (nomeFunc === "FLAVIA DA SILVA MARINHO") { nomeFunc = "FLÁVIO DA SILVA MARINHO"; }
+      let mapaPontos = {};
 
-              if (nomeFunc) {
-                if (!mapaPontos[nomeFunc]) mapaPontos[nomeFunc] = {};
-                if (!mapaPontos[nomeFunc][dataAlvo]) mapaPontos[nomeFunc][dataAlvo] = [];
+      if (snapshotEncontrado) {
+        snapshotEncontrado.forEach(child => {
+          const dadoBruto = child.val();
 
-                mapaPontos[nomeFunc][dataAlvo].push({
-                  tipo: ponto.tipo || "Registro",
-                  horario: ponto.horario || ponto.hora || "--:--",
-                  fotoSelfie: ponto.fotoSelfie || ponto.foto || null,
-                  latitude: ponto.latitude || null,
-                  longitude: ponto.longitude || null
-                });
-              }
-            }
-          });
+          // Caso o registro seja direto um nó interno contendo filhos recursivos (Estrutura por ID de Usuário)
+          if (dadoBruto && typeof dadoBruto === 'object' && !dadoBruto.colaborador && !dadoBruto.funcionario) {
+            Object.keys(dadoBruto).forEach(subKey => {
+              const subPonto = dadoBruto[subKey];
+              processarObjetoPonto(subPonto, mapaPontos, mesFiltro);
+            });
+          } else {
+            // Estrutura linear padrão de tabela unica
+            processarObjetoPonto(dadoBruto, mapaPontos, mesFiltro);
+          }
+        });
+      }
+
+      // Função interna para extrair batidas independente do nome da chave de dados
+      function processarObjetoPonto(ponto, mapa, mesSel) {
+        if (!ponto) return;
+        let dataAlvo = ponto.dataChave || ponto.data || ponto.data_registro || "";
+        
+        // Se a data estiver no formato brasileiro DD/MM/AAAA, converte para AAAA-MM-DD
+        if (dataAlvo.includes('/')) {
+          const p = dataAlvo.split('/');
+          if (p.length === 3) dataAlvo = `${p[2]}-${p[1]}-${p[0]}`;
         }
 
-        let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
-          const info = dadosColaboradores[nome];
-          if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
-          if (colabFiltro !== "TODOS" && nome.toUpperCase() !== colabFiltro.toUpperCase()) return false;
-          return true;
-        }).sort();
+        if (dataAlvo && dataAlvo.startsWith(mesSel)) {
+          let nomeFunc = ponto.colaborador || ponto.funcionario || ponto.nome || ponto.colaboradorNome || "";
+          let nomeLimpo = normalizarTexto(nomeFunc);
 
-        let htmlTabela = "";
+          if (nomeLimpo) {
+            if (!mapa[nomeLimpo]) mapa[nomeLimpo] = {};
+            if (!mapa[nomeLimpo][dataAlvo]) mapa[nomeLimpo][dataAlvo] = [];
 
-        if (funcionariosFiltrados.length === 0) {
-          corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:red;">Nenhum funcionário ativo corresponde aos filtros.</td></tr>';
-          return;
+            mapa[nomeLimpo][dataAlvo].push({
+              tipo: ponto.tipo || ponto.status || "Registro",
+              horario: ponto.horario || ponto.hora || "--:--",
+              fotoSelfie: ponto.fotoSelfie || ponto.foto || ponto.urlFoto || null,
+              latitude: ponto.latitude || ponto.lat || null,
+              longitude: ponto.longitude || ponto.lng || null
+            });
+          }
         }
+      }
 
-        funcionariosFiltrados.forEach(nome => {
-          const cadastro = dadosColaboradores[nome];
-          let diasTrabalhados = 0;
-          let faltas = 0;
+      // Filtra os colaboradores ativos na tela
+      let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
+        const info = dadosColaboradores[nome];
+        if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
+        if (colabFiltro !== "TODOS" && normalizarTexto(nome) !== normalizarTexto(colabFiltro)) return false;
+        return true;
+      }).sort();
 
-          for (let dia = 1; dia <= totalDiasMes; dia++) {
-            const diaFormatado = String(dia).padStart(2, '0');
-            const mesFormatado = String(mesZeroBased + 1).padStart(2, '0');
-            const dataChaveDia = ano + '-' + mesFormatado + '-' + diaFormatado;
-            const dataExibicao = diaFormatado + '/' + mesFormatado + '/' + ano;
+      let htmlTabela = "";
 
-            const registrosDoDia = (mapaPontos[nome.toUpperCase()] && mapaPontos[nome.toUpperCase()][dataChaveDia]) ? mapaPontos[nome.toUpperCase()][dataChaveDia] : [];
+      funcionariosFiltrados.forEach(nome => {
+        const cadastro = dadosColaboradores[nome];
+        const nomeChaveNormalizado = normalizarTexto(nome);
+        let diasTrabalhados = 0;
+        let faltas = 0;
 
-            let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
-            let auditoria = "--";
+        for (let dia = 1; dia <= totalDiasMes; dia++) {
+          const diaFormatado = String(dia).padStart(2, '0');
+          const mesFormatado = String(mesZeroBased + 1).padStart(2, '0');
+          const dataChaveDia = ano + '-' + mesFormatado + '-' + diaFormatado;
+          const dataExibicao = diaFormatado + '/' + mesFormatado + '/' + ano;
 
-            if (registrosDoDia.length > 0) {
-              diasTrabalhados++;
-              auditoria = '<span class="status-regular">✅ OK</span>';
+          const registrosDoDia = (mapaPontos[nomeChaveNormalizado] && mapaPontos[nomeChaveNormalizado][dataChaveDia]) ? mapaPontos[nomeChaveNormalizado][dataChaveDia] : [];
 
-              registrosDoDia.forEach(reg => {
-                let containerAcao = '<div class="bloco-ponto-acoes"><span class="titulo-hora">' + reg.horario + '</span>';
-                if (reg.fotoSelfie) {
-                  containerAcao += '<button class="btn-foto" onclick="abrirModalFoto(\'' + reg.fotoSelfie + '\')">📸 FOTO</button>';
-                }
-                if (reg.latitude && reg.longitude) {
-                  containerAcao += '<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(' + reg.latitude + ',' + reg.longitude + ')">🗺️ MAPA</button>';
-                }
-                containerAcao += '</div>';
+          let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
+          let auditoria = "--";
 
-                let tipoLimpo = reg.tipo.toLowerCase();
-                if (tipoLimpo.includes("entrada") || tipoLimpo === "ent") ent = containerAcao;
-                if (tipoLimpo.includes("saida almoço") || tipoLimpo.includes("intervalo saída") || tipoLimpo.includes("s. almoço")) almSai = containerAcao;
-                if (tipoLimpo.includes("retorno almoço") || tipoLimpo.includes("intervalo retorno") || tipoLimpo.includes("r. almoço")) almRet = containerAcao;
-                if (tipoLimpo.includes("saida fim") || tipoLimpo.includes("saída") || tipoLimpo === "sai") saiFim = containerAcao;
-              });
-            } else {
-              const hoje = new Date();
-              const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
-              if (dataComparacao < hoje) {
-                ent = '<span class="status-falta">❌ FALTA</span>';
-                auditoria = "Ausência";
-                faltas++;
+          if (registrosDoDia.length > 0) {
+            diasTrabalhados++;
+            auditoria = '<span class="status-regular">✅ OK</span>';
+
+            registrosDoDia.forEach(reg => {
+              let containerAcao = '<div class="bloco-ponto-acoes"><span class="titulo-hora">' + reg.horario + '</span>';
+              if (reg.fotoSelfie) {
+                containerAcao += '<button class="btn-foto" onclick="abrirModalFoto(\'' + reg.fotoSelfie + '\')">📸 FOTO</button>';
               }
-            }
+              if (reg.latitude && reg.longitude) {
+                containerAcao += '<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(' + reg.latitude + ',' + reg.longitude + ')">🗺️ MAPA</button>';
+              }
+              containerAcao += '</div>';
 
-            htmlTabela += '<tr>' +
-              '<td>' + dataExibicao + '</td>' +
-              '<td style="font-weight:bold; color:#004a26;">' + nome + '</td>' +
-              '<td>' + cadastro.setor + ' (L' + cadastro.loja + ')</td>' +
-              '<td>' + ent + '</td>' +
-              '<td>' + almSai + '</td>' +
-              '<td>' + almRet + '</td>' +
-              '<td>' + saiFim + '</td>' +
-              '<td>' + auditoria + '</td>' +
-              '</tr>';
+              let tipoLimpo = normalizarTexto(reg.tipo);
+              if (tipoLimpo.includes("ENTRADA") || tipoLimpo === "ENT") ent = containerAcao;
+              if (tipoLimpo.includes("SAIDA ALMOCO") || tipoLimpo.includes("INTERVALO SAIDA") || tipoLimpo.includes("S. ALMOCO")) almSai = containerAcao;
+              if (tipoLimpo.includes("RETORNO ALMOCO") || tipoLimpo.includes("INTERVALO RETORNO") || tipoLimpo.includes("R. ALMOCO")) almRet = containerAcao;
+              if (tipoLimpo.includes("SAIDA FIM") || tipoLimpo.includes("SAIDA") || tipoLimpo === "SAI") saiFim = containerAcao;
+            });
+          } else {
+            const hoje = new Date();
+            const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
+            if (dataComparacao < hoje) {
+              ent = '<span class="status-falta">❌ FALTA</span>';
+              auditoria = "Ausência";
+              faltas++;
+            }
           }
 
-          registrosProcessadosCache.push({
-            nome: nome,
-            setor: cadastro.setor,
-            loja: cadastro.loja,
-            trabalhados: diasTrabalhados,
-            faltas: faltas
-          });
-        });
+          htmlTabela += '<tr>' +
+            '<td>' + dataExibicao + '</td>' +
+            '<td style="font-weight:bold; color:#004a26;">' + nome + '</td>' +
+            '<td>' + cadastro.setor + ' (L' + cadastro.loja + ')</td>' +
+            '<td>' + ent + '</td>' +
+            '<td>' + almSai + '</td>' +
+            '<td>' + almRet + '</td>' +
+            '<td>' + saiFim + '</td>' +
+            '<td>' + auditoria + '</td>' +
+            '</tr>';
+        }
 
-        corpo.innerHTML = htmlTabela;
-      }).catch(erro => {
-        alert("⚠️ ERRO CRÍTICO DE AUTENTICAÇÃO:\n" + erro.message + "\n\nIsso ocorre porque faltam as chaves completas no bloco 'firebaseConfig'.");
-        corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center; font-weight:bold;">Conexão recusada pelo Firebase. Chaves inválidas.</td></tr>';
+        registrosProcessadosCache.push({
+          nome: nome,
+          setor: cadastro.setor,
+          loja: cadastro.loja,
+          trabalhados: diasTrabalhados,
+          faltas: faltas
+        });
       });
+
+      corpo.innerHTML = htmlTabela;
     }
 
     function abrirMapaGeolocalizacao(lat, lng) {
-      const urlMaps = "https://www.google.com/maps?q=" + lat + "," + lng;
-      window.open(urlMaps, '_blank');
+      window.open(`http://maps.google.com/maps?q=${lat},${lng}`, '_blank');
     }
 
     function abrirModalFoto(urlFoto) {
