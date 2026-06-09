@@ -14,7 +14,7 @@
 
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f7f4; margin: 0; padding: 20px; color: #333; }
-    .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; }
+    .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; border-top: 6px solid #006430; }
     
     h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; }
     
@@ -138,7 +138,7 @@
     }
     const database = firebase.database();
 
-    // 📍 COORDENADAS REAIS CORRIGIDAS DAS LOJAS EM CODÓ/MA
+    // 📍 COORDENADAS REAIS DAS LOJAS EM CODÓ/MA (Com ponto decimal)
     const coordenadasLojas = {
       "1": { lat: -4.4515049, lng: -43.8762104 }, // Loja 01
       "2": { lat: -4.4680240, lng: -43.8895061 }, // Loja 02
@@ -263,11 +263,21 @@
       return R * c; 
     }
 
+    // 🧠 SISTEMA INTELIGENTE DE LEITURA DE TEXTO (BLINDADO CONTRA ACENTOS)
     function normalizarTexto(texto) {
       if (!texto) return "";
-      let t = texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-      if (t.includes("francisca souza") || t.includes("franc.acou")) return "franciscasouza";
+      let t = texto.toString().toLowerCase();
+      
+      // Remove acentos e caracteres especiais de forma agressiva (Ex: Flávio -> flavio)
+      t = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      
+      // Atalhos para compatibilidade direta de chaves personalizadas
+      if (t.includes("franciscasouza") || t.includes("franc.acou")) return "franciscasouza";
       if (t.includes("roni") || t.includes("rone")) return "ronefruta";
+      if (t.includes("flavio")) return "flavio";
+      if (t.includes("andreia")) return "andreia";
+      if (t.includes("antonia")) return "antonia";
+
       return t.replace(/\s+/g, "");
     }
 
@@ -284,7 +294,7 @@
       const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
       const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Monitorando Cerca Virtual (100 metros) em Codó...</td></tr>';
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Analisando cercas virtuais de 100m no Firebase...</td></tr>';
 
       registrosProcessadosCache = [];
 
@@ -424,7 +434,7 @@
       });
     }
 
-    // 🗺️ LINK CORRIGIDO DO GOOGLE MAPS OFICIAL (SEM TRAVAMENTO)
+    // 🗺️ LINK CORRIGIDO DO GOOGLE MAPS OFICIAL (ABRE DIRETO NO NAVEGADOR)
     function abrirMapaGeolocalizacao(lat, lng) {
       window.open('https://www.google.com/maps?q=' + lat + ',' + lng, '_blank');
     }
@@ -498,7 +508,7 @@
 
       doc.autoTable({
         head: [['Nº', 'Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura do Funcionário']],
-        body: líneasTabelaPDF,
+        body: linhasTabelaPDF,
         startY: 145,
         theme: 'grid',
         styles: { fontSize: 8.5, cellPadding: 6, valign: 'middle' },
