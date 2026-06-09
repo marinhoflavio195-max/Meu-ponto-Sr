@@ -16,7 +16,7 @@
     body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f7f4; margin: 0; padding: 20px; color: #333; }
     .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; }
     
-    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; }
+    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     
     .filtros-topo { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #f9fdfa; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
     .campo-filtro { flex: 1; min-width: 220px; }
@@ -85,7 +85,7 @@
     <div class="botoes-acoes">
       <button class="btn btn-filtrar" onclick="consultarPeriodoBanco()">🔍 Consultar Período</button>
       <button class="btn btn-excel" onclick="exportarParaExcel()">📊 Exportar Excel</button>
-      <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF Resumido</button>
+      <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF Executivo</button>
     </div>
 
     <div style="overflow-x: auto;">
@@ -122,7 +122,6 @@
   </div>
 
   <script>
-    // 1. CHAVES REAIS E AUTENTICADAS EXTRAÍDAS DO SEU APP ORIGINAL
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -138,7 +137,6 @@
     }
     const database = firebase.database();
 
-    // 2. Base unificada de funcionários com o padrão do Supermercado São Raimundo
     const dadosColaboradores = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "adrissa" },
       "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1", chaveApp: "alice" },
@@ -198,7 +196,7 @@
       "ROBERTO SANTOS PINHEIRO": { setor: "SEGURANÇA", loja: "1", chaveApp: "roberto" },
       "ROSIMAR DA LUZ ALVES": { setor: "REPOSITOR", loja: "1", chaveApp: "rose" },
       "SERGIO AZEVEDO DA SILVA": { setor: "MOTORISTA", loja: "2", chaveApp: "sergio" },
-      "SOLANGE DA COSTA ANDRADE": { setor: "REPOSITOR", loja: "2", chaveApp: "solange" },
+      "SOLANGE DA COSTA ANDRADE": { setor: "REPOSITOR", loja: "2", textApp: "solange" },
       "SUELY ALVES": { setor: "AÇOUGUE", loja: "1", chaveApp: "sueli" },
       "TAYSA SILVA NASCIMENTO": { setor: "REPOSITOR", loja: "3", chaveApp: "taysa" },
       "THALICE DA LUZ SOUSA": { setor: "REPOSITOR", loja: "1", chaveApp: "thalice" },
@@ -227,7 +225,6 @@
 
     let registrosProcessadosCache = [];
 
-    // Coloca automaticamente junho de 2026 para agilizar a consulta
     document.getElementById('filtroMes').value = "2026-06";
 
     function atualizarListaFuncionarios() {
@@ -246,7 +243,6 @@
       });
     }
 
-    // Normaliza os textos da mesma forma que o aplicativo antigo faz
     function normalizarTexto(texto) {
       if (!texto) return "";
       let t = texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -268,7 +264,7 @@
       const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
       const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Baixando registros ativos do Firebase...</td></tr>';
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Buscando dados em tempo real no banco...</td></tr>';
 
       registrosProcessadosCache = [];
 
@@ -313,7 +309,6 @@
           });
         }
 
-        // Filtra a lista com base na seleção da tela
         let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
           const info = dadosColaboradores[nome];
           if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
@@ -399,7 +394,7 @@
     }
 
     function abrirMapaGeolocalizacao(lat, lng) {
-      window.open('https://maps.google.com/?q=' + lat + ',' + lng, '_blank');
+      window.open('https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng, '_blank');
     }
 
     function abrirModalFoto(urlFoto) {
@@ -426,32 +421,80 @@
       XLSX.writeFile(wb, "Pontos_SR_" + document.getElementById('filtroMes').value + ".xlsx");
     }
 
+    // 🌟 NOVA FUNÇÃO DE EXPORTAÇÃO COMPLETA E PROFISSONAL DO RECONHECIMENTO DE PONTOS
     function exportarParaPDF() {
-      if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes."); return; }
+      if (registrosProcessadosCache.length === 0) { alert("Efetue a consulta antes de gerar o PDF!"); return; }
+      
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'pt', 'a4');
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(14);
-      doc.setTextColor(0, 100, 48);
-      doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 45);
+      const mesRef = document.getElementById('filtroMes').value;
+      const anoMes = mesRef.split('-');
+      const dataFormatadaTopo = anoMes[1] + '/' + anoMes[0];
 
-      let linhasTabelaPDF = registrosProcessadosCache.map(f => [
+      // Configuração de Cabeçalho Institucional Elegante
+      doc.setFillColor(0, 100, 48); // Verde Oficial
+      doc.rect(0, 0, 595, 80, 'F');
+
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(255, 215, 0); // Ouro/Amarelo Oficial
+      doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 38);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(255, 255, 255);
+      doc.text("Relatório Gerencial Mensal de Ponto Integrado — Período: " + dataFormatadaTopo, 40, 58);
+
+      // Bloco de Informações de Controle
+      doc.setFillColor(240, 247, 244);
+      doc.rect(40, 95, 515, 35, 'F');
+      doc.setDrawColor(200, 230, 201);
+      doc.rect(40, 95, 515, 35, 'S');
+
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(0, 74, 38);
+      doc.text("Total Colaboradores: " + registrosProcessadosCache.length, 55, 116);
+      doc.text("Emissão Oficial: " + new Date().toLocaleDateString('pt-BR'), 420, 116);
+
+      // Mapeamento dos registros para compor o corpo do documento PDF
+      let linhasTabelaPDF = registrosProcessadosCache.map((f, index) => [
+        String(index + 1).padStart(2, '0'),
         f.nome,
         f.setor + " (Loja " + f.loja + ")",
-        f.trabalhados,
+        f.trabalhados + " dias",
         f.faltas,
-        ""
+        "___________________________" // Linha sólida ideal para assinatura manual
       ]);
 
+      // Chamada da API JS-AutoTable para desenhar a tabela estilizada de fechamento
       doc.autoTable({
-        head: [['Colaborador', 'Setor', 'Dias Trab.', 'Faltas', 'Assinatura']],
+        head: [['Nº', 'Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura do Funcionário']],
         body: linhasTabelaPDF,
-        startY: 70,
+        startY: 145,
         theme: 'grid',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [0, 100, 48] }
+        styles: { fontSize: 8.5, cellPadding: 6, valign: 'middle' },
+        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+        columnStyles: {
+          0: { cellWidth: 25, halign: 'center' },
+          1: { cellWidth: 165, fontStyle: 'bold' },
+          2: { cellWidth: 120 },
+          3: { cellWidth: 55, halign: 'center' },
+          4: { cellWidth: 45, halign: 'center' },
+          5: { cellWidth: 105, halign: 'center' }
+        },
+        alternateRowStyles: { fillColor: [247, 251, 248] },
+        margin: { left: 40, right: 40 },
+        didDrawPage: function (data) {
+          // Rodapé simples de paginação automática
+          doc.setFontSize(8);
+          doc.setTextColor(120, 120, 120);
+          doc.text("Página " + data.pageNumber, 520, 820);
+        }
       });
-      doc.save("Pontos_SR_" + document.getElementById('filtroMes').value + ".pdf");
+
+      // Grava o arquivo com nome intuitivo baseado na data selecionada
+      doc.save("Fechamento_Pontos_SR_" + mesRef + ".pdf");
     }
 
     atualizarListaFuncionarios();
