@@ -69,11 +69,7 @@
     <div class="campo-grupo" id="grupoTipoBatida" style="display: none;">
       <label for="selecaoTipo">4. O QUE ESTÁ REGISTRANDO AGORA?</label>
       <select id="selecaoTipo">
-        <option value="Entrada Expediente">Entrada Expediente</option>
-        <option value="Saida Almoço">Saída para Almoço</option>
-        <option value="Retorno Almoço">Retorno do Almoço</option>
-        <option value="Saida Fim">Saída Fim de Expediente</option>
-      </select>
+        </select>
     </div>
 
     <div id="caixaStatusGps" class="status-gps"></div>
@@ -115,13 +111,12 @@
     let latAtual = null;
     let lonAtual = null;
 
-    // Carrega tudo de uma vez só quando o app abre para ficar instantâneo
+    // Carrega a tabela de funcionários dinâmica (atualizada pelo seu painel)
     function carregarDadosDoServidor() {
-      database.ref('config_funcionarios').once('value', snapshot => {
+      database.ref('config_funcionarios').on('value', snapshot => {
         if(snapshot.exists()) {
           funcionariosMemoria = snapshot.val();
           
-          // Libera o campo de lojas imediatamente
           const comboLoja = document.getElementById('selecaoLoja');
           comboLoja.innerHTML = `
             <option value="">-- Escolha a Loja --</option>
@@ -131,14 +126,11 @@
             <option value="4">Loja 4 (SR Moto Peças)</option>
           `;
           comboLoja.disabled = false;
-          
-          // Esconde o aviso de carregamento
           document.getElementById('statusCarregamentoInicial').style.display = 'none';
         }
       });
     }
 
-    // Correção e otimização: agora roda na memória do celular e abre na hora!
     function configurarFiltroSetores() {
       const lojaSelecionada = document.getElementById('selecaoLoja').value;
       const comboSetor = document.getElementById('selecaoSetor');
@@ -185,19 +177,70 @@
       comboNome.disabled = false;
     }
 
+    // 🌟 TRAVA SUCESSIVA DA OPÇÃO 4 CONFORME AS BATIDAS DO DIA NO BANCO
+    function analisarBatidasDoDia(nomeColaborador) {
+      const comboTipo = document.getElementById('selecaoTipo');
+      const statusBox = document.getElementById('caixaStatusGps');
+      const btnRegistrar = document.getElementById('btnRegistrarPonto');
+      
+      const agora = new Date();
+      const diaStr = String(agora.getDate()).padStart(2, '0');
+      const mesStr = String(agora.getMonth() + 1).padStart(2, '0');
+      const anoStr = agora.getFullYear();
+      const dataChaveHoje = `${anoStr}-${mesStr}-${diaStr}`;
+
+      comboTipo.innerHTML = '<option value="">Analisando histórico de hoje...</option>';
+
+      // Busca no Firebase as batidas deste funcionário hoje
+      database.ref('pontos_registrados')
+        .orderByChild('dataChave')
+        .equalTo(dataChaveHoje)
+        .once('value', snapshot => {
+          let batidasEfetivadas = [];
+          
+          if(snapshot.exists()) {
+            snapshot.forEach(child => {
+              const registro = child.val();
+              // Normaliza a checa se o ponto pertence ao funcionário selecionado
+              if(registro.colaborador.toUpperCase() === nomeColaborador.toUpperCase()) {
+                batidasEfetivadas.push(registro.tipo);
+              }
+            });
+          }
+
+          // Monta as opções sequencialmente baseado no que já foi encontrado
+          if (!batidasEfetivadas.includes("Entrada Expediente")) {
+            comboTipo.innerHTML = `<option value="Entrada Expediente">Entrada Expediente</option>`;
+          } 
+          else if (!batidasEfetivadas.includes("Saida Almoço")) {
+            comboTipo.innerHTML = `<option value="Saida Almoço">Saída para Almoço</option>`;
+          } 
+          else if (!batidasEfetivadas.includes("Retorno Almoço")) {
+            comboTipo.innerHTML = `<option value="Retorno Almoço">Retorno do Almoço</option>`;
+          } 
+          else if (!batidasEfetivadas.includes("Saida Fim")) {
+            comboTipo.innerHTML = `<option value="Saida Fim">Saída Fim de Expediente</option>`;
+          } 
+          else {
+            // Se o funcionário já bateu os 4 pontos
+            comboTipo.innerHTML = `<option value="COMPLETO">Expediente Total Concluído!</option>`;
+            statusBox.style.display = 'block';
+            statusBox.className = "status-gps gps-erro";
+            statusBox.innerHTML = `✅ Todos os seus 4 pontos de hoje já foram registrados com sucesso, ${nomeColaborador}!`;
+            btnRegistrar.disabled = true;
+            fecharCameraApenas();
+          }
+        });
+    }
+
     function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
       const R = 6371e3; 
       const phi1 = lat1 * Math.PI / 180;
       const phi2 = lat2 * Math.PI / 180;
       const deltaPhi = (lat2 - lat1) * Math.PI / 180;
       const deltaLambda = (lon2 - lon1) * Math.PI / 180;
-
-      const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
-                Math.cos(phi1) * Math.cos(phi2) *
-                Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-      return R * c; 
+      const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) + Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
     }
 
     function verificarLocalizacaoEValida() {
@@ -228,8 +271,20 @@
         if(distanciaM <= RAIO_MAXIMO_METROS) {
           statusBox.className = "status-gps gps-sucesso";
           statusBox.innerHTML = `✅ Perímetro Confirmado! Você está na área da Loja (Distância: ${Math.round(distanciaM)} metros).`;
-          btnRegistrar.disabled = false;
-          abrirCameraAparato();
+          
+          // Libera os blocos visuais e chama a trava sequencial da opção 4
+          document.getElementById('grupoTipoBatida').style.display = 'block';
+          analisarBatidasDoDia(nomeSel);
+          
+          // Abre a câmera apenas se ele ainda tiver ponto pendente hoje
+          setTimeout(() => {
+            const tipoAtual = document.getElementById('selecaoTipo').value;
+            if(tipoAtual !== "COMPLETO" && tipoAtual !== "") {
+              btnRegistrar.disabled = false;
+              abrirCameraAparato();
+            }
+          }, 600);
+
         } else {
           statusBox.className = "status-gps gps-erro";
           statusBox.innerHTML = `⚠️ ACESSO BLOQUEADO!<br>Você está fora da área da Loja selecionada.<br>Distância atual: ${Math.round(distanciaM)} metros de distância da filial.`;
@@ -243,7 +298,6 @@
     }
 
     function abrirCameraAparato() {
-      document.getElementById('grupoTipoBatida').style.display = 'block';
       document.getElementById('blocoValidacao').style.display = 'block';
 
       if(!streamCamera) {
@@ -274,6 +328,8 @@
       const tipoBatida = document.getElementById('selecaoTipo').value;
       const lojaAtual = document.getElementById('selecaoLoja').value;
       const setorAtual = document.getElementById('selecaoSetor').value;
+
+      if(tipoBatida === "COMPLETO" || !tipoBatida) return;
 
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
@@ -307,7 +363,7 @@
 
       database.ref('pontos_registrados').push(registroPonto)
         .then(() => {
-          alert(`✅ PONTO REGISTRADO COM SUCESSO!\n\nFuncionário: ${nomeColaborador}\nHorário: ${horaFormatada}`);
+          alert(`✅ PONTO REGISTRADO COM SUCESSO!\n\nFuncionário: ${nomeColaborador}\nHorário: ${horaFormatada}\nRegistro: ${tipoBatida}`);
           document.getElementById('selecaoLoja').value = "";
           configurarFiltroSetores();
         })
