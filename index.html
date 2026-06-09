@@ -19,9 +19,7 @@
     .campo-grupo label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #004a26; }
     .campo-grupo select { width: 100%; padding: 12px; border: 2px solid #a5d6a7; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #ffffff; color: #333; font-weight: bold; transition: border-color 0.2s; }
     .campo-grupo select:focus { border-color: #006430; outline: none; }
-    .campo-grupo select:disabled { background-color: #e8f5e9; border-color: #c8e6c9; color: #888; }
-
-    /* Alertas de Perímetro Geográfico */
+    
     .status-gps { padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 15px; display: none; }
     .gps-sucesso { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
     .gps-erro { background-color: #ffebee; color: #c62828; border: 1px solid #ffbaf2; }
@@ -76,15 +74,14 @@
 
     <div class="area-camera" id="blocoValidacao">
       <label style="display:block; font-weight:bold; color:#004a26; margin-bottom:10px;">OLHE PARA A CÂMERA PARA CONFIRMAÇÃO:</label>
-      <video id="video" autoplay playsinline></video>
+      <video id="video" autoplay playsinline muted></video>
       <canvas id="canvas" width="320" height="240"></canvas>
       
-      <button id="btnRegistrarPonto" class="btn-bater" onclick="registrarPontoFinal()" disabled>📸 CONFIRMAR E REGISTRAR PONTO</button>
+      <button id="btnRegistrarPonto" class="btn-bater" onclick="registrarPontoFinal()">📸 CONFIRMAR E REGISTRAR PONTO</button>
     </div>
   </div>
 
   <script>
-    // Configurações do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -97,7 +94,6 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Coordenadas Exatas (Codó-MA)
     const coordenadasLojas = {
       "1": { lat: -4.4515049, lon: -43.8762104 },
       "2": { lat: -4.4680240, lon: -43.8895061 },
@@ -111,12 +107,10 @@
     let latAtual = null;
     let lonAtual = null;
 
-    // Carrega a tabela de funcionários dinâmica (atualizada pelo seu painel)
     function carregarDadosDoServidor() {
       database.ref('config_funcionarios').on('value', snapshot => {
         if(snapshot.exists()) {
           funcionariosMemoria = snapshot.val();
-          
           const comboLoja = document.getElementById('selecaoLoja');
           comboLoja.innerHTML = `
             <option value="">-- Escolha a Loja --</option>
@@ -177,11 +171,11 @@
       comboNome.disabled = false;
     }
 
-    // 🌟 TRAVA SUCESSIVA DA OPÇÃO 4 CONFORME AS BATIDAS DO DIA NO BANCO
     function analisarBatidasDoDia(nomeColaborador) {
       const comboTipo = document.getElementById('selecaoTipo');
       const statusBox = document.getElementById('caixaStatusGps');
       const btnRegistrar = document.getElementById('btnRegistrarPonto');
+      const blocoValidacao = document.getElementById('blocoValidacao');
       
       const agora = new Date();
       const diaStr = String(agora.getDate()).padStart(2, '0');
@@ -191,7 +185,6 @@
 
       comboTipo.innerHTML = '<option value="">Analisando histórico de hoje...</option>';
 
-      // Busca no Firebase as batidas deste funcionário hoje
       database.ref('pontos_registrados')
         .orderByChild('dataChave')
         .equalTo(dataChaveHoje)
@@ -201,14 +194,14 @@
           if(snapshot.exists()) {
             snapshot.forEach(child => {
               const registro = child.val();
-              // Normaliza a checa se o ponto pertence ao funcionário selecionado
-              if(registro.colaborador.toUpperCase() === nomeColaborador.toUpperCase()) {
+              if(registro.colaborador && registro.colaborador.toUpperCase() === nomeColaborador.toUpperCase()) {
                 batidasEfetivadas.push(registro.tipo);
               }
             });
           }
 
-          // Monta as opções sequencialmente baseado no que já foi encontrado
+          let jaCompletou Tudo = false;
+
           if (!batidasEfetivadas.includes("Entrada Expediente")) {
             comboTipo.innerHTML = `<option value="Entrada Expediente">Entrada Expediente</option>`;
           } 
@@ -222,13 +215,21 @@
             comboTipo.innerHTML = `<option value="Saida Fim">Saída Fim de Expediente</option>`;
           } 
           else {
-            // Se o funcionário já bateu os 4 pontos
+            jaCompletou Tudo = true;
+          }
+
+          if (jaCompletouTudo) {
             comboTipo.innerHTML = `<option value="COMPLETO">Expediente Total Concluído!</option>`;
             statusBox.style.display = 'block';
-            statusBox.className = "status-gps gps-erro";
+            statusBox.className = "status-gps gps-sucesso";
             statusBox.innerHTML = `✅ Todos os seus 4 pontos de hoje já foram registrados com sucesso, ${nomeColaborador}!`;
-            btnRegistrar.disabled = true;
+            blocoValidacao.style.display = 'none';
             fecharCameraApenas();
+          } else {
+            // Se tem ponto para bater, FORÇA a exibição do bloco da câmera e do botão
+            blocoValidacao.style.display = 'block';
+            btnRegistrar.disabled = false;
+            abrirCameraAparato();
           }
         });
     }
@@ -247,14 +248,14 @@
       const nomeSel = document.getElementById('selecaoNome').value;
       const lojaSel = document.getElementById('selecaoLoja').value;
       const statusBox = document.getElementById('caixaStatusGps');
-      const btnRegistrar = document.getElementById('btnRegistrarPonto');
+      const blocoValidacao = document.getElementById('blocoValidacao');
 
       if(!nomeSel) { fecharCamera(); return; }
 
       statusBox.style.display = 'block';
       statusBox.className = "status-gps gps-erro";
       statusBox.innerHTML = "📡 Obtendo localização precisa do GPS...";
-      btnRegistrar.disabled = true;
+      blocoValidacao.style.display = 'none';
 
       if (!navigator.geolocation) {
         statusBox.innerHTML = "❌ Erro: Seu aparelho não suporta Geolocalização.";
@@ -270,42 +271,36 @@
 
         if(distanciaM <= RAIO_MAXIMO_METROS) {
           statusBox.className = "status-gps gps-sucesso";
-          statusBox.innerHTML = `✅ Perímetro Confirmado! Você está na área da Loja (Distância: ${Math.round(distanciaM)} metros).`;
+          statusBox.innerHTML = `✅ Perímetro Confirmado! Você está na área da Loja.`;
           
-          // Libera os blocos visuais e chama a trava sequencial da opção 4
           document.getElementById('grupoTipoBatida').style.display = 'block';
           analisarBatidasDoDia(nomeSel);
-          
-          // Abre a câmera apenas se ele ainda tiver ponto pendente hoje
-          setTimeout(() => {
-            const tipoAtual = document.getElementById('selecaoTipo').value;
-            if(tipoAtual !== "COMPLETO" && tipoAtual !== "") {
-              btnRegistrar.disabled = false;
-              abrirCameraAparato();
-            }
-          }, 600);
-
         } else {
           statusBox.className = "status-gps gps-erro";
-          statusBox.innerHTML = `⚠️ ACESSO BLOQUEADO!<br>Você está fora da área da Loja selecionada.<br>Distância atual: ${Math.round(distanciaM)} metros de distância da filial.`;
+          statusBox.innerHTML = `⚠️ ACESSO BLOQUEADO!<br>Você está fora do perímetro da loja.<br>Distância: ${Math.round(distanciaM)}m (Máximo permitido: 100m).`;
           fecharCameraApenas();
         }
       }, err => {
         statusBox.className = "status-gps gps-erro";
         statusBox.innerHTML = "❌ Ative a localização/GPS do seu aparelho para bater o ponto.";
-        btnRegistrar.disabled = true;
+        fecharCameraApenas();
       }, { enableHighAccuracy: true, timeout: 10000 });
     }
 
     function abrirCameraAparato() {
-      document.getElementById('blocoValidacao').style.display = 'block';
-
+      const video = document.getElementById('video');
+      
       if(!streamCamera) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
           .then(stream => {
             streamCamera = stream;
-            document.getElementById('video').srcObject = stream;
-          }).catch(err => { console.log("Sem câmera"); });
+            video.srcObject = stream;
+            // Garante o play em navegadores mobile antigos ou rígidos
+            video.setAttribute('playsinline', true);
+            video.play().catch(e => console.log("Erro auto-play forçado"));
+          }).catch(err => { 
+            alert("⚠️ Permissão de Câmera Negada! Ative o acesso à câmera nas configurações do seu navegador."); 
+          });
       }
     }
 
@@ -329,14 +324,21 @@
       const lojaAtual = document.getElementById('selecaoLoja').value;
       const setorAtual = document.getElementById('selecaoSetor').value;
 
-      if(tipoBatida === "COMPLETO" || !tipoBatida) return;
+      if(tipoBatida === "COMPLETO" || !tipoBatida) {
+        alert("Seleção inválida ou expediente completo.");
+        return;
+      }
 
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
 
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const fotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      try {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var fotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+      } catch(e) {
+        var fotoBase64 = ""; // Fallback caso ocorra falha estrita no frame
+      }
 
       const agora = new Date();
       const diaStr = String(agora.getDate()).padStart(2, '0');
@@ -367,7 +369,7 @@
           document.getElementById('selecaoLoja').value = "";
           configurarFiltroSetores();
         })
-        .catch(err => { alert("Erro ao salvar."); });
+        .catch(err => { alert("Erro ao salvar no banco."); });
     }
 
     carregarDadosDoServidor();
