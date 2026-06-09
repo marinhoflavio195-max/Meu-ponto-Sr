@@ -14,14 +14,21 @@
 
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f7f4; margin: 0; padding: 20px; color: #333; }
-    .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; border-top: 6px solid #006430; }
+    .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; }
     
     h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; }
     
-    .filtros-topo { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #f9fdfa; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
-    .campo-filtro { flex: 1; min-width: 220px; }
-    .campo-filtro label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 6px; color: #004a26; text-transform: uppercase; }
-    .campo-filtro select, .campo-filtro input { width: 100%; padding: 10px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 14px; box-sizing: border-box; background-color: white; }
+    /* Sistema de Abas */
+    .menu-abas { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+    .aba-btn { padding: 10px 20px; border: none; background: #e0eef0; color: #004a26; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 14px; transition: all 0.2s; }
+    .aba-btn.ativa { background: #006430; color: white; }
+    .conteudo-aba { display: none; }
+    .conteudo-aba.ativa { display: block; }
+
+    .filtros-topo, .form-cadastro { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #f9fdfa; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
+    .campo-filtro, .campo-form { flex: 1; min-width: 220px; }
+    .campo-filtro label, .campo-form label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 6px; color: #004a26; text-transform: uppercase; }
+    .campo-filtro select, .campo-filtro input, .campo-form select, .campo-form input { width: 100%; padding: 10px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 14px; box-sizing: border-box; background-color: white; }
     
     .botoes-acoes { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 25px; }
     .btn { padding: 12px 24px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
@@ -32,6 +39,8 @@
     .btn-excel:hover { background-color: #1b5e20; }
     .btn-pdf { background-color: #0b5394; }
     .btn-pdf:hover { background-color: #073763; }
+    .btn-salvar { background-color: #2e7d32; height: 42px; margin-top: 20px; }
+    .btn-cancelar { background-color: #757575; height: 42px; margin-top: 20px; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: left; }
     th { background-color: #006430; color: white; padding: 14px 10px; font-size: 13px; border-bottom: 3px solid #ffd700; text-transform: uppercase; }
@@ -47,6 +56,10 @@
     .btn-foto { background: #673ab7; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
     .btn-mapa { background: #0b5394; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
 
+    /* Ações de Funcionários */
+    .btn-editar { background: #f57c00; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+    .btn-excluir { background: #d32f2f; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
     .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; }
     .modal-content img { width: 100%; border-radius: 8px; border: 3px solid #006430; margin-bottom: 15px; }
@@ -56,62 +69,126 @@
 <body>
 
   <div class="painel-container">
-    <h1>SUPERMERCADO SÃO RAIMUNDO - CENTRAL DE PONTOS</h1>
+    <h1>SUPERMERCADO SÃO RAIMUNDO - CENTRAL ADMINISTRATIVA</h1>
 
-    <div class="filtros-topo">
-      <div class="campo-filtro">
-        <label for="filtroLoja">Filtrar por Loja:</label>
-        <select id="filtroLoja" onchange="atualizarListaFuncionarios()">
-          <option value="TODAS">-- Todas as Lojas (1, 2, 3 e 4) --</option>
-          <option value="1">Loja 1</option>
-          <option value="2">Loja 2</option>
-          <option value="3">Loja 3</option>
-          <option value="4">Loja 4</option>
-        </select>
+    <div class="menu-abas">
+      <button class="aba-btn ativa" onclick="alternarAba('abaPontos', this)">📊 Central de Pontos</button>
+      <button class="aba-btn" onclick="alternarAba('abaFuncionarios', this); carregarTabelaFuncionarios();">👥 Gerenciar Funcionários</button>
+    </div>
+
+    <div id="abaPontos" class="conteudo-aba ativa">
+      <div class="filtros-topo">
+        <div class="campo-filtro">
+          <label for="filtroLoja">Filtrar por Loja:</label>
+          <select id="filtroLoja" onchange="atualizarListaFuncionariosPainel()">
+            <option value="TODAS">-- Todas as Lojas (1, 2, 3 e 4) --</option>
+            <option value="1">Loja 1</option>
+            <option value="2">Loja 2</option>
+            <option value="3">Loja 3</option>
+            <option value="4">Loja 4</option>
+          </select>
+        </div>
+        
+        <div class="campo-filtro">
+          <label for="filtroColaborador">Funcionário:</label>
+          <select id="filtroColaborador">
+            <option value="TODOS">-- Todos os Funcionários --</option>
+          </select>
+        </div>
+        
+        <div class="campo-filtro">
+          <label for="filtroMes">Mês de Fechamento:</label>
+          <input type="month" id="filtroMes">
+        </div>
       </div>
+
+      <div class="botoes-acoes">
+        <button class="btn btn-filtrar" onclick="consultarPeriodoBanco()">🔍 Consultar Período</button>
+        <button class="btn btn-excel" onclick="exportarParaExcel()">📊 Exportar Excel</button>
+        <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF Executivo</button>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Funcionário</th>
+              <th>Loja/Setor</th>
+              <th>Entrada</th>
+              <th>S. Almoço</th>
+              <th>R. Almoço</th>
+              <th>Saída Fim</th>
+              <th>Auditoria Geolocalização</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaCorpo">
+            <tr>
+              <td colspan="8" style="text-align: center; padding: 40px; color: #666; font-size: 15px;">
+                Selecione as opções acima e clique em <b>Consultar Período</b>.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="abaFuncionarios" class="conteudo-aba">
+      <h3 id="tituloFormFuncionarios" style="color: #006430; margin-top: 0;">➕ Cadastrar Novo Funcionário</h3>
       
-      <div class="campo-filtro">
-        <label for="filtroColaborador">Funcionário:</label>
-        <select id="filtroColaborador">
-          <option value="TODOS">-- Todos os Funcionários --</option>
-        </select>
+      <div class="form-cadastro">
+        <input type="hidden" id="editandoId" value="">
+        
+        <div class="campo-form">
+          <label for="formNome">Nome Completo do Funcionário:</label>
+          <input type="text" id="formNome" placeholder="Ex: FLÁVIO DA SILVA MARINHO">
+        </div>
+
+        <div class="campo-form">
+          <label for="formSetor">Setor:</label>
+          <input type="text" id="formSetor" placeholder="Ex: GERENCIA, OPERADORA DE CAIXA">
+        </div>
+
+        <div class="campo-form">
+          <label for="formLoja">Loja Vinculada:</label>
+          <select id="formLoja">
+            <option value="1">Loja 1 (Centro)</option>
+            <option value="2">Loja 2</option>
+            <option value="3">Loja 3</option>
+            <option value="4">Loja 4 (SR Moto Peças)</option>
+          </select>
+        </div>
+
+        <div class="campo-form">
+          <label for="formChave">Chave do App (Sem acento/espaço):</label>
+          <input type="text" id="formChave" placeholder="Ex: flavio" oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '')">
+        </div>
+
+        <button class="btn btn-salvar" onclick="salvarFuncionariovb()">💾 Salvar</button>
+        <button class="btn btn-cancelar" id="btnCancelarEdicao" style="display:none;" onclick="limparFormularioFuncionarios()">Cancelar</button>
       </div>
-      
-      <div class="campo-filtro">
-        <label for="filtroMes">Mês de Fechamento:</label>
-        <input type="month" id="filtroMes">
+
+      <h3 style="color: #006430;">👥 Funcionários Cadastrados no Sistema</h3>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome Completo (Firebase ID)</th>
+              <th>Setor</th>
+              <th>Loja</th>
+              <th>Chave App</th>
+              <th>Ações Gerenciais</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaFuncionariosCorpo">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 20px;">Carregando lista de funcionários...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <div class="botoes-acoes">
-      <button class="btn btn-filtrar" onclick="consultarPeriodoBanco()">🔍 Consultar Período</button>
-      <button class="btn btn-excel" onclick="exportarParaExcel()">📊 Exportar Excel</button>
-      <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF Executivo</button>
-    </div>
-
-    <div style="overflow-x: auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Funcionário</th>
-            <th>Loja/Setor</th>
-            <th>Entrada</th>
-            <th>S. Almoço</th>
-            <th>R. Almoço</th>
-            <th>Saída Fim</th>
-            <th>Auditoria Geolocalização</th>
-          </tr>
-        </thead>
-        <tbody id="tabelaCorpo">
-          <tr>
-            <td colspan="8" style="text-align: center; padding: 40px; color: #666; font-size: 15px;">
-              Selecione as opções acima e clique em <b>Consultar Período</b>.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 
   <div id="modalFoto" class="modal">
@@ -138,110 +215,44 @@
     }
     const database = firebase.database();
 
-    // 📍 COORDENADAS REAIS DAS LOJAS EM CODÓ/MA (Com ponto decimal)
     const coordenadasLojas = {
-      "1": { lat: -4.4515049, lng: -43.8762104 }, // Loja 01
-      "2": { lat: -4.4680240, lng: -43.8895061 }, // Loja 02
-      "3": { lat: -4.4665202, lng: -43.8833122 }, // Loja 03
-      "4": { lat: -4.4514327, lng: -43.8758061 }  // Loja 04
+      "1": { lat: -4.4515049, lng: -43.8762104 },
+      "2": { lat: -4.4680240, lng: -43.8895061 },
+      "3": { lat: -4.4665202, lng: -43.8833122 },
+      "4": { lat: -4.4514327, lng: -43.8758061 }
     };
 
-    const dadosColaboradores = {
-      "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "adrissa" },
-      "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1", chaveApp: "alice" },
-      "ANDRE KENNEDY COSTA SILVA": { setor: "CPD/TI", loja: "1", chaveApp: "andre" },
-      "ANDREIA REGO LIMA": { setor: "OPERADORA DE CAIXA", loja: "3", chaveApp: "andreia" },
-      "ANTONIA EDILENE DA CONCEICAO PEREIRA": { setor: "OPERADORA DE CAIXA", loja: "3", chaveApp: "antonia" },
-      "ANTONIO FRANCISCO ARAUJO VIEIRA": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "antonio" },
-      "ANTONIO MARCOS CRUZ CUNHA": { setor: "GERENCIA", loja: "3", chaveApp: "marcos" },
-      "ANTONY THALISON FERNADES GUIMARAES": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "talison" },
-      "CARLOS JOSE DA COSTA RIBEIRO": { setor: "AÇOUGUE", loja: "1", chaveApp: "carlos" },
-      "CRISTIANE LIMA TORRES": { setor: "REPOSITOR", loja: "2", chaveApp: "cristiane" },
-      "DENILSON ANDRADE SILVA": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "denilson" },
-      "EDUARDO DOS SANTOS RODRIGUES": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "eduardo" },
-      "ERISVANA CHAVES SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "erisvana" },
-      "EUDES DAS MERCES CORTE": { setor: "MOTORISTA", loja: "1", chaveApp: "eudes" },
-      "EVERTON LEANDRO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3", chaveApp: "everton" },
-      "FELIPE SILVA QUEIROZ": { setor: "SERVIÇOS GERAIS", loja: "1", chaveApp: "felipesilva" },
-      "FELIPE VIEIRA DA SILVA": { setor: "MOTORISTA", loja: "3", chaveApp: "felipefrente" },
-      "FLAVIA DA SILVA LIMA SILVA": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "flavia" },
-      "FLÁVIO DA SILVA MARINHO": { setor: "GERENCIA", loja: "1", chaveApp: "flavio" },
-      "FRANCISCA ANDRADE VIEIRA": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "fran" },
-      "FRANCISCA DAS CHAGAS ARAUJO BORGES SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "francisca" },
-      "FRANCISCA MILENA DE PAIVA TEIXEIRA": { setor: "OPERADORA DE CAIXA", loja: "2", chaveApp: "milena" },
-      "FRANCISCA ROSA CANTANHEIDE DOS SANTOS": { setor: "AÇOUGUE", loja: "1", chaveApp: "franciscasouza" },
-      "FRANCISCO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3", chaveApp: "francisco" },
-      "FRANCISCO GABRIEL TORRES DA LUZ": { setor: "REPOSITOR", loja: "1", chaveApp: "gabriel" },
-      "GABRIEL MAX NASCIMENTO ROCHA": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "gabrielmax" },
-      "GENILSON DA CONCEICAO ARAUJO": { setor: "HORTIFRUTI", loja: "1", chaveApp: "genilson" },
-      "INES RODRIGUES FONTES": { setor: "RH", loja: "1", chaveApp: "irene" },
-      "IRENE MACHADO NETA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "irene" },
-      "ISMAEL PONTES CARDOSO": { setor: "MOTORISTA", loja: "2", chaveApp: "ismael" },
-      "JAQUELINE REIS DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "jaki" },
-      "JOICE VALE DA CONCEIÇÃO": { setor: "OPERADORA DE CAIXA", loja: "3", chaveApp: "joice" },
-      "JOSECLEIA SANTOS FERREIRA": { setor: "REPOSITOR", loja: "2", chaveApp: "josecleia" },
-      "KARINE MENDES DOS SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "karine" },
-      "KARLENE DA SILVA COSTA": { setor: "REPOSITOR", loja: "3", chaveApp: "karlene" },
-      "LEANDRO ALVES DA CONCEIÇÃO": { setor: "AÇOUGUE", loja: "1", chaveApp: "leandro" },
-      "LEILA CRISTINA ALVES SABA": { setor: "AÇOUGUE", loja: "3", chaveApp: "leila" },
-      "LETICIA DA CONCEIÇÃO FARIAS": { setor: "OPERADORA DE CAIXA", loja: "3", chaveApp: "leticia" },
-      "MARCOS ANTONIO QUEIROZ AMARANTE": { setor: "HORTIFRUTI", loja: "1", chaveApp: "marcos" },
-      "MARIA DAS DORES DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "marta" },
-      "MARIA DO CARMO SANTOS DA SILVA": { setor: "AÇOUGUE", loja: "2", chaveApp: "mariadocarmo" },
-      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", chaveApp: "mariadocarmo" },
-      "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", chaveApp: "edete" },
-      "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", chaveApp: "francisca" },
-      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", chaveApp: "meyriane" },
-      "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", chaveApp: "michely" },
-      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", chaveApp: "pablo" },
-      "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "patricia" },
-      "PEDRO PEREIRA QUADROS JUNIOR": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "pedro" },
-      "PEDRO SALAZAR DA CONCEICAO": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "pedrosalazar" },
-      "RAIANA SILVA ALVES VIEIRA": { setor: "REPOSITOR", loja: "1", chaveApp: "rayana" },
-      "RAIMUNDO QUEIROZ MARINHO": { setor: "EMPACOTADOR", loja: "1", chaveApp: "raimundoq" },
-      "RICKELMY SILVA DE SOUSA": { setor: "REPOSITOR", loja: "2", chaveApp: "rickelmy" },
-      "RITA DE CASSIA DA SILVA PACHECO": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "rita" },
-      "ROBERT MARLON PEREIRA MOTA": { setor: "HORTIFRUTI", loja: "3", chaveApp: "ruan" },
-      "ROBERTO SANTOS PINHEIRO": { setor: "SEGURANÇA", loja: "1", chaveApp: "roberto" },
-      "ROSIMAR DA LUZ ALVES": { setor: "REPOSITOR", loja: "1", chaveApp: "rose" },
-      "SERGIO AZEVEDO DA SILVA": { setor: "MOTORISTA", loja: "2", chaveApp: "sergio" },
-      "SOLANGE DA COSTA ANDRADE": { setor: "REPOSITOR", loja: "2", textApp: "solange" },
-      "SUELY ALVES": { setor: "AÇOUGUE", loja: "1", chaveApp: "sueli" },
-      "TAYSA SILVA NASCIMENTO": { setor: "REPOSITOR", loja: "3", chaveApp: "taysa" },
-      "THALICE DA LUZ SOUSA": { setor: "REPOSITOR", loja: "1", chaveApp: "thalice" },
-      "THARLES FERNADO DA SILVA RAMOS": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "tharles" },
-      "VALDIMIRO CUNHA DE OLIVEIRA NETO": { setor: "MOTORISTA", loja: "1", chaveApp: "valdimiro" },
-      "VANIA CRISTINA REGO DA SILVA LIMA": { setor: "GERENCIA", loja: "3", chaveApp: "vania" },
-      "VILSON ANTONIO SALES DE SOUSA FILHO": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "vilson" },
-      "VINICIUS GABRIEL DA CONCEIÇÃO RIBEIRO": { setor: "REPOSITOR", loja: "1", chaveApp: "vinicios" },
-      "EDMLSON": { setor: "EMPACOTADOR", loja: "1", chaveApp: "edmilson" },
-      "MARCELO BRITO DA COSTA": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "marcelo" },
-      "ANTONIO KEVESON SANTOS DOS REIS": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "keverson" },
-      "ALAN FRANCISCO MEDEIROS MILITAR": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "alan" },
-      "CARLOS HENRRIQUE GRANDÃO": { setor: "REPOSITOR", loja: "1", chaveApp: "carlos" },
-      "JOSENILTON DA SILVA PAZ": { setor: "REPOSITOR", loja: "3", chaveApp: "josenilton" },
-      "MARIA EDIETE RODRIGUES SANTANA": { setor: "REPOSITOR", loja: "1", chaveApp: "edete" },
-      "DEBORA LUZIA CORTE GALVÃO": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "debora" },
-      "SAMIRA NASCIMENTO SILVA DA SILVA": { setor: "REPOSITOR", loja: "1", chaveApp: "samira" },
-      "DEBORA CRISTINA DE PAIVA DA SILVA": { setor: "REPOSITOR", loja: "1", chaveApp: "deborasabao" },
-      "RONE HORTIFRUTI": { setor: "HORTIFRUTI", loja: "1", chaveApp: "ronefruta" },
-      "MAYCON RUAN AZEVEDO DE ABREU": { setor: "CPD/TI", loja: "1", chaveApp: "ruan" },
-      "HENRIQUE - DEPOSITO INST MIX": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "henrique" },
-      "VICTOR HUGGO MORAIS DOS SANTOS": { setor: "REPOSITOR", loja: "1", chaveApp: "victor" },
-      "ERIKA LARISSA DO NASCIMENTO DA SILVA": { setor: "AÇOUGUE", loja: "1", chaveApp: "erica" },
-      "HILLARIA OLIVEIRA RIBEIRO": { setor: "RH", loja: "1", chaveApp: "hilaria" }
-    };
-
+    let memoriaFuncionarios = {};
     let registrosProcessadosCache = [];
     document.getElementById('filtroMes').value = "2026-06";
 
-    function atualizarListaFuncionarios() {
+    // Alternar entre abas
+    function alternarAba(abaId, botao) {
+      document.querySelectorAll('.conteudo-aba').forEach(el => el.classList.remove('ativa'));
+      document.querySelectorAll('.aba-btn').forEach(el => el.classList.remove('ativa'));
+      
+      document.getElementById(abaId).classList.add('ativa');
+      botao.classList.add('ativa');
+    }
+
+    // Escuta dinâmica de funcionários do Firebase
+    function sincronizarFuncionariosComBanco() {
+      database.ref('config_funcionarios').on('value', snapshot => {
+        memoriaFuncionarios = snapshot.val() || {};
+        atualizarListaFuncionariosPainel();
+        if (document.getElementById('abaFuncionarios').classList.contains('ativa')) {
+          renderizarTabelaFuncionariosLocal();
+        }
+      });
+    }
+
+    function atualizarListaFuncionariosPainel() {
       const lojaSelecionada = document.getElementById('filtroLoja').value;
       const selectColaborador = document.getElementById('filtroColaborador');
       selectColaborador.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
 
-      Object.keys(dadosColaboradores).sort().forEach(nome => {
-        const dados = dadosColaboradores[nome];
+      Object.keys(memoriaFuncionarios).sort().forEach(nome => {
+        const dados = memoriaFuncionarios[nome];
         if (lojaSelecionada === "TODAS" || String(dados.loja).trim() === String(lojaSelecionada).trim()) {
           const opt = document.createElement('option');
           opt.value = nome;
@@ -251,34 +262,123 @@
       });
     }
 
-    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
-      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-      const R = 6371000; 
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c; 
+    // CRUD - RENDERIZAR TABELA DE GERENCIAMENTO
+    function carregarTabelaFuncionarios() {
+      renderizarTabelaFuncionariosLocal();
     }
 
-    // 🧠 SISTEMA INTELIGENTE DE LEITURA DE TEXTO (BLINDADO CONTRA ACENTOS)
+    function renderizarTabelaFuncionariosLocal() {
+      const corpo = document.getElementById('tabelaFuncionariosCorpo');
+      corpo.innerHTML = "";
+
+      if (Object.keys(memoriaFuncionarios).length === 0) {
+        corpo.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum funcionário cadastrado no Firebase.</td></tr>';
+        return;
+      }
+
+      Object.keys(memoriaFuncionarios).sort().forEach(nome => {
+        const f = memoriaFuncionarios[nome];
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+          <td style="font-weight:bold; color:#004a26;">${nome}</td>
+          <td>${f.setor || '--'}</td>
+          <td>Loja ${f.loja || '--'}</td>
+          <td><code style="background:#eef4f0; padding:2px 6px; border-radius:4px;">${f.chaveApp || f.textApp || '---'}</code></td>
+          <td>
+            <button class="btn-editar" onclick="carregarParaEditar('${nome.replace(/'/g, "\\'")}')">✏️ Editar</button>
+            <button class="btn-excluir" onclick="excluirFuncionariovb('${nome.replace(/'/g, "\\'")}')">🗑️ Excluir</button>
+          </td>
+        `;
+        corpo.appendChild(tr);
+      });
+    }
+
+    // CRUD - ADICIONAR / EDITAR
+    function salvarFuncionariovb() {
+      const nome = document.getElementById('formNome').value.trim().toUpperCase();
+      const setor = document.getElementById('formSetor').value.trim().toUpperCase();
+      const loja = document.getElementById('formLoja').value;
+      const chave = document.getElementById('formChave').value.trim().toLowerCase();
+      const editandoId = document.getElementById('editandoId').value;
+
+      if (!nome || !setor || !chave) {
+        alert("⚠️ Por favor, preencha todos os campos obrigatórios!");
+        return;
+      }
+
+      const dadosSalvar = {
+        setor: setor,
+        loja: loja,
+        chaveApp: chave
+      };
+
+      // Se mudou o nome da chave mestre na edição, remove a antiga antes de salvar a nova
+      if (editandoId && editandoId !== nome) {
+        database.ref('config_funcionarios/' + editandoId).remove();
+      }
+
+      database.ref('config_funcionarios/' + nome).set(dadosSalvar)
+        .then(() => {
+          alert("✅ Dados salvos com sucesso no Firebase!");
+          limparFormularioFuncionarios();
+        })
+        .catch(err => alert("Erro ao salvar: " + err.message));
+    }
+
+    function carregarParaEditar(nome) {
+      const f = memoriaFuncionarios[nome];
+      if (!f) return;
+
+      document.getElementById('editandoId').value = nome;
+      document.getElementById('formNome').value = nome;
+      document.getElementById('formSetor').value = f.setor || "";
+      document.getElementById('formLoja').value = f.loja || "1";
+      document.getElementById('formChave').value = f.chaveApp || f.textApp || "";
+
+      document.getElementById('tituloFormFuncionarios').innerHTML = `✏️ Editando Colaborador: <span style="color:#f57c00">${nome}</span>`;
+      document.getElementById('btnCancelarEdicao').style.display = "inline-block";
+      document.getElementById('formNome').focus();
+    }
+
+    function excluirFuncionariovb(nome) {
+      if (confirm(`⚠️ Tem certeza absoluta que deseja remover ${nome} do sistema?\nEle perderá acesso imediato ao aplicativo de ponto.`)) {
+        database.ref('config_funcionarios/' + nome).remove()
+          .then(() => alert("🗑️ Funcionário removido com sucesso."))
+          .catch(err => alert("Erro ao excluir: " + err.message));
+      }
+    }
+
+    function limparFormularioFuncionarios() {
+      document.getElementById('editandoId').value = "";
+      document.getElementById('formNome').value = "";
+      document.getElementById('formSetor').value = "";
+      document.getElementById('formLoja').value = "1";
+      document.getElementById('formChave').value = "";
+      
+      document.getElementById('tituloFormFuncionarios').innerHTML = "➕ Cadastrar Novo Funcionário";
+      document.getElementById('btnCancelarEdicao').style.display = "none";
+    }
+
+    // LOGICA DO FILTRO DE PONTOS (MANTIDA E BLINDADA)
     function normalizarTexto(texto) {
       if (!texto) return "";
-      let t = texto.toString().toLowerCase();
-      
-      // Remove acentos e caracteres especiais de forma agressiva (Ex: Flávio -> flavio)
-      t = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-      
-      // Atalhos para compatibilidade direta de chaves personalizadas
+      let t = texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
       if (t.includes("franciscasouza") || t.includes("franc.acou")) return "franciscasouza";
       if (t.includes("roni") || t.includes("rone")) return "ronefruta";
       if (t.includes("flavio")) return "flavio";
       if (t.includes("andreia")) return "andreia";
       if (t.includes("antonia")) return "antonia";
-
       return t.replace(/\s+/g, "");
+    }
+
+    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+      const R = 6371000; 
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
     }
 
     function consultarPeriodoBanco() {
@@ -306,26 +406,16 @@
             const p = child.val();
             if (p.colaborador && p.horario && p.tipo) {
               let dataChaveLimpa = "";
-              
               if (p.dataChave) {
-                if (p.dataChave.includes('/')) {
-                  let pt = p.dataChave.split('/');
-                  dataChaveLimpa = `${pt[2]}-${pt[1]}-${pt[0]}`;
-                } else {
-                  dataChaveLimpa = p.dataChave;
-                }
+                dataChaveLimpa = p.dataChave.includes('/') ? p.dataChave.split('/').reverse().join('-') : p.dataChave;
               } else if (p.data) {
-                let pt = p.data.split('/');
-                dataChaveLimpa = `${pt[2]}-${pt[1]}-${pt[0]}`;
+                dataChaveLimpa = p.data.split('/').reverse().join('-');
               }
 
               if (dataChaveLimpa.startsWith(mesFiltro)) {
                 let nFunc = normalizarTexto(p.colaborador);
                 let chaveAgrupada = `${dataChaveLimpa}_${nFunc}`;
-                
-                if (!mapaPontos[chaveAgrupada]) {
-                  mapaPontos[chaveAgrupada] = [];
-                }
+                if (!mapaPontos[chaveAgrupada]) mapaPontos[chaveAgrupada] = [];
 
                 mapaPontos[chaveAgrupada].push({
                   tipo: normalizarTexto(p.tipo),
@@ -339,8 +429,8 @@
           });
         }
 
-        let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
-          const info = dadosColaboradores[nome];
+        let funcionariosFiltrados = Object.keys(memoriaFuncionarios).filter(nome => {
+          const info = memoriaFuncionarios[nome];
           if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
           if (colabFiltro !== "TODOS" && nome !== colabFiltro) return false;
           return true;
@@ -349,19 +439,17 @@
         let htmlTabela = "";
 
         funcionariosFiltrados.forEach(nome => {
-          const cadastro = dadosColaboradores[nome];
+          const cadastro = memoriaFuncionarios[nome];
           const chaveAppNome = cadastro.chaveApp || normalizarTexto(nome);
           const coordLojaAlvo = coordenadasLojas[cadastro.loja];
           
-          let diasTrabalhados = 0;
-          let faltas = 0;
-          let pontosForaDoLimite = 0;
+          let diasTrabalhados = 0, faltas = 0, pontosForaDoLimite = 0;
 
           for (let dia = 1; dia <= totalDiasMes; dia++) {
             const diaFormatado = String(dia).padStart(2, '0');
             const mesFormatado = String(mesZeroBased + 1).padStart(2, '0');
-            const dataChaveDia = ano + '-' + mesFormatado + '-' + diaFormatado;
-            const dataExibicao = diaFormatado + '/' + mesFormatado + '/' + ano;
+            const dataChaveDia = `${ano}-${mesFormatado}-${diaFormatado}`;
+            const dataExibicao = `${diaFormatado}/${mesFormatado}/${ano}`;
 
             const chaveAgrupadaBusca = `${dataChaveDia}_${chaveAppNome}`;
             const registrosDoDia = mapaPontos[chaveAgrupadaBusca] || [];
@@ -371,18 +459,14 @@
 
             if (registrosDoDia.length > 0) {
               diasTrabalhados++;
-
               registrosDoDia.forEach(reg => {
-                let containerAcao = '<div class="bloco-ponto-acoes"><span class="titulo-hora">' + reg.horario + '</span>';
-                if (reg.fotoSelfie) {
-                  containerAcao += '<button class="btn-foto" onclick="abrirModalFoto(\'' + reg.fotoSelfie + '\')">📸 FOTO</button>';
-                }
+                let containerAcao = `<div class="bloco-ponto-acoes"><span class="titulo-hora">${reg.horario}</span>`;
+                if (reg.fotoSelfie) containerAcao += `<button class="btn-foto" onclick="abrirModalFoto('${reg.fotoSelfie}')">📸 FOTO</button>`;
                 if (reg.latitude && reg.longitude) {
-                  containerAcao += '<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(' + reg.latitude + ',' + reg.longitude + ')">🗺️ MAPA</button>';
-                  
+                  containerAcao += `<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(${reg.latitude},${reg.longitude})">🗺️ MAPA</button>`;
                   if (coordLojaAlvo) {
-                    let distanciaReal = calcularDistanciaMetros(reg.latitude, reg.longitude, coordLojaAlvo.lat, coordLojaAlvo.lng);
-                    if (distanciaReal !== null && distanciaReal > 100) {
+                    let dist = calcularDistanciaMetros(reg.latitude, reg.longitude, coordLojaAlvo.lat, coordLojaAlvo.lng);
+                    if (dist !== null && dist > 100) {
                       statusAuditoriaGeo = '<span class="status-alerta">⚠️ Fora (>100m)</span>';
                       pontosForaDoLimite++;
                     }
@@ -396,47 +480,27 @@
                 if (reg.tipo.includes("expediente") || reg.tipo.includes("fim") || reg.tipo.includes("saidafim") || (reg.tipo.includes("saida") && !reg.tipo.includes("alm"))) saiFim = containerAcao;
               });
             } else {
-              const hoje = new Date();
-              const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
-              if (dataComparacao < hoje) {
+              if (new Date(ano, mesZeroBased, dia, 23, 59) < new Date()) {
                 ent = '<span class="status-falta">❌ FALTA</span>';
                 statusAuditoriaGeo = "Ausência";
                 faltas++;
               }
             }
 
-            htmlTabela += '<tr>' +
-              '<td>' + dataExibicao + '</td>' +
-              '<td style="font-weight:bold; color:#004a26;">' + nome + '</td>' +
-              '<td>' + cadastro.setor + ' (L' + cadastro.loja + ')</td>' +
-              '<td>' + ent + '</td>' +
-              '<td>' + almSai + '</td>' +
-              '<td>' + almRet + '</td>' +
-              '<td>' + saiFim + '</td>' +
-              '<td>' + statusAuditoriaGeo + '</td>' +
-              '</tr>';
+            htmlTabela += `<tr><td>${dataExibicao}</td><td style="font-weight:bold; color:#004a26;">${nome}</td><td>${cadastro.setor} (L${cadastro.loja})</td><td>${ent}</td><td>${almSai}</td><td>${almRet}</td><td>${saiFim}</td><td>${statusAuditoriaGeo}</td></tr>`;
           }
 
-          registrosProcessadosCache.push({
-            nome: nome,
-            setor: cadastro.setor,
-            loja: cadastro.loja,
-            trabalhados: diasTrabalhados,
-            faltas: faltas,
-            foraLimite: pontosForaDoLimite
-          });
+          registrosProcessadosCache.push({ nome: nome, setor: cadastro.setor, loja: cadastro.loja, trabalhados: diasTrabalhados, faltas: faltas, foraLimite: pontosForaDoLimite });
         });
 
         corpo.innerHTML = htmlTabela;
       }).catch(erro => {
-        alert("Erro na leitura do Firebase: " + erro.message);
         corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center;">Falha de comunicação.</td></tr>';
       });
     }
 
-    // 🗺️ LINK CORRIGIDO DO GOOGLE MAPS OFICIAL (ABRE DIRETO NO NAVEGADOR)
     function abrirMapaGeolocalizacao(lat, lng) {
-      window.open('https://www.google.com/maps?q=' + lat + ',' + lng, '_blank');
+      window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank');
     }
 
     function abrirModalFoto(urlFoto) {
@@ -450,90 +514,31 @@
 
     function exportarParaExcel() {
       if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes."); return; }
-      let dadosFormatadosExcel = registrosProcessadosCache.map(f => ({
-        "Colaborador": f.nome,
-        "Setor": f.setor,
-        "Loja": "Loja " + f.loja,
-        "Dias Trabalhados": f.trabalhados,
-        "Total de Faltas": f.faltas,
-        "Registros Fora do Limite (100m)": f.foraLimite
-      }));
+      let exp = registrosProcessadosCache.map(f => ({ "Colaborador": f.nome, "Setor": f.setor, "Loja": "Loja " + f.loja, "Dias Trabalhados": f.trabalhados, "Total de Faltas": f.faltas, "Registros Fora do Limite": f.foraLimite }));
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(dadosFormatadosExcel);
-      XLSX.utils.book_append_sheet(wb, ws, "Fechamento");
-      XLSX.writeFile(wb, "Pontos_SR_" + document.getElementById('filtroMes').value + ".xlsx");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(exp), "Fechamento");
+      XLSX.writeFile(wb, `Pontos_SR_${document.getElementById('filtroMes').value}.xlsx`);
     }
 
     function exportarParaPDF() {
       if (registrosProcessadosCache.length === 0) { alert("Efetue a consulta antes de gerar o PDF!"); return; }
-      
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'pt', 'a4');
-      const mesRef = document.getElementById('filtroMes').value;
-      const anoMes = mesRef.split('-');
-      const dataFormatadaTopo = anoMes[1] + '/' + anoMes[0];
-
-      doc.setFillColor(0, 100, 48);
-      doc.rect(0, 0, 595, 80, 'F');
-
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(255, 215, 0);
-      doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 38);
-
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(255, 255, 255);
-      doc.text("Relatório Gerencial Mensal de Ponto Integrado — Período: " + dataFormatadaTopo, 40, 58);
-
-      doc.setFillColor(240, 247, 244);
-      doc.rect(40, 95, 515, 35, 'F');
-      doc.setDrawColor(200, 230, 201);
-      doc.rect(40, 95, 515, 35, 'S');
-
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(0, 74, 38);
-      doc.text("Total Colaboradores: " + registrosProcessadosCache.length, 55, 116);
-      doc.text("Emissão Oficial: " + new Date().toLocaleDateString('pt-BR'), 420, 116);
-
-      let linhasTabelaPDF = registrosProcessadosCache.map((f, index) => [
-        String(index + 1).padStart(2, '0'),
-        f.nome,
-        f.setor + " (Loja " + f.loja + ")",
-        f.trabalhados + " dias",
-        f.foraLimite > 0 ? f.faltas + " (" + f.foraLimite + " Fora)" : f.faltas,
-        "___________________________"
-      ]);
-
+      doc.setFillColor(0, 100, 48); doc.rect(0, 0, 595, 80, 'F');
+      doc.setFont("Helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(255, 215, 0); doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 38);
+      doc.setFont("Helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(255, 255, 255); doc.text("Relatório Gerencial de Ponto — Período: " + document.getElementById('filtroMes').value, 40, 58);
+      
+      let linhas = registrosProcessadosCache.map((f, i) => [String(i + 1).padStart(2, '0'), f.nome, `${f.setor} (Loja ${f.loja})`, `${f.trabalhados} dias`, f.foraLimite > 0 ? `${f.faltas} (${f.foraLimite} Fora)` : f.faltas, "___________________________"]);
       doc.autoTable({
-        head: [['Nº', 'Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura do Funcionário']],
-        body: linhasTabelaPDF,
-        startY: 145,
-        theme: 'grid',
-        styles: { fontSize: 8.5, cellPadding: 6, valign: 'middle' },
-        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
-        columnStyles: {
-          0: { cellWidth: 25, halign: 'center' },
-          1: { cellWidth: 165, fontStyle: 'bold' },
-          2: { cellWidth: 120 },
-          3: { cellWidth: 55, halign: 'center' },
-          4: { cellWidth: 45, halign: 'center' },
-          5: { cellWidth: 105, halign: 'center' }
-        },
-        alternateRowStyles: { fillColor: [247, 251, 248] },
-        margin: { left: 40, right: 40 },
-        didDrawPage: function (data) {
-          doc.setFontSize(8);
-          doc.setTextColor(120, 120, 120);
-          doc.text("Página " + data.pageNumber, 520, 820);
-        }
+        head: [['Nº', 'Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura']],
+        body: linhas, startY: 120, theme: 'grid', styles: { fontSize: 8.5 },
+        headStyles: { fillColor: [0, 100, 48] }
       });
-
-      doc.save("Fechamento_Cerca_Virtual_SR_" + mesRef + ".pdf");
+      doc.save(`Fechamento_SR_${document.getElementById('filtroMes').value}.pdf`);
     }
 
-    atualizarListaFuncionarios();
+    // Inicialização automática
+    sincronizarFuncionariosComBanco();
   </script>
 </body>
 </html>
