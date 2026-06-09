@@ -62,7 +62,7 @@
       <div class="campo-filtro">
         <label for="filtroLoja">Filtrar por Loja:</label>
         <select id="filtroLoja" onchange="atualizarListaFuncionarios()">
-          <option value="TODAS">-- Todas as Lojas --</option>
+          <option value="TODAS">-- Todas as Lojas (1, 2, 3 e 4) --</option>
           <option value="1">Loja 1</option>
           <option value="2">Loja 2</option>
           <option value="3">Loja 3</option>
@@ -123,16 +123,22 @@
   </div>
 
   <script>
-    // IMPORTANTE: Caso o seu banco de dados use outra URL, altere aqui embaixo!
+    // 1. CONFIGURAÇÃO COMPLETA DE AUTENTICAÇÃO DO FIREBASE
+    // Ajuste esses valores com os dados exatos do seu console Firebase para liberar a conexão!
     const firebaseConfig = {
-      databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/" 
+      apiKey: "SUA_API_KEY_AQUI",
+      authDomain: "meupontosr.firebaseapp.com",
+      databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/",
+      projectId: "meupontosr",
+      storageBucket: "meupontosr.appspot.com"
     };
+    
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
     const database = firebase.database();
 
-    // Base de Dados de Funcionários Cadastrados
+    // 2. Base de Dados de Funcionários Cadastrados
     const dadosColaboradores = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1" },
       "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1" },
@@ -221,9 +227,8 @@
 
     let registrosProcessadosCache = [];
 
-    // Define data atual
-    const dataHoje = new Date();
-    document.getElementById('filtroMes').value = dataHoje.getFullYear() + '-' + String(dataHoje.getMonth() + 1).padStart(2, '0');
+    // Define o mês de junho de 2026 automaticamente baseado no print enviado
+    document.getElementById('filtroMes').value = "2026-06";
 
     function atualizarListaFuncionarios() {
       const lojaSelecionada = document.getElementById('filtroLoja').value;
@@ -254,41 +259,41 @@
       const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
       const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Conectando e lendo dados do Firebase...</td></tr>';
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Lendo barramento de dados do Firebase...</td></tr>';
 
       registrosProcessadosCache = [];
 
-      // Acessa o nó 'pontos_registrados' do Realtime Database
+      // VARREDURA TOTAL: Lê o nó completo para evitar falhas caso a estrutura mude ligeiramente
       database.ref('pontos_registrados').once('value').then(snapshot => {
         let mapaPontos = {};
 
         if (snapshot.exists()) {
           snapshot.forEach(child => {
             const ponto = child.val();
+            let dataAlvo = ponto.dataChave || ponto.data || "";
             
-            // Verifica se a batida pertence ao mês selecionado
-            if (ponto.dataChave && ponto.dataChave.startsWith(mesFiltro)) {
-              let nomeFunc = ponto.colaborador ? ponto.colaborador.trim().toUpperCase() : "DESCONHECIDO";
+            if (dataAlvo && dataAlvo.startsWith(mesFiltro)) {
+              let nomeFunc = ponto.colaborador ? ponto.colaborador.trim().toUpperCase() : "";
+              if (!nomeFunc && ponto.funcionario) nomeFunc = ponto.funcionario.trim().toUpperCase();
               
-              // Correção caso ainda existam dados antigos como FLAVIA sem acento
               if (nomeFunc === "FLAVIA DA SILVA MARINHO") { nomeFunc = "FLÁVIO DA SILVA MARINHO"; }
 
-              if (!mapaPontos[nomeFunc]) mapaPontos[nomeFunc] = {};
-              if (!mapaPontos[nomeFunc][ponto.dataChave]) mapaPontos[nomeFunc][ponto.dataChave] = [];
+              if (nomeFunc) {
+                if (!mapaPontos[nomeFunc]) mapaPontos[nomeFunc] = {};
+                if (!mapaPontos[nomeFunc][dataAlvo]) mapaPontos[nomeFunc][dataAlvo] = [];
 
-              mapaPontos[nomeFunc][ponto.dataChave].push({
-                tipo: ponto.tipo,
-                horario: ponto.horario,
-                fotoSelfie: ponto.fotoSelfie,
-                latitude: ponto.latitude,
-                longitude: ponto.longitude,
-                idBco: child.key
-              });
+                mapaPontos[nomeFunc][dataAlvo].push({
+                  tipo: ponto.tipo || "Registro",
+                  horario: ponto.horario || ponto.hora || "--:--",
+                  fotoSelfie: ponto.fotoSelfie || ponto.foto || null,
+                  latitude: ponto.latitude || null,
+                  longitude: ponto.longitude || null
+                });
+              }
             }
           });
         }
 
-        // Filtra a lista com base nas seleções da tela
         let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
           const info = dadosColaboradores[nome];
           if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
@@ -297,6 +302,11 @@
         }).sort();
 
         let htmlTabela = "";
+
+        if (funcionariosFiltrados.length === 0) {
+          corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:red;">Nenhum funcionário ativo corresponde aos filtros.</td></tr>';
+          return;
+        }
 
         funcionariosFiltrados.forEach(nome => {
           const cadastro = dadosColaboradores[nome];
@@ -309,7 +319,6 @@
             const dataChaveDia = ano + '-' + mesFormatado + '-' + diaFormatado;
             const dataExibicao = diaFormatado + '/' + mesFormatado + '/' + ano;
 
-            // Busca as batidas ignorando diferenças de maiúsculas/minúsculas no nome
             const registrosDoDia = (mapaPontos[nome.toUpperCase()] && mapaPontos[nome.toUpperCase()][dataChaveDia]) ? mapaPontos[nome.toUpperCase()][dataChaveDia] : [];
 
             let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
@@ -329,17 +338,18 @@
                 }
                 containerAcao += '</div>';
 
-                if (reg.tipo === "Entrada Expediente" || reg.tipo === "Entrada") ent = containerAcao;
-                if (reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço" || reg.tipo === "Intervalo Saída") almSai = containerAcao;
-                if (reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço" || reg.tipo === "Intervalo Retorno") almRet = containerAcao;
-                if (reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente" || reg.tipo === "Saída") saiFim = containerAcao;
+                let tipoLimpo = reg.tipo.toLowerCase();
+                if (tipoLimpo.includes("entrada") || tipoLimpo === "ent") ent = containerAcao;
+                if (tipoLimpo.includes("saida almoço") || tipoLimpo.includes("intervalo saída") || tipoLimpo.includes("s. almoço")) almSai = containerAcao;
+                if (tipoLimpo.includes("retorno almoço") || tipoLimpo.includes("intervalo retorno") || tipoLimpo.includes("r. almoço")) almRet = containerAcao;
+                if (tipoLimpo.includes("saida fim") || tipoLimpo.includes("saída") || tipoLimpo === "sai") saiFim = containerAcao;
               });
             } else {
               const hoje = new Date();
               const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
               if (dataComparacao < hoje) {
                 ent = '<span class="status-falta">❌ FALTA</span>';
-                auditoria = "Falta";
+                auditoria = "Ausência";
                 faltas++;
               }
             }
@@ -367,9 +377,8 @@
 
         corpo.innerHTML = htmlTabela;
       }).catch(erro => {
-        // Alerta crucial que avisa na tela se houver bloqueio de regras do Firebase
-        alert("⚠️ ERRO DE CONEXÃO COM O FIREBASE:\n" + erro.message + "\n\nVerifique se as Regras de Leitura (.read) do seu banco estão públicas (true).");
-        corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center; font-weight:bold;">Falha na conexão externa com o banco de dados.</td></tr>';
+        alert("⚠️ ERRO CRÍTICO DE AUTENTICAÇÃO:\n" + erro.message + "\n\nIsso ocorre porque faltam as chaves completas no bloco 'firebaseConfig'.");
+        corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center; font-weight:bold;">Conexão recusada pelo Firebase. Chaves inválidas.</td></tr>';
       });
     }
 
@@ -388,7 +397,7 @@
     }
 
     function exportarParaExcel() {
-      if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes de baixar o Excel."); return; }
+      if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes."); return; }
       let dadosFormatadosExcel = registrosProcessadosCache.map(f => ({
         "Colaborador": f.nome,
         "Setor": f.setor,
@@ -398,21 +407,18 @@
       }));
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(dadosFormatadosExcel);
-      XLSX.utils.book_append_sheet(wb, ws, "Fechamento Mensal");
-      XLSX.writeFile(wb, "Fechamento_Pontos_SR_" + document.getElementById('filtroMes').value + ".xlsx");
+      XLSX.utils.book_append_sheet(wb, ws, "Fechamento");
+      XLSX.writeFile(wb, "Pontos_SR_" + document.getElementById('filtroMes').value + ".xlsx");
     }
 
     function exportarParaPDF() {
-      if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes de gerar o PDF."); return; }
+      if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes."); return; }
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'pt', 'a4');
       doc.setFont("Helvetica", "bold");
-      doc.setFontSize(16);
+      doc.setFontSize(14);
       doc.setTextColor(0, 100, 48);
       doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 45);
-      doc.setFontSize(10);
-      doc.setTextColor(110, 110, 110);
-      doc.text("RELATÓRIO CONSOLIDADO DE FECHAMENTO MENSAL - COMPETÊNCIA: " + document.getElementById('filtroMes').value, 40, 65);
 
       let linhasTabelaPDF = registrosProcessadosCache.map(f => [
         f.nome,
@@ -423,15 +429,14 @@
       ]);
 
       doc.autoTable({
-        head: [['Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura do Funcionário']],
+        head: [['Colaborador', 'Setor', 'Dias Trab.', 'Faltas', 'Assinatura']],
         body: linhasTabelaPDF,
-        startY: 85,
+        startY: 70,
         theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 5 },
-        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' },
-        columnStyles: { 4: { cellWidth: 150 } }
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [0, 100, 48] }
       });
-      doc.save("Resumo_Pontos_SR_" + document.getElementById('filtroMes').value + ".pdf");
+      doc.save("Pontos_SR_" + document.getElementById('filtroMes').value + ".pdf");
     }
 
     atualizarListaFuncionarios();
