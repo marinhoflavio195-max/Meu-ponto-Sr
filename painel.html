@@ -16,7 +16,7 @@
     body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f7f4; margin: 0; padding: 20px; color: #333; }
     .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; }
     
-    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; }
     
     .filtros-topo { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #f9fdfa; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
     .campo-filtro { flex: 1; min-width: 220px; }
@@ -40,6 +40,7 @@
     
     .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
     .status-regular { color: #2e7d32; font-weight: bold; }
+    .status-alerta { color: #d32f2f; font-weight: bold; background: #ffebee; padding: 2px 6px; border-radius: 4px; }
     
     .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 6px; border-radius: 6px; border: 1px solid #d0dfd5; min-width: 80px; }
     .titulo-hora { font-size: 11px; font-weight: bold; color: #004a26; margin-bottom: 4px; }
@@ -99,7 +100,7 @@
             <th>S. Almoço</th>
             <th>R. Almoço</th>
             <th>Saída Fim</th>
-            <th>Auditoria</th>
+            <th>Auditoria Geolocalização</th>
           </tr>
         </thead>
         <tbody id="tabelaCorpo">
@@ -136,6 +137,14 @@
       firebase.initializeApp(firebaseConfig);
     }
     const database = firebase.database();
+
+    // 📍 COORDENADAS REAIS CORRIGIDAS DAS LOJAS EM CODÓ/MA
+    const coordenadasLojas = {
+      "1": { lat: -4.4515049, lng: -43.8762104 }, // Loja 01
+      "2": { lat: -4.4680240, lng: -43.8895061 }, // Loja 02
+      "3": { lat: -4.4665202, lng: -43.8833122 }, // Loja 03
+      "4": { lat: -4.4514327, lng: -43.8758061 }  // Loja 04
+    };
 
     const dadosColaboradores = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "adrissa" },
@@ -224,7 +233,6 @@
     };
 
     let registrosProcessadosCache = [];
-
     document.getElementById('filtroMes').value = "2026-06";
 
     function atualizarListaFuncionarios() {
@@ -241,6 +249,18 @@
           selectColaborador.appendChild(opt);
         }
       });
+    }
+
+    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+      const R = 6371000; 
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c; 
     }
 
     function normalizarTexto(texto) {
@@ -264,7 +284,7 @@
       const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
       const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Buscando dados em tempo real no banco...</td></tr>';
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Monitorando Cerca Virtual (100 metros) em Codó...</td></tr>';
 
       registrosProcessadosCache = [];
 
@@ -301,8 +321,8 @@
                   tipo: normalizarTexto(p.tipo),
                   horario: p.horario,
                   fotoSelfie: p.fotoSelfie || null,
-                  latitude: p.latitude || null,
-                  longitude: p.longitude || null
+                  latitude: parseFloat(p.latitude) || null,
+                  longitude: parseFloat(p.longitude) || null
                 });
               }
             }
@@ -321,8 +341,11 @@
         funcionariosFiltrados.forEach(nome => {
           const cadastro = dadosColaboradores[nome];
           const chaveAppNome = cadastro.chaveApp || normalizarTexto(nome);
+          const coordLojaAlvo = coordenadasLojas[cadastro.loja];
+          
           let diasTrabalhados = 0;
           let faltas = 0;
+          let pontosForaDoLimite = 0;
 
           for (let dia = 1; dia <= totalDiasMes; dia++) {
             const diaFormatado = String(dia).padStart(2, '0');
@@ -334,11 +357,10 @@
             const registrosDoDia = mapaPontos[chaveAgrupadaBusca] || [];
 
             let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
-            let auditoria = "--";
+            let statusAuditoriaGeo = '<span class="status-regular">✅ No Limite</span>';
 
             if (registrosDoDia.length > 0) {
               diasTrabalhados++;
-              auditoria = '<span class="status-regular">✅ OK</span>';
 
               registrosDoDia.forEach(reg => {
                 let containerAcao = '<div class="bloco-ponto-acoes"><span class="titulo-hora">' + reg.horario + '</span>';
@@ -347,6 +369,14 @@
                 }
                 if (reg.latitude && reg.longitude) {
                   containerAcao += '<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(' + reg.latitude + ',' + reg.longitude + ')">🗺️ MAPA</button>';
+                  
+                  if (coordLojaAlvo) {
+                    let distanciaReal = calcularDistanciaMetros(reg.latitude, reg.longitude, coordLojaAlvo.lat, coordLojaAlvo.lng);
+                    if (distanciaReal !== null && distanciaReal > 100) {
+                      statusAuditoriaGeo = '<span class="status-alerta">⚠️ Fora (>100m)</span>';
+                      pontosForaDoLimite++;
+                    }
+                  }
                 }
                 containerAcao += '</div>';
 
@@ -360,7 +390,7 @@
               const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
               if (dataComparacao < hoje) {
                 ent = '<span class="status-falta">❌ FALTA</span>';
-                auditoria = "Ausência";
+                statusAuditoriaGeo = "Ausência";
                 faltas++;
               }
             }
@@ -373,7 +403,7 @@
               '<td>' + almSai + '</td>' +
               '<td>' + almRet + '</td>' +
               '<td>' + saiFim + '</td>' +
-              '<td>' + auditoria + '</td>' +
+              '<td>' + statusAuditoriaGeo + '</td>' +
               '</tr>';
           }
 
@@ -382,7 +412,8 @@
             setor: cadastro.setor,
             loja: cadastro.loja,
             trabalhados: diasTrabalhados,
-            faltas: faltas
+            faltas: faltas,
+            foraLimite: pontosForaDoLimite
           });
         });
 
@@ -393,8 +424,9 @@
       });
     }
 
+    // 🗺️ LINK CORRIGIDO DO GOOGLE MAPS OFICIAL (SEM TRAVAMENTO)
     function abrirMapaGeolocalizacao(lat, lng) {
-      window.open('https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng, '_blank');
+      window.open('https://www.google.com/maps?q=' + lat + ',' + lng, '_blank');
     }
 
     function abrirModalFoto(urlFoto) {
@@ -413,7 +445,8 @@
         "Setor": f.setor,
         "Loja": "Loja " + f.loja,
         "Dias Trabalhados": f.trabalhados,
-        "Total de Faltas": f.faltas
+        "Total de Faltas": f.faltas,
+        "Registros Fora do Limite (100m)": f.foraLimite
       }));
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(dadosFormatadosExcel);
@@ -421,7 +454,6 @@
       XLSX.writeFile(wb, "Pontos_SR_" + document.getElementById('filtroMes').value + ".xlsx");
     }
 
-    // 🌟 NOVA FUNÇÃO DE EXPORTAÇÃO COMPLETA E PROFISSONAL DO RECONHECIMENTO DE PONTOS
     function exportarParaPDF() {
       if (registrosProcessadosCache.length === 0) { alert("Efetue a consulta antes de gerar o PDF!"); return; }
       
@@ -431,13 +463,12 @@
       const anoMes = mesRef.split('-');
       const dataFormatadaTopo = anoMes[1] + '/' + anoMes[0];
 
-      // Configuração de Cabeçalho Institucional Elegante
-      doc.setFillColor(0, 100, 48); // Verde Oficial
+      doc.setFillColor(0, 100, 48);
       doc.rect(0, 0, 595, 80, 'F');
 
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(18);
-      doc.setTextColor(255, 215, 0); // Ouro/Amarelo Oficial
+      doc.setTextColor(255, 215, 0);
       doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 38);
 
       doc.setFont("Helvetica", "normal");
@@ -445,7 +476,6 @@
       doc.setTextColor(255, 255, 255);
       doc.text("Relatório Gerencial Mensal de Ponto Integrado — Período: " + dataFormatadaTopo, 40, 58);
 
-      // Bloco de Informações de Controle
       doc.setFillColor(240, 247, 244);
       doc.rect(40, 95, 515, 35, 'F');
       doc.setDrawColor(200, 230, 201);
@@ -457,20 +487,18 @@
       doc.text("Total Colaboradores: " + registrosProcessadosCache.length, 55, 116);
       doc.text("Emissão Oficial: " + new Date().toLocaleDateString('pt-BR'), 420, 116);
 
-      // Mapeamento dos registros para compor o corpo do documento PDF
       let linhasTabelaPDF = registrosProcessadosCache.map((f, index) => [
         String(index + 1).padStart(2, '0'),
         f.nome,
         f.setor + " (Loja " + f.loja + ")",
         f.trabalhados + " dias",
-        f.faltas,
-        "___________________________" // Linha sólida ideal para assinatura manual
+        f.foraLimite > 0 ? f.faltas + " (" + f.foraLimite + " Fora)" : f.faltas,
+        "___________________________"
       ]);
 
-      // Chamada da API JS-AutoTable para desenhar a tabela estilizada de fechamento
       doc.autoTable({
         head: [['Nº', 'Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura do Funcionário']],
-        body: linhasTabelaPDF,
+        body: líneasTabelaPDF,
         startY: 145,
         theme: 'grid',
         styles: { fontSize: 8.5, cellPadding: 6, valign: 'middle' },
@@ -486,15 +514,13 @@
         alternateRowStyles: { fillColor: [247, 251, 248] },
         margin: { left: 40, right: 40 },
         didDrawPage: function (data) {
-          // Rodapé simples de paginação automática
           doc.setFontSize(8);
           doc.setTextColor(120, 120, 120);
           doc.text("Página " + data.pageNumber, 520, 820);
         }
       });
 
-      // Grava o arquivo com nome intuitivo baseado na data selecionada
-      doc.save("Fechamento_Pontos_SR_" + mesRef + ".pdf");
+      doc.save("Fechamento_Cerca_Virtual_SR_" + mesRef + ".pdf");
     }
 
     atualizarListaFuncionarios();
