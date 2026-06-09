@@ -14,7 +14,7 @@
 
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f7f4; margin: 0; padding: 20px; color: #333; }
-    .painel-container { width: 100%; max-width: 1300px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; }
+    .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; }
     
     h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; }
     
@@ -46,7 +46,6 @@
     .btn-foto { background: #673ab7; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
     .btn-mapa { background: #0b5394; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
 
-    /* Modal de Foto */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
     .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; }
     .modal-content img { width: 100%; border-radius: 8px; border: 3px solid #006430; margin-bottom: 15px; }
@@ -56,13 +55,13 @@
 <body>
 
   <div class="painel-container">
-    <h1>SUPERMERCADO SÃO RAIMUNDO - GESTÃO DE PONTOS</h1>
+    <h1>SUPERMERCADO SÃO RAIMUNDO - CENTRAL DE PONTOS</h1>
 
     <div class="filtros-topo">
       <div class="campo-filtro">
         <label for="filtroLoja">Filtrar por Loja:</label>
         <select id="filtroLoja" onchange="atualizarListaFuncionarios()">
-          <option value="TODAS">-- Todas as Lojas --</option>
+          <option value="TODAS">-- Todas as Lojas (1, 2, 3 e 4) --</option>
           <option value="1">Loja 1</option>
           <option value="2">Loja 2</option>
           <option value="3">Loja 3</option>
@@ -123,13 +122,15 @@
   </div>
 
   <script>
-    // Configurações do Firebase - Verifique se a sua apiKey e databaseURL batem com o Console do Firebase
+    // 1. CHAVES REAIS E AUTENTICADAS EXTRAÍDAS DO SEU APP ORIGINAL
     const firebaseConfig = {
-      apiKey: "SUA_API_KEY_AQUI", // Se possuir API Key, insira aqui
-      authDomain: "meupontosr.firebaseapp.com",
-      databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/",
-      projectId: "meupontosr",
-      storageBucket: "meupontosr.appspot.com"
+      apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
+      authDomain: "meu-ponto-sr.firebaseapp.com",
+      databaseURL: "https://meu-ponto-sr-default-rtdb.firebaseio.com",
+      projectId: "meu-ponto-sr",
+      storageBucket: "meu-ponto-sr.appspot.com",
+      messagingSenderId: "356930006135",
+      appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
     };
     
     if (!firebase.apps.length) {
@@ -137,96 +138,96 @@
     }
     const database = firebase.database();
 
-    // Base Cadastral de Funcionários
+    // 2. Base unificada de funcionários com o padrão do Supermercado São Raimundo
     const dadosColaboradores = {
-      "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1" },
-      "ANDRE KENNEDY COSTA SILVA": { setor: "CPD/TI", loja: "1" },
-      "ANDREIA REGO LIMA": { setor: "OPERADORA DE CAIXA", loja: "3" },
-      "ANTONIA EDILENE DA CONCEICAO PEREIRA": { setor: "OPERADORA DE CAIXA", loja: "3" },
-      "ANTONIO FRANCISCO ARAUJO VIEIRA": { setor: "ALMOXERIFADO", loja: "1" },
-      "ANTONIO MARCOS CRUZ CUNHA": { setor: "GERENCIA", loja: "3" },
-      "ANTONY THALISON FERNADES GUIMARAES": { setor: "ALMOXERIFADO", loja: "1" },
-      "CARLOS JOSE DA COSTA RIBEIRO": { setor: "AÇOUGUE", loja: "1" },
-      "CRISTIANE LIMA TORRES": { setor: "REPOSITOR", loja: "2" },
-      "DENILSON ANDRADE SILVA": { setor: "ALMOXERIFADO", loja: "1" },
-      "EDUARDO DOS SANTOS RODRIGUES": { setor: "SR MOTO PEÇAS", loja: "4" },
-      "ERISVANA CHAVES SILVA": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "EUDES DAS MERCES CORTE": { setor: "MOTORISTA", loja: "1" },
-      "EVERTON LEANDRO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3" },
-      "FELIPE SILVA QUEIROZ": { setor: "SERVIÇOS GERAIS", loja: "1" },
-      "FELIPE VIEIRA DA SILVA": { setor: "MOTORISTA", loja: "3" },
-      "FLAVIA DA SILVA LIMA SILVA": { setor: "ALMOXERIFADO", loja: "1" },
-      "FLÁVIO DA SILVA MARINHO": { setor: "GERENCIA", loja: "1" },
-      "FRANCISCA ANDRADE VIEIRA": { setor: "SR MOTO PEÇAS", loja: "4" },
-      "FRANCISCA DAS CHAGAS ARAUJO BORGES SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "FRANCISCA MILENA DE PAIVA TEIXEIRA": { setor: "OPERADORA DE CAIXA", loja: "2" },
-      "FRANCISCA ROSA CANTANHEIDE DOS SANTOS": { setor: "AÇOUGUE", loja: "1" },
-      "FRANCISCO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3" },
-      "FRANCISCO GABRIEL TORRES DA LUZ": { setor: "REPOSITOR", loja: "1" },
-      "GABRIEL MAX NASCIMENTO ROCHA": { setor: "SR MOTO PEÇAS", loja: "4" },
-      "GENILSON DA CONCEICAO ARAUJO": { setor: "HORTIFRUTI", loja: "1" },
-      "INES RODRIGUES FONTES": { setor: "RH", loja: "1" },
-      "IRENE MACHADO NETA": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "ISMAEL PONTES CARDOSO": { setor: "MOTORISTA", loja: "2" },
-      "JAQUELINE REIS DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "JOICE VALE DA CONCEIÇÃO": { setor: "OPERADORA DE CAIXA", loja: "3" },
-      "JOSECLEIA SANTOS FERREIRA": { setor: "REPOSITOR", loja: "2" },
-      "KARINE MENDES DOS SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "KARLENE DA SILVA COSTA": { setor: "REPOSITOR", loja: "3" },
-      "LEANDRO ALVES DA CONCEIÇÃO": { setor: "AÇOUGUE", loja: "1" },
-      "LEILA CRISTINA ALVES SABA": { setor: "AÇOUGUE", loja: "3" },
-      "LETICIA DA CONCEIÇÃO FARIAS": { setor: "OPERADORA DE CAIXA", loja: "3" },
-      "MARCOS ANTONIO QUEIROZ AMARANTE": { setor: "HORTIFRUTI", loja: "1" },
-      "MARIA DAS DORES DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "MARIA DO CARMO SANTOS DA SILVA": { setor: "AÇOUGUE", loja: "2" },
-      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2" },
-      "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1" },
-      "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1" },
-      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2" },
-      "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3" },
-      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3" },
-      "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "PEDRO PEREIRA QUADROS JUNIOR": { setor: "SR MOTO PEÇAS", loja: "4" },
-      "PEDRO SALAZAR DA CONCEICAO": { setor: "SR MOTO PEÇAS", loja: "4" },
-      "RAIANA SILVA ALVES VIEIRA": { setor: "REPOSITOR", loja: "1" },
-      "RAIMUNDO QUEIROZ MARINHO": { setor: "EMPACOTADOR", loja: "1" },
-      "RICKELMY SILVA DE SOUSA": { setor: "REPOSITOR", loja: "2" },
-      "RITA DE CASSIA DA SILVA PACHECO": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "ROBERT MARLON PEREIRA MOTA": { setor: "HORTIFRUTI", loja: "3" },
-      "ROBERTO SANTOS PINHEIRO": { setor: "SEGURANÇA", loja: "1" },
-      "ROSIMAR DA LUZ ALVES": { setor: "REPOSITOR", loja: "1" },
-      "SERGIO AZEVEDO DA SILVA": { setor: "MOTORISTA", loja: "2" },
-      "SOLANGE DA COSTA ANDRADE": { setor: "REPOSITOR", loja: "2" },
-      "SUELY ALVES": { setor: "AÇOUGUE", loja: "1" },
-      "TAYSA SILVA NASCIMENTO": { setor: "REPOSITOR", loja: "3" },
-      "THALICE DA LUZ SOUSA": { setor: "REPOSITOR", loja: "1" },
-      "THARLES FERNADO DA SILVA RAMOS": { setor: "ALMOXERIFADO", loja: "1" },
-      "VALDIMIRO CUNHA DE OLIVEIRA NETO": { setor: "MOTORISTA", loja: "1" },
-      "VANIA CRISTINA REGO DA SILVA LIMA": { setor: "GERENCIA", loja: "3" },
-      "VILSON ANTONIO SALES DE SOUSA FILHO": { setor: "ALMOXERIFADO", loja: "1" },
-      "VINICIUS GABRIEL DA CONCEIÇÃO RIBEIRO": { setor: "REPOSITOR", loja: "1" },
-      "EDMLSON": { setor: "EMPACOTADOR", loja: "1" },
-      "MARCELO BRITO DA COSTA": { setor: "ALMOXERIFADO", loja: "1" },
-      "ANTONIO KEVESON SANTOS DOS REIS": { setor: "ALMOXERIFADO", loja: "1" },
-      "ALAN FRANCISCO MEDEIROS MILITAR": { setor: "ALMOXERIFADO", loja: "1" },
-      "CARLOS HENRRIQUE GRANDÃO": { setor: "REPOSITOR", loja: "1" },
-      "JOSENILTON DA SILVA PAZ": { setor: "REPOSITOR", loja: "3" },
-      "MARIA EDIETE RODRIGUES SANTANA": { setor: "REPOSITOR", loja: "1" },
-      "DEBORA LUZIA CORTE GALVÃO": { setor: "OPERADORA DE CAIXA", loja: "1" },
-      "SAMIRA NASCIMENTO SILVA DA SILVA": { setor: "REPOSITOR", loja: "1" },
-      "DEBORA CRISTINA DE PAIVA DA SILVA": { setor: "REPOSITOR", loja: "1" },
-      "RONE HORTIFRUTI": { setor: "HORTIFRUTI", loja: "1" },
-      "MAYCON RUAN AZEVEDO DE ABREU": { setor: "CPD/TI", loja: "1" },
-      "HENRIQUE - DEPOSITO INST MIX": { setor: "ALMOXERIFADO", loja: "1" },
-      "VICTOR HUGGO MORAIS DOS SANTOS": { setor: "REPOSITOR", loja: "1" },
-      "ERIKA LARISSA DO NASCIMENTO DA SILVA": { setor: "AÇOUGUE", loja: "1" },
-      "HILLARIA OLIVEIRA RIBEIRO": { setor: "RH", loja: "1" }
+      "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "adrissa" },
+      "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1", chaveApp: "alice" },
+      "ANDRE KENNEDY COSTA SILVA": { setor: "CPD/TI", loja: "1", chaveApp: "andre" },
+      "ANDREIA REGO LIMA": { setor: "OPERADORA DE CAIXA", loja: "3", chaveApp: "andreia" },
+      "ANTONIA EDILENE DA CONCEICAO PEREIRA": { setor: "OPERADORA DE CAIXA", loja: "3", chaveApp: "antonia" },
+      "ANTONIO FRANCISCO ARAUJO VIEIRA": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "antonio" },
+      "ANTONIO MARCOS CRUZ CUNHA": { setor: "GERENCIA", loja: "3", chaveApp: "marcos" },
+      "ANTONY THALISON FERNADES GUIMARAES": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "talison" },
+      "CARLOS JOSE DA COSTA RIBEIRO": { setor: "AÇOUGUE", loja: "1", chaveApp: "carlos" },
+      "CRISTIANE LIMA TORRES": { setor: "REPOSITOR", loja: "2", chaveApp: "cristiane" },
+      "DENILSON ANDRADE SILVA": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "denilson" },
+      "EDUARDO DOS SANTOS RODRIGUES": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "eduardo" },
+      "ERISVANA CHAVES SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "erisvana" },
+      "EUDES DAS MERCES CORTE": { setor: "MOTORISTA", loja: "1", chaveApp: "eudes" },
+      "EVERTON LEANDRO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3", chaveApp: "everton" },
+      "FELIPE SILVA QUEIROZ": { setor: "SERVIÇOS GERAIS", loja: "1", chaveApp: "felipesilva" },
+      "FELIPE VIEIRA DA SILVA": { setor: "MOTORISTA", loja: "3", chaveApp: "felipefrente" },
+      "FLAVIA DA SILVA LIMA SILVA": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "flavia" },
+      "FLÁVIO DA SILVA MARINHO": { setor: "GERENCIA", loja: "1", chaveApp: "flavio" },
+      "FRANCISCA ANDRADE VIEIRA": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "fran" },
+      "FRANCISCA DAS CHAGAS ARAUJO BORGES SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "francisca" },
+      "FRANCISCA MILENA DE PAIVA TEIXEIRA": { setor: "OPERADORA DE CAIXA", loja: "2", chaveApp: "milena" },
+      "FRANCISCA ROSA CANTANHEIDE DOS SANTOS": { setor: "AÇOUGUE", loja: "1", chaveApp: "franciscasouza" },
+      "FRANCISCO ANDRADE SILVA": { setor: "AÇOUGUE", loja: "3", chaveApp: "francisco" },
+      "FRANCISCO GABRIEL TORRES DA LUZ": { setor: "REPOSITOR", loja: "1", chaveApp: "gabriel" },
+      "GABRIEL MAX NASCIMENTO ROCHA": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "gabrielmax" },
+      "GENILSON DA CONCEICAO ARAUJO": { setor: "HORTIFRUTI", loja: "1", chaveApp: "genilson" },
+      "INES RODRIGUES FONTES": { setor: "RH", loja: "1", chaveApp: "irene" },
+      "IRENE MACHADO NETA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "irene" },
+      "ISMAEL PONTES CARDOSO": { setor: "MOTORISTA", loja: "2", chaveApp: "ismael" },
+      "JAQUELINE REIS DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "jaki" },
+      "JOICE VALE DA CONCEIÇÃO": { setor: "OPERADORA DE CAIXA", loja: "3", chaveApp: "joice" },
+      "JOSECLEIA SANTOS FERREIRA": { setor: "REPOSITOR", loja: "2", chaveApp: "josecleia" },
+      "KARINE MENDES DOS SANTOS": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "karine" },
+      "KARLENE DA SILVA COSTA": { setor: "REPOSITOR", loja: "3", chaveApp: "karlene" },
+      "LEANDRO ALVES DA CONCEIÇÃO": { setor: "AÇOUGUE", loja: "1", chaveApp: "leandro" },
+      "LEILA CRISTINA ALVES SABA": { setor: "AÇOUGUE", loja: "3", chaveApp: "leila" },
+      "LETICIA DA CONCEIÇÃO FARIAS": { setor: "OPERADORA DE CAIXA", loja: "3", chaveApp: "leticia" },
+      "MARCOS ANTONIO QUEIROZ AMARANTE": { setor: "HORTIFRUTI", loja: "1", chaveApp: "marcos" },
+      "MARIA DAS DORES DA SILVA": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "marta" },
+      "MARIA DO CARMO SANTOS DA SILVA": { setor: "AÇOUGUE", loja: "2", chaveApp: "mariadocarmo" },
+      "MARIA DO CARMO SANTOS TORRES": { setor: "GERENCIA", loja: "2", chaveApp: "mariadocarmo" },
+      "MARIA DOS SANTOS AGUIAR DE MORAES": { setor: "REPOSITOR", loja: "1", chaveApp: "edete" },
+      "MARIA FRANCISCA DA SILVA E SILVA": { setor: "AÇOUGUE", loja: "1", chaveApp: "francisca" },
+      "MARIA MEYRIANE SALES SOUSA": { setor: "OPERADORA DE CAIXA", loja: "2", chaveApp: "meyriane" },
+      "MICHELY DOS SANTOS CARDOSO": { setor: "REPOSITOR", loja: "3", chaveApp: "michely" },
+      "PABLO RICKMANN DIAS CARVALHO": { setor: "REPOSITOR", loja: "3", chaveApp: "pablo" },
+      "PATRICIA MOURAO FONTES": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "patricia" },
+      "PEDRO PEREIRA QUADROS JUNIOR": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "pedro" },
+      "PEDRO SALAZAR DA CONCEICAO": { setor: "SR MOTO PEÇAS", loja: "4", chaveApp: "pedrosalazar" },
+      "RAIANA SILVA ALVES VIEIRA": { setor: "REPOSITOR", loja: "1", chaveApp: "rayana" },
+      "RAIMUNDO QUEIROZ MARINHO": { setor: "EMPACOTADOR", loja: "1", chaveApp: "raimundoq" },
+      "RICKELMY SILVA DE SOUSA": { setor: "REPOSITOR", loja: "2", chaveApp: "rickelmy" },
+      "RITA DE CASSIA DA SILVA PACHECO": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "rita" },
+      "ROBERT MARLON PEREIRA MOTA": { setor: "HORTIFRUTI", loja: "3", chaveApp: "ruan" },
+      "ROBERTO SANTOS PINHEIRO": { setor: "SEGURANÇA", loja: "1", chaveApp: "roberto" },
+      "ROSIMAR DA LUZ ALVES": { setor: "REPOSITOR", loja: "1", chaveApp: "rose" },
+      "SERGIO AZEVEDO DA SILVA": { setor: "MOTORISTA", loja: "2", chaveApp: "sergio" },
+      "SOLANGE DA COSTA ANDRADE": { setor: "REPOSITOR", loja: "2", chaveApp: "solange" },
+      "SUELY ALVES": { setor: "AÇOUGUE", loja: "1", chaveApp: "sueli" },
+      "TAYSA SILVA NASCIMENTO": { setor: "REPOSITOR", loja: "3", chaveApp: "taysa" },
+      "THALICE DA LUZ SOUSA": { setor: "REPOSITOR", loja: "1", chaveApp: "thalice" },
+      "THARLES FERNADO DA SILVA RAMOS": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "tharles" },
+      "VALDIMIRO CUNHA DE OLIVEIRA NETO": { setor: "MOTORISTA", loja: "1", chaveApp: "valdimiro" },
+      "VANIA CRISTINA REGO DA SILVA LIMA": { setor: "GERENCIA", loja: "3", chaveApp: "vania" },
+      "VILSON ANTONIO SALES DE SOUSA FILHO": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "vilson" },
+      "VINICIUS GABRIEL DA CONCEIÇÃO RIBEIRO": { setor: "REPOSITOR", loja: "1", chaveApp: "vinicios" },
+      "EDMLSON": { setor: "EMPACOTADOR", loja: "1", chaveApp: "edmilson" },
+      "MARCELO BRITO DA COSTA": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "marcelo" },
+      "ANTONIO KEVESON SANTOS DOS REIS": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "keverson" },
+      "ALAN FRANCISCO MEDEIROS MILITAR": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "alan" },
+      "CARLOS HENRRIQUE GRANDÃO": { setor: "REPOSITOR", loja: "1", chaveApp: "carlos" },
+      "JOSENILTON DA SILVA PAZ": { setor: "REPOSITOR", loja: "3", chaveApp: "josenilton" },
+      "MARIA EDIETE RODRIGUES SANTANA": { setor: "REPOSITOR", loja: "1", chaveApp: "edete" },
+      "DEBORA LUZIA CORTE GALVÃO": { setor: "OPERADORA DE CAIXA", loja: "1", chaveApp: "debora" },
+      "SAMIRA NASCIMENTO SILVA DA SILVA": { setor: "REPOSITOR", loja: "1", chaveApp: "samira" },
+      "DEBORA CRISTINA DE PAIVA DA SILVA": { setor: "REPOSITOR", loja: "1", chaveApp: "deborasabao" },
+      "RONE HORTIFRUTI": { setor: "HORTIFRUTI", loja: "1", chaveApp: "ronefruta" },
+      "MAYCON RUAN AZEVEDO DE ABREU": { setor: "CPD/TI", loja: "1", chaveApp: "ruan" },
+      "HENRIQUE - DEPOSITO INST MIX": { setor: "ALMOXERIFADO", loja: "1", chaveApp: "henrique" },
+      "VICTOR HUGGO MORAIS DOS SANTOS": { setor: "REPOSITOR", loja: "1", chaveApp: "victor" },
+      "ERIKA LARISSA DO NASCIMENTO DA SILVA": { setor: "AÇOUGUE", loja: "1", chaveApp: "erica" },
+      "HILLARIA OLIVEIRA RIBEIRO": { setor: "RH", loja: "1", chaveApp: "hilaria" }
     };
 
     let registrosProcessadosCache = [];
 
-    // Define o mês de junho de 2026 automaticamente como padrão baseado no seu painel
+    // Coloca automaticamente junho de 2026 para agilizar a consulta
     document.getElementById('filtroMes').value = "2026-06";
 
     function atualizarListaFuncionarios() {
@@ -245,15 +246,16 @@
       });
     }
 
-    // Função auxiliar para limpar strings (remover acentos, espaços e padronizar maiúsculas)
+    // Normaliza os textos da mesma forma que o aplicativo antigo faz
     function normalizarTexto(texto) {
       if (!texto) return "";
-      return texto.toString().trim().toUpperCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
-        .replace(/\s+/g, " "); // Remove espaços duplos
+      let t = texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      if (t.includes("francisca souza") || t.includes("franc.acou")) return "franciscasouza";
+      if (t.includes("roni") || t.includes("rone")) return "ronefruta";
+      return t.replace(/\s+/g, "");
     }
 
-    async function consultarPeriodoBanco() {
+    function consultarPeriodoBanco() {
       const lojaFiltro = document.getElementById('filtroLoja').value;
       const colabFiltro = document.getElementById('filtroColaborador').value;
       const mesFiltro = document.getElementById('filtroMes').value;
@@ -266,159 +268,138 @@
       const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
       const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Varrendo pastas do Firebase...</td></tr>';
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Baixando registros ativos do Firebase...</td></tr>';
 
       registrosProcessadosCache = [];
-      let snapshotEncontrado = null;
 
-      // ESTRUTURA BLINDADA: Tenta ler o nó principal, se falhar, vasculha caminhos alternativos
-      const caminhosParaTestar = ['pontos_registrados', 'pontos', '/'];
-      
-      for (let caminho of caminhosParaTestar) {
-        try {
-          const snap = await database.ref(caminho).once('value');
-          if (snap.exists() && snap.hasChildren()) {
-            snapshotEncontrado = snap;
-            console.log(`Dados localizados com sucesso na pasta: ${caminho}`);
-            break; 
-          }
-        } catch (e) {
-          console.error(`Erro ao tentar ler o caminho ${caminho}:`, e);
-        }
-      }
+      database.ref('pontos_registrados').once('value').then(snapshot => {
+        let mapaPontos = {};
 
-      let mapaPontos = {};
-
-      if (snapshotEncontrado) {
-        snapshotEncontrado.forEach(child => {
-          const dadoBruto = child.val();
-
-          // Caso o registro seja direto um nó interno contendo filhos recursivos (Estrutura por ID de Usuário)
-          if (dadoBruto && typeof dadoBruto === 'object' && !dadoBruto.colaborador && !dadoBruto.funcionario) {
-            Object.keys(dadoBruto).forEach(subKey => {
-              const subPonto = dadoBruto[subKey];
-              processarObjetoPonto(subPonto, mapaPontos, mesFiltro);
-            });
-          } else {
-            // Estrutura linear padrão de tabela unica
-            processarObjetoPonto(dadoBruto, mapaPontos, mesFiltro);
-          }
-        });
-      }
-
-      // Função interna para extrair batidas independente do nome da chave de dados
-      function processarObjetoPonto(ponto, mapa, mesSel) {
-        if (!ponto) return;
-        let dataAlvo = ponto.dataChave || ponto.data || ponto.data_registro || "";
-        
-        // Se a data estiver no formato brasileiro DD/MM/AAAA, converte para AAAA-MM-DD
-        if (dataAlvo.includes('/')) {
-          const p = dataAlvo.split('/');
-          if (p.length === 3) dataAlvo = `${p[2]}-${p[1]}-${p[0]}`;
-        }
-
-        if (dataAlvo && dataAlvo.startsWith(mesSel)) {
-          let nomeFunc = ponto.colaborador || ponto.funcionario || ponto.nome || ponto.colaboradorNome || "";
-          let nomeLimpo = normalizarTexto(nomeFunc);
-
-          if (nomeLimpo) {
-            if (!mapa[nomeLimpo]) mapa[nomeLimpo] = {};
-            if (!mapa[nomeLimpo][dataAlvo]) mapa[nomeLimpo][dataAlvo] = [];
-
-            mapa[nomeLimpo][dataAlvo].push({
-              tipo: ponto.tipo || ponto.status || "Registro",
-              horario: ponto.horario || ponto.hora || "--:--",
-              fotoSelfie: ponto.fotoSelfie || ponto.foto || ponto.urlFoto || null,
-              latitude: ponto.latitude || ponto.lat || null,
-              longitude: ponto.longitude || ponto.lng || null
-            });
-          }
-        }
-      }
-
-      // Filtra os colaboradores ativos na tela
-      let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
-        const info = dadosColaboradores[nome];
-        if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
-        if (colabFiltro !== "TODOS" && normalizarTexto(nome) !== normalizarTexto(colabFiltro)) return false;
-        return true;
-      }).sort();
-
-      let htmlTabela = "";
-
-      funcionariosFiltrados.forEach(nome => {
-        const cadastro = dadosColaboradores[nome];
-        const nomeChaveNormalizado = normalizarTexto(nome);
-        let diasTrabalhados = 0;
-        let faltas = 0;
-
-        for (let dia = 1; dia <= totalDiasMes; dia++) {
-          const diaFormatado = String(dia).padStart(2, '0');
-          const mesFormatado = String(mesZeroBased + 1).padStart(2, '0');
-          const dataChaveDia = ano + '-' + mesFormatado + '-' + diaFormatado;
-          const dataExibicao = diaFormatado + '/' + mesFormatado + '/' + ano;
-
-          const registrosDoDia = (mapaPontos[nomeChaveNormalizado] && mapaPontos[nomeChaveNormalizado][dataChaveDia]) ? mapaPontos[nomeChaveNormalizado][dataChaveDia] : [];
-
-          let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
-          let auditoria = "--";
-
-          if (registrosDoDia.length > 0) {
-            diasTrabalhados++;
-            auditoria = '<span class="status-regular">✅ OK</span>';
-
-            registrosDoDia.forEach(reg => {
-              let containerAcao = '<div class="bloco-ponto-acoes"><span class="titulo-hora">' + reg.horario + '</span>';
-              if (reg.fotoSelfie) {
-                containerAcao += '<button class="btn-foto" onclick="abrirModalFoto(\'' + reg.fotoSelfie + '\')">📸 FOTO</button>';
+        if (snapshot.exists()) {
+          snapshot.forEach(child => {
+            const p = child.val();
+            if (p.colaborador && p.horario && p.tipo) {
+              let dataChaveLimpa = "";
+              
+              if (p.dataChave) {
+                if (p.dataChave.includes('/')) {
+                  let pt = p.dataChave.split('/');
+                  dataChaveLimpa = `${pt[2]}-${pt[1]}-${pt[0]}`;
+                } else {
+                  dataChaveLimpa = p.dataChave;
+                }
+              } else if (p.data) {
+                let pt = p.data.split('/');
+                dataChaveLimpa = `${pt[2]}-${pt[1]}-${pt[0]}`;
               }
-              if (reg.latitude && reg.longitude) {
-                containerAcao += '<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(' + reg.latitude + ',' + reg.longitude + ')">🗺️ MAPA</button>';
-              }
-              containerAcao += '</div>';
 
-              let tipoLimpo = normalizarTexto(reg.tipo);
-              if (tipoLimpo.includes("ENTRADA") || tipoLimpo === "ENT") ent = containerAcao;
-              if (tipoLimpo.includes("SAIDA ALMOCO") || tipoLimpo.includes("INTERVALO SAIDA") || tipoLimpo.includes("S. ALMOCO")) almSai = containerAcao;
-              if (tipoLimpo.includes("RETORNO ALMOCO") || tipoLimpo.includes("INTERVALO RETORNO") || tipoLimpo.includes("R. ALMOCO")) almRet = containerAcao;
-              if (tipoLimpo.includes("SAIDA FIM") || tipoLimpo.includes("SAIDA") || tipoLimpo === "SAI") saiFim = containerAcao;
-            });
-          } else {
-            const hoje = new Date();
-            const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
-            if (dataComparacao < hoje) {
-              ent = '<span class="status-falta">❌ FALTA</span>';
-              auditoria = "Ausência";
-              faltas++;
+              if (dataChaveLimpa.startsWith(mesFiltro)) {
+                let nFunc = normalizarTexto(p.colaborador);
+                let chaveAgrupada = `${dataChaveLimpa}_${nFunc}`;
+                
+                if (!mapaPontos[chaveAgrupada]) {
+                  mapaPontos[chaveAgrupada] = [];
+                }
+
+                mapaPontos[chaveAgrupada].push({
+                  tipo: normalizarTexto(p.tipo),
+                  horario: p.horario,
+                  fotoSelfie: p.fotoSelfie || null,
+                  latitude: p.latitude || null,
+                  longitude: p.longitude || null
+                });
+              }
             }
-          }
-
-          htmlTabela += '<tr>' +
-            '<td>' + dataExibicao + '</td>' +
-            '<td style="font-weight:bold; color:#004a26;">' + nome + '</td>' +
-            '<td>' + cadastro.setor + ' (L' + cadastro.loja + ')</td>' +
-            '<td>' + ent + '</td>' +
-            '<td>' + almSai + '</td>' +
-            '<td>' + almRet + '</td>' +
-            '<td>' + saiFim + '</td>' +
-            '<td>' + auditoria + '</td>' +
-            '</tr>';
+          });
         }
 
-        registrosProcessadosCache.push({
-          nome: nome,
-          setor: cadastro.setor,
-          loja: cadastro.loja,
-          trabalhados: diasTrabalhados,
-          faltas: faltas
-        });
-      });
+        // Filtra a lista com base na seleção da tela
+        let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
+          const info = dadosColaboradores[nome];
+          if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
+          if (colabFiltro !== "TODOS" && nome !== colabFiltro) return false;
+          return true;
+        }).sort();
 
-      corpo.innerHTML = htmlTabela;
+        let htmlTabela = "";
+
+        funcionariosFiltrados.forEach(nome => {
+          const cadastro = dadosColaboradores[nome];
+          const chaveAppNome = cadastro.chaveApp || normalizarTexto(nome);
+          let diasTrabalhados = 0;
+          let faltas = 0;
+
+          for (let dia = 1; dia <= totalDiasMes; dia++) {
+            const diaFormatado = String(dia).padStart(2, '0');
+            const mesFormatado = String(mesZeroBased + 1).padStart(2, '0');
+            const dataChaveDia = ano + '-' + mesFormatado + '-' + diaFormatado;
+            const dataExibicao = diaFormatado + '/' + mesFormatado + '/' + ano;
+
+            const chaveAgrupadaBusca = `${dataChaveDia}_${chaveAppNome}`;
+            const registrosDoDia = mapaPontos[chaveAgrupadaBusca] || [];
+
+            let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
+            let auditoria = "--";
+
+            if (registrosDoDia.length > 0) {
+              diasTrabalhados++;
+              auditoria = '<span class="status-regular">✅ OK</span>';
+
+              registrosDoDia.forEach(reg => {
+                let containerAcao = '<div class="bloco-ponto-acoes"><span class="titulo-hora">' + reg.horario + '</span>';
+                if (reg.fotoSelfie) {
+                  containerAcao += '<button class="btn-foto" onclick="abrirModalFoto(\'' + reg.fotoSelfie + '\')">📸 FOTO</button>';
+                }
+                if (reg.latitude && reg.longitude) {
+                  containerAcao += '<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(' + reg.latitude + ',' + reg.longitude + ')">🗺️ MAPA</button>';
+                }
+                containerAcao += '</div>';
+
+                if (reg.tipo.includes("entrada") && !reg.tipo.includes("alm")) ent = containerAcao;
+                if (reg.tipo.includes("saidaalm") || reg.tipo === "almoco" || (reg.tipo.includes("saida") && reg.tipo.includes("alm"))) almSai = containerAcao;
+                if (reg.tipo.includes("retorno") || reg.tipo.includes("retalm") || (reg.tipo.includes("volta") && reg.tipo.includes("alm"))) almRet = containerAcao;
+                if (reg.tipo.includes("expediente") || reg.tipo.includes("fim") || reg.tipo.includes("saidafim") || (reg.tipo.includes("saida") && !reg.tipo.includes("alm"))) saiFim = containerAcao;
+              });
+            } else {
+              const hoje = new Date();
+              const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
+              if (dataComparacao < hoje) {
+                ent = '<span class="status-falta">❌ FALTA</span>';
+                auditoria = "Ausência";
+                faltas++;
+              }
+            }
+
+            htmlTabela += '<tr>' +
+              '<td>' + dataExibicao + '</td>' +
+              '<td style="font-weight:bold; color:#004a26;">' + nome + '</td>' +
+              '<td>' + cadastro.setor + ' (L' + cadastro.loja + ')</td>' +
+              '<td>' + ent + '</td>' +
+              '<td>' + almSai + '</td>' +
+              '<td>' + almRet + '</td>' +
+              '<td>' + saiFim + '</td>' +
+              '<td>' + auditoria + '</td>' +
+              '</tr>';
+          }
+
+          registrosProcessadosCache.push({
+            nome: nome,
+            setor: cadastro.setor,
+            loja: cadastro.loja,
+            trabalhados: diasTrabalhados,
+            faltas: faltas
+          });
+        });
+
+        corpo.innerHTML = htmlTabela;
+      }).catch(erro => {
+        alert("Erro na leitura do Firebase: " + erro.message);
+        corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center;">Falha de comunicação.</td></tr>';
+      });
     }
 
     function abrirMapaGeolocalizacao(lat, lng) {
-      window.open(`http://maps.google.com/maps?q=${lat},${lng}`, '_blank');
+      window.open('https://maps.google.com/?q=' + lat + ',' + lng, '_blank');
     }
 
     function abrirModalFoto(urlFoto) {
