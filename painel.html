@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Administrativo - Meu Ponto SR</title>
+  <title>Painel de Ponto - Supermercado São Raimundo</title>
   
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -13,67 +13,55 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f0f4f1; margin: 0; padding: 20px; color: #333; }
-    .painel-container { width: 98%; max-width: 100%; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,74,38,0.1); box-sizing: border-box; border-top: 6px solid #006430; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f7f4; margin: 0; padding: 20px; color: #333; }
+    .painel-container { width: 100%; max-width: 1300px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; }
     
-    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 10px; font-size: 28px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-    h2 { color: #006430; font-size: 20px; margin-bottom: 15px; border-bottom: 2px solid #a5d6a7; padding-bottom: 5px; }
-
-    .filtros-topo { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #f7fbf7; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
-    .campo-filtro { flex: 1; min-width: 200px; }
-    .campo-filtro label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #004a26; }
-    .campo-filtro select, .campo-filtro input { width: 100%; padding: 10px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 15px; box-sizing: border-box; background-color: #ffffff; }
+    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; }
+    
+    .filtros-topo { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #f9fdfa; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
+    .campo-filtro { flex: 1; min-width: 220px; }
+    .campo-filtro label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 6px; color: #004a26; text-transform: uppercase; }
+    .campo-filtro select, .campo-filtro input { width: 100%; padding: 10px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 14px; box-sizing: border-box; background-color: white; }
     
     .botoes-acoes { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 25px; }
-    .btn { padding: 12px 22px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-filtrar { background-color: #006430; border-bottom: 3px solid #004a26; }
+    .btn { padding: 12px 24px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    
+    .btn-filtrar { background-color: #006430; }
     .btn-filtrar:hover { background-color: #004a26; }
-    .btn-excel { background-color: #2e7d32; border-bottom: 3px solid #1b5e20; }
+    .btn-excel { background-color: #2e7d32; }
     .btn-excel:hover { background-color: #1b5e20; }
-    .btn-pdf { background-color: #0b5394; border-bottom: 3px solid #073763; }
+    .btn-pdf { background-color: #0b5394; }
     .btn-pdf:hover { background-color: #073763; }
-    .btn-imprimir { background-color: #757575; border-bottom: 3px solid #424242; }
-    .btn-imprimir:hover { background-color: #424242; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-    th { background-color: #006430; color: white; padding: 12px 8px; text-align: left; font-size: 14px; border-bottom: 3px solid #ffd700; }
-    td { padding: 12px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: left; }
+    th { background-color: #006430; color: white; padding: 14px 10px; font-size: 13px; border-bottom: 3px solid #ffd700; text-transform: uppercase; }
+    td { padding: 12px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
     tr:hover { background-color: #f1f8f3; }
     
-    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 5px 10px; border-radius: 4px; font-size: 12px; }
+    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+    .status-regular { color: #2e7d32; font-weight: bold; }
     
-    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 5px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; min-width: 75px; border: 1px solid #d0dfd5; }
-    .titulo-acao-btd { font-size: 9px; font-weight: bold; color: #004a26; margin-bottom: 3px; text-transform: uppercase; }
-    .btn-foto { background: #673ab7; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
-    .btn-mapa { background: #0b5394; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
+    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 6px; border-radius: 6px; border: 1px solid #d0dfd5; min-width: 80px; }
+    .titulo-hora { font-size: 11px; font-weight: bold; color: #004a26; margin-bottom: 4px; }
+    .btn-foto { background: #673ab7; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
+    .btn-mapa { background: #0b5394; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
 
+    /* Modal de Foto */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
-    .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; }
     .modal-content img { width: 100%; border-radius: 8px; border: 3px solid #006430; margin-bottom: 15px; }
-    .btn-fechar-modal { background: #006430; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
-
-    #areaImpressaoConsolidada { display: none; }
-
-    @media print {
-      body { background: white; padding: 0; margin: 0; }
-      .painel-container { display: none !important; }
-      #areaImpressaoConsolidada { display: block !important; width: 100%; }
-      table.tab-print { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-      table.tab-print th, table.tab-print td { border: 1px solid #000 !important; padding: 8px 6px; text-align: left; }
-      table.tab-print th { background-color: #f2f2f2 !important; color: #000 !important; font-size: 11px; text-transform: uppercase; }
-      .linha-signature { width: 180px; border-bottom: 1px solid #000; height: 25px; }
-    }
+    .btn-fechar { background: #006430; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; }
   </style>
 </head>
 <body>
 
   <div class="painel-container">
-    <h1>SUPERMERCADO SÃO RAIMUNDO - PAINEL DE PONTO</h1>
+    <h1>SUPERMERCADO SÃO RAIMUNDO - GESTÃO DE PONTOS</h1>
 
     <div class="filtros-topo">
       <div class="campo-filtro">
-        <label for="filtroLoja">FILTRAR POR LOJA:</label>
-        <select id="filtroLoja" onchange="atualizarListaFuncionariosFiltro()">
+        <label for="filtroLoja">Filtrar por Loja:</label>
+        <select id="filtroLoja" onchange="atualizarListaFuncionarios()">
           <option value="TODAS">-- Todas as Lojas --</option>
           <option value="1">Loja 1</option>
           <option value="2">Loja 2</option>
@@ -81,85 +69,71 @@
           <option value="4">Loja 4</option>
         </select>
       </div>
+      
       <div class="campo-filtro">
-        <label for="filtroColaborador">FUNCIONÁRIO:</label>
+        <label for="filtroColaborador">Funcionário:</label>
         <select id="filtroColaborador">
           <option value="TODOS">-- Todos os Funcionários --</option>
         </select>
       </div>
+      
       <div class="campo-filtro">
-        <label for="filtroMes">MÊS DE FECHAMENTO:</label>
+        <label for="filtroMes">Mês de Fechamento:</label>
         <input type="month" id="filtroMes">
       </div>
     </div>
 
     <div class="botoes-acoes">
-      <button class="btn btn-filtrar" onclick="processarFechamentoMensal()">🔍 Consultar Período</button>
-      <button class="btn btn-excel" onclick="baixarExcel()">📊 Baixar Excel</button>
-      <button class="btn btn-pdf" onclick="baixarPDFConsolidado()">📄 Gerar PDF Resumido</button>
-      <button class="btn btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha</button>
+      <button class="btn btn-filtrar" onclick="consultarPeriodoBanco()">🔍 Consultar Período</button>
+      <button class="btn btn-excel" onclick="exportarParaExcel()">📊 Exportar Excel</button>
+      <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF Resumido</button>
     </div>
 
-    <div style="overflow-x:auto;">
-      <table id="tabelaFechamento">
+    <div style="overflow-x: auto;">
+      <table>
         <thead>
           <tr>
             <th>Data</th>
             <th>Funcionário</th>
-            <th>Loja</th>
+            <th>Loja/Setor</th>
             <th>Entrada</th>
             <th>S. Almoço</th>
             <th>R. Almoço</th>
             <th>Saída Fim</th>
-            <th>Atrasos</th>
             <th>Auditoria</th>
           </tr>
         </thead>
-        <tbody id="corpoTabela">
-          <tr><td colspan="9" style="text-align:center; padding:30px; font-size: 16px;">Selecione os parâmetros e clique em Consultar Período.</td></tr>
+        <tbody id="tabelaCorpo">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: #666; font-size: 15px;">
+              Selecione as opções acima e clique em <b>Consultar Período</b>.
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div id="areaImpressaoConsolidada">
-    <h2 style="text-align: center; color: #006430; margin-bottom: 5px;">SUPERMERCADO SÃO RAIMUNDO</h2>
-    <h3 style="text-align: center; margin-top: 0; margin-bottom: 20px;" id="tituloPrintMes">FOLHA DE ASSINATURA E RESUMO DE REGISTROS</h3>
-    <table class="tab-print" id="tabelaPrintInvisivel">
-      <thead>
-        <tr>
-          <th>Colaborador</th>
-          <th>Setor / Loja</th>
-          <th style="text-align: center;">Dias Trab.</th>
-          <th style="text-align: center;">Faltas</th>
-          <th style="text-align: center;">Atrasos</th>
-          <th>Assinatura do Funcionário</th>
-        </tr>
-      </thead>
-      <tbody id="corpoTabelaPrint"></tbody>
-    </table>
-  </div>
-
   <div id="modalFoto" class="modal">
     <div class="modal-content">
       <h3>Selfie de Verificação</h3>
-      <img id="modalImg" src="" alt="Ponto">
-      <button class="btn-fechar-modal" onclick="fecharModal()">Fechar</button>
+      <img id="modalImg" src="" alt="Foto do Ponto">
+      <button class="btn-fechar" onclick="fecharModalFoto()">Fechar Janela</button>
     </div>
   </div>
 
   <script>
-    // Configuração do Banco Realtime do Firebase
+    // 1. Inicialização do Banco de Dados Firebase
     const firebaseConfig = {
       databaseURL: "https://meupontosr-default-rtdb.firebaseio.com/" 
     };
     if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+      firebase.initializeApp(firebaseConfig);
     }
     const database = firebase.database();
 
-    // Carga inicial nativa estruturada (NOME DO FLÁVIO TOTALMENTE CORRIGIDO)
-    const cargaInicialPlanilha = {
+    // 2. Base de Dados Interna Base Secundária (Lojas, Setores e Colaboradores)
+    const dadosColaboradores = {
       "ADRISSA VALENTIM DOS SANTOS DA COSTA": { setor: "OPERADORA DE CAIXA", loja: "1" },
       "ALICIENE CUNHA DA SILVA": { setor: "AÇOUGUE", loja: "1" },
       "ANDRE KENNEDY COSTA SILVA": { setor: "CPD/TI", loja: "1" },
@@ -245,188 +219,203 @@
       "HILLARIA OLIVEIRA RIBEIRO": { setor: "RH", loja: "1" }
     };
 
-    // Ajustar campos de datas iniciais
-    const dAtual = new Date();
-    document.getElementById('filtroMes').value = dAtual.getFullYear() + '-' + String(dAtual.getMonth() + 1).padStart(2, '0');
+    // Objeto global de cache para transferir dados limpos para os relatórios (PDF/Excel)
+    let registrosProcessadosCache = [];
 
-    function atualizarListaFuncionariosFiltro() {
-      const lojaSel = document.getElementById('filtroLoja').value;
-      const combo = document.getElementById('filtroColaborador');
-      if (!combo) return;
+    // Define o mês atual como padrão no carregamento inicial da página
+    const dataHoje = new Date();
+    document.getElementById('filtroMes').value = dataHoje.getFullYear() + '-' + String(dataHoje.getMonth() + 1).padStart(2, '0');
 
-      combo.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
+    // 3. Atualização Dinâmica da Lista de Funcionários baseado na Loja Selecionada
+    function atualizarListaFuncionarios() {
+      const lojaSelecionada = document.getElementById('filtroLoja').value;
+      const selectColaborador = document.getElementById('filtroColaborador');
+      
+      selectColaborador.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
 
-      Object.keys(cargaInicialPlanilha).sort().forEach(nome => {
-        const item = cargaInicialPlanilha[nome];
-        const lojaFunc = String(item.loja || "1").trim();
-
-        if(lojaSel === "TODAS" || lojaFunc === String(lojaSel).trim()) {
-          combo.innerHTML += '<option value="' + nome + '">' + nome + '</option>';
+      Object.keys(dadosColaboradores).sort().forEach(nome => {
+        const dados = dadosColaboradores[nome];
+        if (lojaSelecionada === "TODAS" || String(dados.loja).trim() === String(lojaSelecionada).trim()) {
+          const opt = document.createElement('option');
+          opt.value = nome;
+          opt.textContent = nome;
+          selectColaborador.appendChild(opt);
         }
       });
     }
 
-    function processarFechamentoMensal() {
-      const lojaSel = document.getElementById('filtroLoja').value;
-      const funcSel = document.getElementById('filtroColaborador').value;
-      const mesSel = document.getElementById('filtroMes').value; 
+    // 4. Consulta e Processamento Principal do Banco Firebase
+    function consultarPeriodoBanco() {
+      const lojaFiltro = document.getElementById('filtroLoja').value;
+      const colabFiltro = document.getElementById('filtroColaborador').value;
+      const mesFiltro = document.getElementById('filtroMes').value;
 
-      if(!mesSel) { alert("Selecione o Mês!"); return; }
+      if (!mesFiltro) { alert("Por favor, selecione o mês de fechamento!"); return; }
 
-      const partesMes = mesSel.split('-');
-      const ano = parseInt(partesMes[0]);
-      const mesZeroB = parseInt(partesMes[1]) - 1;
-      const totalDias = new Date(ano, mesZeroB + 1, 0).getDate();
+      const partes = mesFiltro.split('-');
+      const ano = parseInt(partes[0]);
+      const mesZeroBased = parseInt(partes[1]) - 1;
+      const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
-      const corpo = document.getElementById('corpoTabela');
-      corpo.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Puxando registros do banco de dados...</td></tr>';
+      const corpo = document.getElementById('tabelaCorpo');
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Lendo dados do Firebase...</td></tr>';
 
-      database.ref('pontos_registrados').once('value', snapshot => {
-        let pontosMap = {};
+      // Limpa a memória de cache global antes da nova consulta
+      registrosProcessadosCache = [];
 
-        if(snapshot.exists()) {
+      database.ref('pontos_registrados').once('value').then(snapshot => {
+        let mapaPontos = {};
+
+        if (snapshot.exists()) {
           snapshot.forEach(child => {
-            const p = child.val();
-            if(p.dataChave && p.dataChave.startsWith(mesSel)) {
-              let colab = p.colaborador ? p.colaborador.trim().toUpperCase() : "DESCONHECIDO";
+            const ponto = child.val();
+            if (ponto.dataChave && ponto.dataChave.startsWith(mesFiltro)) {
+              let nomeFunc = ponto.colaborador ? ponto.colaborador.trim().toUpperCase() : "DESCONHECIDO";
               
-              // Se no banco ainda tiver o nome antigo salvo como FLAVIA, o código converte para FLÁVIO na hora de puxar
-              if (colab === "FLAVIA DA SILVA MARINHO") { 
-                colab = "FLÁVIO DA SILVA MARINHO"; 
-              }
+              // Normalização imediata caso haja registros defasados com "FLAVIA"
+              if (nomeFunc === "FLAVIA DA SILVA MARINHO") { nomeFunc = "FLÁVIO DA SILVA MARINHO"; }
 
-              if(!pontosMap[colab]) pontosMap[colab] = {};
-              if(!pontosMap[colab][p.dataChave]) pontosMap[colab][p.dataChave] = [];
-              
-              pontosMap[colab][p.dataChave].push({ 
-                tipo: p.tipo,
-                horario: p.horario,
-                fotoSelfie: p.fotoSelfie,
-                latitude: p.latitude,
-                longitude: p.longitude,
-                idReal: child.key 
+              if (!mapaPontos[nomeFunc]) mapaPontos[nomeFunc] = {};
+              if (!mapaPontos[nomeFunc][ponto.dataChave]) mapaPontos[nomeFunc][ponto.dataChave] = [];
+
+              mapaPontos[nomeFunc][ponto.dataChave].push({
+                tipo: ponto.tipo,
+                horario: ponto.horario,
+                fotoSelfie: ponto.fotoSelfie,
+                latitude: ponto.latitude,
+                longitude: ponto.longitude,
+                idBco: child.key
               });
             }
           });
         }
 
-        let listaFuncionariosFiltrados = Object.keys(cargaInicialPlanilha).filter(nome => {
-          const f = cargaInicialPlanilha[nome];
-          const lojaFunc = String(f.loja || "1").trim();
-
-          if(lojaSel !== "TODAS" && lojaFunc !== String(lojaSel).trim()) return false;
-          if(funcSel !== "TODOS" && nome !== funcSel) return false;
+        // Filtra os colaboradores que devem entrar no relatório baseado nos selects da tela
+        let funcionariosFiltrados = Object.keys(dadosColaboradores).filter(nome => {
+          const info = dadosColaboradores[nome];
+          if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
+          if (colabFiltro !== "TODOS" && nome !== colabFiltro) return false;
           return true;
         }).sort();
 
-        if(listaFuncionariosFiltrados.length === 0) {
-          corpo.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:red; font-weight:bold;">Nenhum registro encontrado.</td></tr>';
-          document.getElementById('corpoTabelaPrint').innerHTML = "";
+        if (funcionariosFiltrados.length === 0) {
+          corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:red; font-weight:bold;">Nenhum funcionário elegível encontrado para este filtro.</td></tr>';
           return;
         }
 
-        let htmlPrincipal = "";
-        let htmlPrint = "";
+        let htmlTabela = "";
 
-        listaFuncionariosFiltrados.forEach(nome => {
-          const dadosF = cargaInicialPlanilha[nome];
-          let diasTrabalhadosCont = 0;
-          let faltasCont = 0;
+        funcionariosFiltrados.forEach(nome => {
+          const cadastro = dadosColaboradores[nome];
+          let diasTrabalhados = 0;
+          let faltas = 0;
 
-          for(let dia = 1; dia <= totalDias; dia++) {
-            const diaStr = String(dia).padStart(2, '0');
-            const mesStr = String(mesZeroB + 1).padStart(2, '0');
-            const dataChaveLoop = ano + '-' + mesStr + '-' + diaStr;
-            const dataExibicao = diaStr + '/' + mesStr + '/' + ano;
+          for (let dia = 1; dia <= totalDiasMes; dia++) {
+            const diaFormatado = String(dia).padStart(2, '0');
+            const mesFormatado = String(mesZeroBased + 1).padStart(2, '0');
+            const dataChaveDia = ano + '-' + mesFormatado + '-' + diaFormatado;
+            const dataExibicao = diaFormatado + '/' + mesFormatado + '/' + ano;
 
-            const registrosDoDia = (pontosMap[nome] && pontosMap[nome][dataChaveLoop]) ? pontosMap[nome][dataChaveLoop] : [];
+            const registrosDoDia = (mapaPontos[nome] && mapaPontos[nome][dataChaveDia]) ? mapaPontos[nome][dataChaveDia] : [];
 
-            let entrada = "--", sAlmoço = "--", rAlmoço = "--", saidaFim = "--";
-            let auditoriaTexto = "--";
+            let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
+            let auditoria = "--";
 
-            if (registrosDoDia && registrosDoDia.length > 0) {
-              diasTrabalhadosCont++;
-              auditoriaTexto = "✅ Regular";
+            if (registrosDoDia.length > 0) {
+              diasTrabalhados++;
+              auditoria = '<span class="status-regular">✅ OK</span>';
 
               registrosDoDia.forEach(reg => {
-                // REESCRITO EM FORMATO TRADICIONAL SEGURO (Impossível quebrar o script)
-                let btnMidia = '<div class="bloco-ponto-acoes">';
-                btnMidia += '<span class="titulo-acao-btd">' + reg.horario + '</span>';
-                
-                if(reg.fotoSelfie) {
-                  btnMidia += '<button class="btn-foto" onclick="visualizarSelfie(\'' + reg.idReal + '\')">📸 FOTO</button>';
+                // Montagem limpa do HTML dos blocos de batida (Sem quebras de string)
+                let containerAcao = '<div class="bloco-ponto-acoes"><span class="titulo-hora">' + reg.horario + '</span>';
+                if (reg.fotoSelfie) {
+                  containerAcao += '<button class="btn-foto" onclick="abrirModalFoto(\'' + reg.fotoSelfie + '\')">📸 FOTO</button>';
                 }
-                if(reg.latitude) {
-                  btnMidia += '<a class="btn-mapa" target="_blank" href="https://www.google.com/maps?q=' + reg.latitude + ',' + reg.longitude + '">🗺️ MAPA</a>';
+                if (reg.latitude && reg.longitude) {
+                  containerAcao += '<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(' + reg.latitude + ',' + reg.longitude + ')">🗺️ MAPA</button>';
                 }
-                btnMidia += '</div>';
+                containerAcao += '</div>';
 
-                if(reg.tipo === "Entrada Expediente" || reg.tipo === "Entrada") entrada = btnMidia;
-                if(reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço" || reg.tipo === "Intervalo Saída") sAlmoço = btnMidia;
-                if(reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço" || reg.tipo === "Intervalo Retorno") rAlmoço = btnMidia;
-                if(reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente" || reg.tipo === "Saída") saidaFim = btnMidia;
+                if (reg.tipo === "Entrada Expediente" || reg.tipo === "Entrada") ent = containerAcao;
+                if (reg.tipo === "Saida Almoço" || reg.tipo === "Saída para Almoço" || reg.tipo === "Intervalo Saída") almSai = containerAcao;
+                if (reg.tipo === "Retorno Almoço" || reg.tipo === "Retorno do Almoço" || reg.tipo === "Intervalo Retorno") almRet = containerAcao;
+                if (reg.tipo === "Saida Fim" || reg.tipo === "Saída Fim de Expediente" || reg.tipo === "Saída") saiFim = containerAcao;
               });
             } else {
-              const hojeCheck = new Date();
-              const loopCheck = new Date(ano, mesZeroB, dia, 23, 59);
-              if(loopCheck < hojeCheck) {
-                entrada = '<span class="status-falta">❌ FALTA</span>';
-                auditoriaTexto = "Falta";
-                faltasCont++;
+              const hoje = new Date();
+              const dataComparacao = new Date(ano, mesZeroBased, dia, 23, 59);
+              if (dataComparacao < hoje) {
+                ent = '<span class="status-falta">❌ FALTA</span>';
+                auditoria = "Falta Computada";
+                faltas++;
               }
             }
 
-            htmlPrincipal += '<tr>' +
+            htmlTabela += '<tr>' +
               '<td>' + dataExibicao + '</td>' +
               '<td style="font-weight:bold; color:#004a26;">' + nome + '</td>' +
-              '<td style="text-align:center; font-weight:bold; color:#666;">L' + dadosF.loja + '</td>' +
-              '<td>' + entrada + '</td>' +
-              '<td>' + sAlmoço + '</td>' +
-              '<td>' + rAlmoço + '</td>' +
-              '<td>' + saidaFim + '</td>' +
-              '<td style="text-align:center;">-</td>' +
-              '<td style="font-weight:bold;">' + auditoriaTexto + '</td>' +
+              '<td>' + cadastro.setor + ' (L' + cadastro.loja + ')</td>' +
+              '<td>' + ent + '</td>' +
+              '<td>' + almSai + '</td>' +
+              '<td>' + almRet + '</td>' +
+              '<td>' + saiFim + '</td>' +
+              '<td>' + auditoria + '</td>' +
               '</tr>';
           }
 
-          htmlPrint += '<tr>' +
-            '<td style="font-weight:bold; text-transform:uppercase;">' + nome + '</td>' +
-            '<td>' + dadosF.setor + ' (Loja ' + dadosF.loja + ')</td>' +
-            '<td style="text-align:center; font-weight:bold;">' + diasTrabalhadosCont + '</td>' +
-            '<td style="text-align:center; color:red; font-weight:bold;">' + faltasCont + '</td>' +
-            '<td style="text-align:center;">-</td>' +
-            '<td><div class="linha-signature"></div></td>' +
-            '</tr>';
+          // Adiciona ao repositório de cache consolidado para exportação estável
+          registrosProcessadosCache.push({
+            nome: nome,
+            setor: cadastro.setor,
+            loja: cadastro.loja,
+            trabalhados: diasTrabalhados,
+            faltas: faltas
+          });
         });
 
-        corpo.innerHTML = htmlPrincipal;
-        document.getElementById('corpoTabelaPrint').innerHTML = htmlPrint;
-        
-        const mesesNomes = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-        document.getElementById('tituloPrintMes').innerHTML = 'RELAÇÃO DE FECHAMENTO MENSAL - MÊS DE ' + mesesNomes[mesZeroB] + ' DE ' + ano;
+        corpo.innerHTML = htmlTabela;
+      }).catch(erro => {
+        alert("Erro crítico ao ler dados do Firebase: " + erro.message);
+        corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center;">Houve uma falha na conexão.</td></tr>';
       });
     }
 
-    function visualizarSelfie(idPonto) {
-      database.ref('pontos_registrados/' + idPonto).once('value', snapshot => {
-        if(snapshot.exists() && snapshot.val().fotoSelfie) {
-          document.getElementById('modalImg').src = snapshot.val().fotoSelfie;
-          document.getElementById('modalFoto').style.display = 'flex';
-        } else {
-          alert("Foto não encontrada.");
-        }
-      });
+    // 5. Funções Auxiliares de Mídia (Mapa e Fotos)
+    function abrirMapaGeolocalizacao(lat, lng) {
+      const urlMaps = "https://www.google.com/maps?q=" + lat + "," + lng;
+      window.open(urlMaps, '_blank');
     }
 
-    function fecharModal() { document.getElementById('modalFoto').style.display = 'none'; }
-
-    function baixarExcel() {
-      const tab = document.getElementById('tabelaFechamento');
-      let wb = XLSX.utils.table_to_book(tab, { sheet: "ResumoSR" });
-      XLSX.writeFile(wb, 'Fechamento_Pontos_SR_' + document.getElementById('filtroMes').value + '.xlsx');
+    function abrirModalFoto(urlFoto) {
+      document.getElementById('modalImg').src = urlFoto;
+      document.getElementById('modalFoto').style.display = 'flex';
     }
 
-    function baixarPDFConsolidado() {
+    function fecharModalFoto() {
+      document.getElementById('modalFoto').style.display = 'none';
+    }
+
+    // 6. Motores de Exportação Direct Memory (Previnem relatórios vazios)
+    function exportarParaExcel() {
+      if (registrosProcessadosCache.length === 0) { alert("Efetue uma consulta de período antes de baixar o Excel."); return; }
+
+      let dadosFormatadosExcel = registrosProcessadosCache.map(f => ({
+        "Colaborador": f.nome,
+        "Setor": f.setor,
+        "Loja": "Loja " + f.loja,
+        "Dias Trabalhados": f.trabalhados,
+        "Total de Faltas": f.faltas
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(dadosFormatadosExcel);
+      XLSX.utils.book_append_sheet(wb, ws, "Fechamento Mensal");
+      XLSX.writeFile(wb, "Fechamento_Pontos_SR_" + document.getElementById('filtroMes').value + ".xlsx");
+    }
+
+    function exportarParaPDF() {
+      if (registrosProcessadosCache.length === 0) { alert("Efetue uma consulta de período antes de gerar o PDF."); return; }
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'pt', 'a4');
       
@@ -435,23 +424,35 @@
       doc.setTextColor(0, 100, 48);
       doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 45);
       
-      doc.setFontSize(11);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Relatório Consolidado de Faltas - Período: ' + document.getElementById('filtroMes').value, 40, 65);
-      
+      doc.setFontSize(10);
+      doc.setTextColor(110, 110, 110);
+      doc.text("RELATÓRIO CONSOLIDADO DE FECHAMENTO MENSAL DE PONTOS - COMPETÊNCIA: " + document.getElementById('filtroMes').value, 40, 65);
+
+      let linhasTabelaPDF = registrosProcessadosCache.map(f => [
+        f.nome,
+        f.setor + " (Loja " + f.loja + ")",
+        f.trabalhados,
+        f.faltas,
+        "" // Linha em branco para assinatura física
+      ]);
+
       doc.autoTable({
-        html: '#tabelaPrintInvisivel',
+        head: [['Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura do Funcionário']],
+        body: linhasTabelaPDF,
         startY: 85,
         theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 6 },
-        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' }
+        styles: { fontSize: 8, cellPadding: 5 },
+        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' },
+        columnStyles: {
+          4: { cellWidth: 150 } // Reserva espaço para assinatura manual
+        }
       });
       
-      doc.save('Resumo_Pontos_SR_' + document.getElementById('filtroMes').value + '.pdf');
+      doc.save("Resumo_Pontos_SR_" + document.getElementById('filtroMes').value + ".pdf");
     }
 
-    // Carrega a lista no select assim que a página abre
-    atualizarListaFuncionariosFiltro();
+    // Carregamento da lista inicial automática
+    atualizarListaFuncionarios();
   </script>
 </body>
 </html>
