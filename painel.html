@@ -13,28 +13,47 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f7f4; margin: 0; padding: 20px; color: #333; }
-    .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,100,48,0.08); box-sizing: border-box; border-top: 6px solid #006430; }
+    /* Variáveis de cor dinâmicas que mudam com o tema */
+    :root {
+      --cor-principal: #006430;
+      --cor-principal-hover: #004a26;
+      --cor-fundo-tela: #f3f7f4;
+      --cor-fundo-card: #ffffff;
+      --cor-texto: #333333;
+      --cor-sub-barra: #ffd700;
+      --cor-tabela-hover: #f1f8f3;
+      --cor-borda-filtro: #c8e6c9;
+      --cor-fundo-filtro: #f9fdfa;
+    }
+
+    body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--cor-fundo-tela); margin: 0; padding: 20px; color: var(--cor-texto); transition: background-color 0.3s, color 0.3s; }
+    .painel-container { width: 100%; max-width: 1400px; margin: 0 auto; background: var(--cor-fundo-card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); box-sizing: border-box; border-top: 6px solid var(--cor-principal); transition: background-color 0.3s, border-top-color 0.3s; }
     
-    h1 { color: #006430; margin-top: 0; border-bottom: 3px solid #ffd700; padding-bottom: 12px; font-size: 26px; font-weight: 700; }
+    .topo-painel { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 3px solid var(--cor-sub-barra); padding-bottom: 12px; margin-bottom: 15px; }
+    h1 { color: var(--cor-principal); margin: 0; font-size: 26px; font-weight: 700; }
     
+    /* Seletor de Temas Estilizado */
+    .seletor-tema-container { display: flex; align-items: center; gap: 8px; background: var(--cor-fundo-tela); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--cor-borda-filtro); }
+    .seletor-tema-container label { font-size: 12px; font-weight: bold; color: var(--cor-texto); text-transform: uppercase; }
+    .seletor-tema-container select { padding: 6px; border-radius: 15px; border: 1px solid #ccc; font-size: 13px; font-weight: bold; cursor: pointer; background: white; color: #333; }
+
     /* Sistema de Abas */
     .menu-abas { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
     .aba-btn { padding: 10px 20px; border: none; background: #e0eef0; color: #004a26; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 14px; transition: all 0.2s; }
-    .aba-btn.ativa { background: #006430; color: white; }
+    .aba-btn.ativa { background: var(--cor-principal); color: white; }
     .conteudo-aba { display: none; }
     .conteudo-aba.ativa { display: block; }
 
-    .filtros-topo, .form-cadastro { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #f9fdfa; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; }
+    .filtros-topo, .form-cadastro { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: var(--cor-fundo-filtro); padding: 20px; border-radius: 8px; border: 1px solid var(--cor-borda-filtro); }
     .campo-filtro, .campo-form { flex: 1; min-width: 220px; }
-    .campo-filtro label, .campo-form label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 6px; color: #004a26; text-transform: uppercase; }
-    .campo-filtro select, .campo-filtro input, .campo-form select, .campo-form input { width: 100%; padding: 10px; border: 1px solid #a5d6a7; border-radius: 6px; font-size: 14px; box-sizing: border-box; background-color: white; }
+    .campo-filtro label, .campo-form label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 6px; color: var(--cor-principal-hover); text-transform: uppercase; }
+    .campo-filtro select, .campo-filtro input, .campo-form select, .campo-form input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; background-color: white; color: #333; }
     
     .botoes-acoes { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 25px; }
     .btn { padding: 12px 24px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
     
-    .btn-filtrar { background-color: #006430; }
-    .btn-filtrar:hover { background-color: #004a26; }
+    .btn-filtrar { background-color: var(--cor-principal); }
+    .btn-filtrar:hover { background-color: var(--cor-principal-hover); }
     .btn-excel { background-color: #2e7d32; }
     .btn-excel:hover { background-color: #1b5e20; }
     .btn-pdf { background-color: #0b5394; }
@@ -42,16 +61,16 @@
     .btn-salvar { background-color: #2e7d32; height: 42px; margin-top: 20px; }
     .btn-cancelar { background-color: #757575; height: 42px; margin-top: 20px; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: left; }
-    th { background-color: #006430; color: white; padding: 14px 10px; font-size: 13px; border-bottom: 3px solid #ffd700; text-transform: uppercase; }
-    td { padding: 12px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
-    tr:hover { background-color: #f1f8f3; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: left; background: var(--cor-fundo-card); }
+    th { background-color: var(--cor-principal); color: white; padding: 14px 10px; font-size: 13px; border-bottom: 3px solid var(--cor-sub-barra); text-transform: uppercase; }
+    td { padding: 12px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; color: var(--cor-texto); }
+    tr:hover { background-color: var(--cor-tabela-hover); }
     
     .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
     .status-regular { color: #2e7d32; font-weight: bold; }
     .status-alerta { color: #d32f2f; font-weight: bold; background: #ffebee; padding: 2px 6px; border-radius: 4px; }
     
-    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 6px; border-radius: 6px; border: 1px solid #d0dfd5; min-width: 80px; }
+    .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 6px; border-radius: 6px; border: 1px solid #d0dfd5; min-width: 80px; color: #333; }
     .titulo-hora { font-size: 11px; font-weight: bold; color: #004a26; margin-bottom: 4px; }
     .btn-foto { background: #673ab7; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
     .btn-mapa { background: #0b5394; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
@@ -60,15 +79,27 @@
     .btn-excluir { background: #d32f2f; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
-    .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; }
-    .modal-content img { width: 100%; border-radius: 8px; border: 3px solid #006430; margin-bottom: 15px; }
-    .btn-fechar { background: #006430; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; }
+    .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; color: #333; }
+    .modal-content img { width: 100%; border-radius: 8px; border: 3px solid var(--cor-principal); margin-bottom: 15px; }
+    .btn-fechar { background: var(--cor-principal); color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; }
   </style>
 </head>
 <body>
 
   <div class="painel-container">
-    <h1>SUPERMERCADO SÃO RAIMUNDO - CENTRAL ADMINISTRATIVA</h1>
+    <div class="topo-painel">
+      <h1>SUPERMERCADO SÃO RAIMUNDO - CENTRAL ADMINISTRATIVA</h1>
+      
+      <div class="seletor-tema-container">
+        <label for="seletorTema">Tema do Painel:</label>
+        <select id="seletorTema" onchange="mudarTemaPainel(this.value)">
+          <option value="verde">Verde Padrão</option>
+          <option value="azul">Azul Corporativo</option>
+          <option value="cinza">Cinza Executivo</option>
+          <option value="escuro">Modo Black (Escuro)</option>
+        </select>
+      </div>
+    </div>
 
     <div class="menu-abas">
       <button class="aba-btn ativa" onclick="alternarAba('abaPontos', this)">📊 Central de Pontos</button>
@@ -133,7 +164,7 @@
     </div>
 
     <div id="abaFuncionarios" class="conteudo-aba">
-      <h3 id="tituloFormFuncionarios" style="color: #006430; margin-top: 0;">➕ Cadastrar Novo Funcionário</h3>
+      <h3 id="tituloFormFuncionarios" style="margin-top: 0;">➕ Cadastrar Novo Funcionário</h3>
       
       <div class="form-cadastro">
         <input type="hidden" id="editandoId" value="">
@@ -167,7 +198,7 @@
         <button class="btn btn-cancelar" id="btnCancelarEdicao" style="display:none;" onclick="limparFormularioFuncionarios()">Cancelar</button>
       </div>
 
-      <h3 style="color: #006430;">👥 Funcionários Cadastrados no Sistema</h3>
+      <h3>👥 Funcionários Cadastrados no Sistema</h3>
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -199,6 +230,7 @@
   </div>
 
   <script>
+    // Configurações do Banco de Dados
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -224,6 +256,59 @@
     let memoriaFuncionarios = {};
     let registrosProcessadosCache = [];
     document.getElementById('filtroMes').value = "2026-06";
+
+    // LÓGICA DE TROCA DE TEMA (SALVA A ESCOLHA NO NAVEGADOR)
+    function mudarTemaPainel(tema) {
+      const raiz = document.documentElement.style;
+      localStorage.setItem('temaPainelSR', tema);
+      
+      if (tema === 'azul') {
+        raiz.setProperty('--cor-principal', '#0b5394');
+        raiz.setProperty('--cor-principal-hover', '#073763');
+        raiz.setProperty('--cor-fundo-tela', '#f0f4f8');
+        raiz.setProperty('--cor-fundo-card', '#ffffff');
+        raiz.setProperty('--cor-texto', '#333333');
+        raiz.setProperty('--cor-sub-barra', '#ffd700');
+        raiz.setProperty('--cor-tabela-hover', '#e8f0fe');
+        raiz.setProperty('--cor-borda-filtro', '#b4c7e7');
+        raiz.setProperty('--cor-fundo-filtro', '#f2f6fa');
+      } else if (tema === 'cinza') {
+        raiz.setProperty('--cor-principal', '#455a64');
+        raiz.setProperty('--cor-principal-hover', '#263238');
+        raiz.setProperty('--cor-fundo-tela', '#eceff1');
+        raiz.setProperty('--cor-fundo-card', '#ffffff');
+        raiz.setProperty('--cor-texto', '#333333');
+        raiz.setProperty('--cor-sub-barra', '#b0bec5');
+        raiz.setProperty('--cor-tabela-hover', '#f5f7f8');
+        raiz.setProperty('--cor-borda-filtro', '#cfd8dc');
+        raiz.setProperty('--cor-fundo-filtro', '#f8f9fa');
+      } else if (tema === 'escuro') {
+        raiz.setProperty('--cor-principal', '#1b5e20');
+        raiz.setProperty('--cor-principal-hover', '#2e7d32');
+        raiz.setProperty('--cor-fundo-tela', '#121212');
+        raiz.setProperty('--cor-fundo-card', '#1e1e1e');
+        raiz.setProperty('--cor-texto', '#e0e0e0');
+        raiz.setProperty('--cor-sub-barra', '#ffd700');
+        raiz.setProperty('--cor-tabela-hover', '#2d2d2d');
+        raiz.setProperty('--cor-borda-filtro', '#333333');
+        raiz.setProperty('--cor-fundo-filtro', '#252525');
+      } else { // Tema Verde Padrão
+        raiz.setProperty('--cor-principal', '#006430');
+        raiz.setProperty('--cor-principal-hover', '#004a26');
+        raiz.setProperty('--cor-fundo-tela', '#f3f7f4');
+        raiz.setProperty('--cor-fundo-card', '#ffffff');
+        raiz.setProperty('--cor-texto', '#333333');
+        raiz.setProperty('--cor-sub-barra', '#ffd700');
+        raiz.setProperty('--cor-tabela-hover', '#f1f8f3');
+        raiz.setProperty('--cor-borda-filtro', '#c8e6c9');
+        raiz.setProperty('--cor-fundo-filtro', '#f9fdfa');
+      }
+    }
+
+    // Carrega o tema salvo automaticamente ao abrir a página
+    const temaSalvo = localStorage.getItem('temaPainelSR') || 'verde';
+    document.getElementById('seletorTema').value = temaSalvo;
+    mudarTemaPainel(temaSalvo);
 
     function alternarAba(abaId, botao) {
       document.querySelectorAll('.conteudo-aba').forEach(el => el.classList.remove('ativa'));
@@ -277,10 +362,10 @@
         const tr = document.createElement('tr');
         
         tr.innerHTML = `
-          <td style="font-weight:bold; color:#004a26;">${nome}</td>
+          <td style="font-weight:bold; color:var(--cor-principal);">${nome}</td>
           <td>${f.setor || '--'}</td>
           <td>Loja ${f.loja || '--'}</td>
-          <td><code style="background:#eef4f0; padding:2px 6px; border-radius:4px;">${f.chaveApp || f.textApp || '---'}</code></td>
+          <td><code style="background:#eef4f0; padding:2px 6px; border-radius:4px; color:#333;">${f.chaveApp || f.textApp || '---'}</code></td>
           <td>
             <button class="btn-editar" onclick="carregarParaEditar('${nome.replace(/'/g, "\\'")}')">✏️ Editar</button>
             <button class="btn-excluir" onclick="excluirFuncionariovb('${nome.replace(/'/g, "\\'")}')">🗑️ Excluir</button>
@@ -387,7 +472,7 @@
       const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
 
       const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#006430;">🔍 Analisando cercas virtuais de 100m no Firebase...</td></tr>';
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:var(--cor-principal);">🔍 Analisando cercas virtuais de 100m no Firebase...</td></tr>';
 
       registrosProcessadosCache = [];
 
@@ -467,7 +552,6 @@
                 }
                 containerAcao += '</div>';
 
-                // 🔥 CRITÉRIO EXATO DE DISTRIBUIÇÃO SEGUNDO O TEXTO ENVIADO PELO APP
                 let t = reg.tipo;
                 if (t.includes("entradaexpediente") || (t.includes("entrada") && !t.includes("alm"))) {
                   ent = containerAcao;
@@ -487,7 +571,7 @@
               }
             }
 
-            htmlTabela += `<tr><td>${dataExibicao}</td><td style="font-weight:bold; color:#004a26;">${nome}</td><td>${cadastro.setor} (L${cadastro.loja})</td><td>${ent}</td><td>${almSai}</td><td>${almRet}</td><td>${saiFim}</td><td>${statusAuditoriaGeo}</td></tr>`;
+            htmlTabela += `<tr><td>${dataExibicao}</td><td style="font-weight:bold; color:var(--cor-principal);">${nome}</td><td>${cadastro.setor} (L${cadastro.loja})</td><td>${ent}</td><td>${almSai}</td><td>${almRet}</td><td>${saiFim}</td><td>${statusAuditoriaGeo}</td></tr>`;
           }
 
           registrosProcessadosCache.push({ nome: nome, setor: cadastro.setor, loja: cadastro.loja, trabalhados: diasTrabalhados, faltas: faltas, foraLimite: pontosForaDoLimite });
@@ -500,7 +584,7 @@
     }
 
     function abrirMapaGeolocalizacao(lat, lng) {
-      window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+      window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank');
     }
 
     function abrirModalFoto(urlFoto) {
@@ -528,10 +612,10 @@
       doc.setFont("Helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(255, 215, 0); doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 38);
       doc.setFont("Helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(255, 255, 255); doc.text("Relatório Gerencial de Ponto — Período: " + document.getElementById('filtroMes').value, 40, 58);
       
-      let linhas = registrosProcessadosCache.map((f, i) => [String(i + 1).padStart(2, '0'), f.nome, `${f.setor} (Loja ${f.loja})`, `${f.trabalhados} dias`, f.foraLimite > 0 ? `${f.faltas} (${f.foraLimite} Fora)` : f.faltas, "___________________________"]);
+      let res = registrosProcessadosCache.map((f, i) => [String(i + 1).padStart(2, '0'), f.nome, `${f.setor} (Loja ${f.loja})`, `${f.trabalhados} dias`, f.foraLimite > 0 ? `${f.faltas} (${f.foraLimite} Fora)` : f.faltas, "___________________________"]);
       doc.autoTable({
         head: [['Nº', 'Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura']],
-        body: linhas, startY: 120, theme: 'grid', styles: { fontSize: 8.5 },
+        body: res, startY: 120, theme: 'grid', styles: { fontSize: 8.5 },
         headStyles: { fillColor: [0, 100, 48] }
       });
       doc.save(`Fechamento_SR_${document.getElementById('filtroMes').value}.pdf`);
