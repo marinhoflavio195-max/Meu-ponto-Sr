@@ -56,7 +56,6 @@
     .btn-foto { background: #673ab7; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
     .btn-mapa { background: #0b5394; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; text-decoration: none; text-align: center; box-sizing: border-box; display: block; }
 
-    /* Ações de Funcionários */
     .btn-editar { background: #f57c00; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
     .btn-excluir { background: #d32f2f; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
@@ -226,7 +225,6 @@
     let registrosProcessadosCache = [];
     document.getElementById('filtroMes').value = "2026-06";
 
-    // Alternar entre abas
     function alternarAba(abaId, botao) {
       document.querySelectorAll('.conteudo-aba').forEach(el => el.classList.remove('ativa'));
       document.querySelectorAll('.aba-btn').forEach(el => el.classList.remove('ativa'));
@@ -235,7 +233,6 @@
       botao.classList.add('ativa');
     }
 
-    // Escuta dinâmica de funcionários do Firebase
     function sincronizarFuncionariosComBanco() {
       database.ref('config_funcionarios').on('value', snapshot => {
         memoriaFuncionarios = snapshot.val() || {};
@@ -262,7 +259,6 @@
       });
     }
 
-    // CRUD - RENDERIZAR TABELA DE GERENCIAMENTO
     function carregarTabelaFuncionarios() {
       renderizarTabelaFuncionariosLocal();
     }
@@ -294,7 +290,6 @@
       });
     }
 
-    // CRUD - ADICIONAR / EDITAR
     function salvarFuncionariovb() {
       const nome = document.getElementById('formNome').value.trim().toUpperCase();
       const setor = document.getElementById('formSetor').value.trim().toUpperCase();
@@ -313,7 +308,6 @@
         chaveApp: chave
       };
 
-      // Se mudou o nome da chave mestre na edição, remove a antiga antes de salvar a nova
       if (editandoId && editandoId !== nome) {
         database.ref('config_funcionarios/' + editandoId).remove();
       }
@@ -360,7 +354,6 @@
       document.getElementById('btnCancelarEdicao').style.display = "none";
     }
 
-    // LOGICA DO FILTRO DE PONTOS (MANTIDA E BLINDADA)
     function normalizarTexto(texto) {
       if (!texto) return "";
       let t = texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -474,10 +467,17 @@
                 }
                 containerAcao += '</div>';
 
-                if (reg.tipo.includes("entrada") && !reg.tipo.includes("alm")) ent = containerAcao;
-                if (reg.tipo.includes("saidaalm") || reg.tipo === "almoco" || (reg.tipo.includes("saida") && reg.tipo.includes("alm"))) almSai = containerAcao;
-                if (reg.tipo.includes("retorno") || reg.tipo.includes("retalm") || (reg.tipo.includes("volta") && reg.tipo.includes("alm"))) almRet = containerAcao;
-                if (reg.tipo.includes("expediente") || reg.tipo.includes("fim") || reg.tipo.includes("saidafim") || (reg.tipo.includes("saida") && !reg.tipo.includes("alm"))) saiFim = containerAcao;
+                // 🔥 CRITÉRIO EXATO DE DISTRIBUIÇÃO SEGUNDO O TEXTO ENVIADO PELO APP
+                let t = reg.tipo;
+                if (t.includes("entradaexpediente") || (t.includes("entrada") && !t.includes("alm"))) {
+                  ent = containerAcao;
+                } else if (t.includes("saidaalmoco") || t === "almoco" || (t.includes("saida") && t.includes("alm"))) {
+                  almSai = containerAcao;
+                } else if (t.includes("retornoalmoco") || t.includes("retalm") || (t.includes("volta") && t.includes("alm"))) {
+                  almRet = containerAcao;
+                } else if (t.includes("saidafim") || t.includes("fim") || (t.includes("saida") && !t.includes("alm"))) {
+                  saiFim = containerAcao;
+                }
               });
             } else {
               if (new Date(ano, mesZeroBased, dia, 23, 59) < new Date()) {
@@ -500,7 +500,7 @@
     }
 
     function abrirMapaGeolocalizacao(lat, lng) {
-      window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank');
+      window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
     }
 
     function abrirModalFoto(urlFoto) {
@@ -537,7 +537,6 @@
       doc.save(`Fechamento_SR_${document.getElementById('filtroMes').value}.pdf`);
     }
 
-    // Inicialização automática
     sincronizarFuncionariosComBanco();
   </script>
 </body>
