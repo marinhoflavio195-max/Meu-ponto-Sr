@@ -266,7 +266,6 @@
     let registrosProcessadosCache = [];
     document.getElementById('filtroMes').value = "2026-06";
 
-    // LÓGICA DE TROCA DE TEMA (SALVA A ESCOLHA NO NAVEGADOR)
     function mudarTemaPainel(tema) {
       const raiz = document.documentElement.style;
       localStorage.setItem('temaPainelSR', tema);
@@ -301,7 +300,7 @@
         raiz.setProperty('--cor-tabela-hover', '#2d2d2d');
         raiz.setProperty('--cor-borda-filtro', '#333333');
         raiz.setProperty('--cor-fundo-filtro', '#252525');
-      } else { // Tema Verde Padrão
+      } else { 
         raiz.setProperty('--cor-principal', '#006430');
         raiz.setProperty('--cor-principal-hover', '#004a26');
         raiz.setProperty('--cor-fundo-tela', '#f3f7f4');
@@ -446,9 +445,6 @@
       document.getElementById('btnCancelarEdicao').style.display = "none";
     }
 
-    // ==========================================
-    // NOVA FUNÇÃO: INTERAÇÃO E AJUSTE DE STATUS MANUAL
-    // ==========================================
     function abrirMenuJustificativa(nomeFuncionario, dataString) {
       const opcao = prompt(
         "Selecione uma ação para " + nomeFuncionario + " no dia " + dataString + ":\n\n" +
@@ -474,7 +470,7 @@
         status: tipo
       }).then(() => {
         alert("✅ Status de " + tipo + " gravado!");
-        consultarPeriodoBanco(); // Recarrega o relatório atualizado
+        consultarPeriodoBanco(); 
       }).catch(err => alert("Erro ao gravar: " + err));
     }
 
@@ -486,9 +482,6 @@
       });
     }
 
-    // ==========================================
-    // PROCESSAMENTO E RENDERIZAÇÃO DO ESPELHO
-    // ==========================================
     function consultarPeriodoBanco() {
       const mesFiltro = document.getElementById('filtroMes').value;
       if (!mesFiltro) {
@@ -499,7 +492,6 @@
       const corpo = document.getElementById('tabelaCorpo');
       corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; font-weight:bold;">Buscando registros no banco de dados...</td></tr>';
 
-      // Puxa as justificativas salvas e depois as batidas normais
       database.ref('justificativas_ponto').once('value').then(snapshotJust => {
         const justificativasSalvas = snapshotJust.val() || {};
 
@@ -550,22 +542,20 @@
           const dStr = String(d).padStart(2, '0');
           const dataFormatada = `${dStr}/${mes}/${ano}`;
           
-          // Chave única para buscar no nó do Firebase
           const chaveJustificativa = nomeFunc.replace(/[.#$[\]]/g, "_") + "_" + dataFormatada.replace(/\//g, "-");
           const statusJustificado = justificativas[chaveJustificativa] ? justificativas[chaveJustificativa].status : null;
 
-          // Busca as batidas reais do funcionário no dia
           let batidasDoDia = [];
           if (batidas[nomeFunc] && batidas[nomeFunc][dataFormatada]) {
             batidasDoDia = Object.values(batidas[nomeFunc][dataFormatada]);
             batidasDoDia.sort((a, b) => a.hora.localeCompare(b.hora));
           }
 
-          let celulaE = "-", celulaSA = "-", celulaRA = "-", celulaS = "-", celulaGPS = "-";
+          let celulaE = "<td>-</td>", celulaSA = "<td>-</td>", celulaRA = "<td>-</td>", celulaS = "<td>-</td>", celulaGPS = "<td>-</td>";
           let classeLinhaExcecao = "";
           let temPonto = batidasDoDia.length > 0;
 
-          // Monta os blocos visuais das batidas reais se existirem
+          // SE TEM PONTO REAL: Renderiza os blocos normalmente nas colunas corretas
           if (temPonto) {
             batidasDoDia.forEach((b, idx) => {
               let bVisual = `
@@ -573,41 +563,37 @@
                   <span class="titulo-hora">${b.tipo}</span>
                   <span class="hora-txt">${b.hora}</span>
                   <button class="btn-foto" onclick="visualizarFotoModal('${b.fotoUrl}')">📸 Ver Foto</button>
-                  <a class="btn-mapa" href="https://www.google.com/maps?q=${b.latitude},${b.longitude}" target="_blank">🗺️ Mapa</a>
+                  <a class="btn-mapa" href="https://maps.google.com/?q=${b.latitude},${b.longitude}" target="_blank">🗺️ Mapa</a>
                 </div>
               `;
-              if (idx === 0) celulaE = bVisual;
-              else if (idx === 1) celulaSA = bVisual;
-              else if (idx === 2) celulaRA = bVisual;
-              else if (idx === 3) celulaS = bVisual;
+              if (idx === 0) celulaE = `<td>${bVisual}</td>`;
+              else if (idx === 1) celulaSA = `<td>${bVisual}</td>`;
+              else if (idx === 2) celulaRA = `<td>${bVisual}</td>`;
+              else if (idx === 3) celulaS = `<td>${bVisual}</td>`;
             });
-            celulaGPS = `<span class="status-regular">✔ Processado</span>`;
-          } else {
-            // Caso NÃO haja batidas, verifica se existe justificativa de folga ou atestado manual
+            celulaGPS = `<td><span class="status-regular">✔ Processado</span></td>`;
+          } 
+          // SE NÃO TEM PONTO: Verifica se há folga/atestado manual ou se mantém a falta padrão
+          else {
             if (statusJustificado === "FOLGA") {
               classeLinhaExcecao = "class='linha-folga'";
               celulaE = `<td colspan="4" style="text-align:center;"><span class="status-folga-tag">🏖️ FOLGA DA ESCALA</span></td>`;
-              celulaGPS = `<button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Mudar Status">⚙️ Alterar</button>`;
+              celulaSA = ""; celulaRA = ""; celulaS = "";
+              celulaGPS = `<td><button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Mudar Status">⚙️ Alterar</button></td>`;
             } else if (statusJustificado === "ATESTADO") {
               classeLinhaExcecao = "class='linha-atestado'";
               celulaE = `<td colspan="4" style="text-align:center;"><span class="status-atestado-tag">🤕 ATESTADO MÉDICO</span></td>`;
-              celulaGPS = `<button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Mudar Status">⚙️ Alterar</button>`;
+              celulaSA = ""; celulaRA = ""; celulaS = "";
+              celulaGPS = `<td><button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Mudar Status">⚙️ Alterar</button></td>`;
             } else {
-              // Falta padrão do sistema com o botão de engrenagem operacional
-              celulaE = `
-                <td>
-                  <span class="status-falta">
-                    ❌ Falta 
-                    <button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Justificar">⚙️</button>
-                  </span>
-                </td>
-              `;
-              celulaSA = "<td>-</td>"; celulaRA = "<td>-</td>"; celulaS = "<td>-</td>";
-              celulaGPS = `<span class="status-alerta">Sem Registro</span>`;
+              celulaE = `<td><span class="status-falta">❌ Falta <button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Justificar">⚙️</button></span></td>`;
+              celulaSA = "<td>-</td>"; 
+              celulaRA = "<td>-</td>"; 
+              celulaS = "<td>-</td>";
+              celulaGPS = `<td><span class="status-alerta">Sem Registro</span></td>`;
             }
           }
 
-          // Cache para exportação de planilhas/PDF
           registrosProcessadosCache.push({
             data: dataFormatada,
             nome: nomeFunc,
@@ -618,19 +604,19 @@
             s: temPonto && batidasDoDia[3] ? batidasDoDia[3].hora : "-"
           });
 
-          if (statusJustificado === "FOLGA" || statusJustificado === "ATESTADO") {
+          if (!temPonto && (statusJustificado === "FOLGA" || statusJustificado === "ATESTADO")) {
             htmlConstruido += `
               <tr ${classeLinhaExcecao}>
                 <td><b>${dataFormatada}</b></td>
                 <td>${nomeFunc}</td>
                 <td>${txtSetorLoja}</td>
                 ${celulaE}
-                <td>${celulaGPS}</td>
+                ${celulaGPS}
               </tr>
             `;
           } else {
             htmlConstruido += `
-              <tr>
+              <tr ${classeLinhaExcecao}>
                 <td><b>${dataFormatada}</b></td>
                 <td>${nomeFunc}</td>
                 <td>${txtSetorLoja}</td>
@@ -638,7 +624,7 @@
                 ${celulaSA}
                 ${celulaRA}
                 ${celulaS}
-                <td>${celulaGPS}</td>
+                ${celulaGPS}
               </tr>
             `;
           }
@@ -686,7 +672,7 @@
       const linhas = registrosProcessadosCache.map(r => [r.data, r.nome, r.setorLoja, r.e, r.sa, r.ra, r.s]);
 
       doc.autoTable({
-        startY: 26, head: [colunas], body: lines,
+        startY: 26, head: [colunas], body: linhas,
         theme: 'grid', headStyles: { fillColor: [0, 100, 48] },
         styles: { fontSize: 8 }, columnStyles: { 1: { cellWidth: 60 } }
       });
