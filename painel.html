@@ -66,10 +66,19 @@
     td { padding: 12px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; color: var(--cor-texto); }
     tr:hover { background-color: var(--cor-tabela-hover); }
     
-    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; }
     .status-regular { color: #2e7d32; font-weight: bold; }
     .status-alerta { color: #d32f2f; font-weight: bold; background: #ffebee; padding: 2px 6px; border-radius: 4px; }
     
+    /* Cores das Novas Justificativas */
+    .linha-folga td { background-color: #e8f5e9 !important; color: #1b5e20 !important; }
+    .linha-atestado td { background-color: #e3f2fd !important; color: #0d47a1 !important; }
+    .status-folga-tag { color: #1b5e20; font-weight: bold; background: #c8e6c9; padding: 6px 12px; border-radius: 4px; font-size: 12px; text-transform: uppercase; }
+    .status-atestado-tag { color: #0d47a1; font-weight: bold; background: #bbdefb; padding: 6px 12px; border-radius: 4px; font-size: 12px; text-transform: uppercase; }
+    
+    .btn-engrenagem { background: #64748b; color: white; border: none; padding: 2px 5px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 5px; }
+    .btn-engrenagem:hover { background: #475569; }
+
     .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #eef4f0; padding: 6px; border-radius: 6px; border: 1px solid #d0dfd5; min-width: 80px; color: #333; }
     .titulo-hora { font-size: 11px; font-weight: bold; color: #004a26; margin-bottom: 4px; }
     .btn-foto { background: #673ab7; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 2px; }
@@ -305,7 +314,6 @@
       }
     }
 
-    // Carrega o tema salvo automaticamente ao abrir a página
     const temaSalvo = localStorage.getItem('temaPainelSR') || 'verde';
     document.getElementById('seletorTema').value = temaSalvo;
     mudarTemaPainel(temaSalvo);
@@ -415,15 +423,14 @@
       document.getElementById('formLoja').value = f.loja || "1";
       document.getElementById('formChave').value = f.chaveApp || f.textApp || "";
 
-      document.getElementById('tituloFormFuncionarios').innerHTML = `✏️ Editando Colaborador: <span style="color:#f57c00">${nome}</span>`;
-      document.getElementById('btnCancelarEdicao').style.display = "inline-block";
-      document.getElementById('formNome').focus();
+      document.getElementById('tituloFormFuncionarios').textContent = "✏️ Editando Funcionário";
+      document.getElementById('btnCancelarEdicao').style.display = "inline-flex";
     }
 
     function excluirFuncionariovb(nome) {
-      if (confirm(`⚠️ Tem certeza absoluta que deseja remover ${nome} do sistema?\nEle perderá acesso imediato ao aplicativo de ponto.`)) {
+      if (confirm(`⚠️ Tem certeza de que deseja excluir permanentemente o(a) funcionário(a) "${nome}"?`)) {
         database.ref('config_funcionarios/' + nome).remove()
-          .then(() => alert("🗑️ Funcionário removido com sucesso."))
+          .then(() => alert("❌ Funcionário removido do sistema."))
           .catch(err => alert("Erro ao excluir: " + err.message));
       }
     }
@@ -434,191 +441,257 @@
       document.getElementById('formSetor').value = "";
       document.getElementById('formLoja').value = "1";
       document.getElementById('formChave').value = "";
-      
-      document.getElementById('tituloFormFuncionarios').innerHTML = "➕ Cadastrar Novo Funcionário";
+
+      document.getElementById('tituloFormFuncionarios').textContent = "➕ Cadastrar Novo Funcionário";
       document.getElementById('btnCancelarEdicao').style.display = "none";
     }
 
-    function normalizarTexto(texto) {
-      if (!texto) return "";
-      let t = texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-      if (t.includes("franciscasouza") || t.includes("franc.acou")) return "franciscasouza";
-      if (t.includes("roni") || t.includes("rone")) return "ronefruta";
-      if (t.includes("flavio")) return "flavio";
-      if (t.includes("andreia")) return "andreia";
-      if (t.includes("antonia")) return "antonia";
-      return t.replace(/\s+/g, "");
+    // ==========================================
+    // NOVA FUNÇÃO: INTERAÇÃO E AJUSTE DE STATUS MANUAL
+    // ==========================================
+    function abrirMenuJustificativa(nomeFuncionario, dataString) {
+      const opcao = prompt(
+        "Selecione uma ação para " + nomeFuncionario + " no dia " + dataString + ":\n\n" +
+        "1 - 🏖️ Marcar como FOLGA DA ESCALA\n" +
+        "2 - 🤕 Marcar como ATESTADO MÉDICO\n" +
+        "3 - ❌ Remover Justificativa (Retornar para Falta)"
+      );
+
+      if (opcao === "1") {
+        salvarJustificativaNoBanco(nomeFuncionario, dataString, "FOLGA");
+      } else if (opcao === "2") {
+        salvarJustificativaNoBanco(nomeFuncionario, dataString, "ATESTADO");
+      } else if (opcao === "3") {
+        removerJustificativaNoBanco(nomeFuncionario, dataString);
+      }
     }
 
-    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
-      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-      const R = 6371000; 
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
+    function salvarJustificativaNoBanco(nome, dataStr, tipo) {
+      const nodeChave = nome.replace(/[.#$[\]]/g, "_") + "_" + dataStr.replace(/\//g, "-");
+      database.ref('justificativas_ponto/' + nodeChave).set({
+        funcionario: nome,
+        data: dataStr,
+        status: tipo
+      }).then(() => {
+        alert("✅ Status de " + tipo + " gravado!");
+        consultarPeriodoBanco(); // Recarrega o relatório atualizado
+      }).catch(err => alert("Erro ao gravar: " + err));
     }
 
-    function consultarPeriodoBanco() {
-      const lojaFiltro = document.getElementById('filtroLoja').value;
-      const colabFiltro = document.getElementById('filtroColaborador').value;
-      const mesFiltro = document.getElementById('filtroMes').value;
-
-      if (!mesFiltro) { alert("Por favor, selecione o mês!"); return; }
-
-      const partes = mesFiltro.split('-');
-      const ano = parseInt(partes[0]);
-      const mesZeroBased = parseInt(partes[1]) - 1;
-      const totalDiasMes = new Date(ano, mesZeroBased + 1, 0).getDate();
-
-      const corpo = document.getElementById('tabelaCorpo');
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:var(--cor-principal);">🔍 Analisando cercas virtuais de 100m no Firebase...</td></tr>';
-
-      registrosProcessadosCache = [];
-
-      database.ref('pontos_registrados').once('value').then(snapshot => {
-        let mapaPontos = {};
-
-        if (snapshot.exists()) {
-          snapshot.forEach(child => {
-            const p = child.val();
-            if (p.colaborador && p.horario && p.tipo) {
-              let dataChaveLimpa = "";
-              if (p.dataChave) {
-                dataChaveLimpa = p.dataChave.includes('/') ? p.dataChave.split('/').reverse().join('-') : p.dataChave;
-              } else if (p.data) {
-                dataChaveLimpa = p.data.split('/').reverse().join('-');
-              }
-
-              if (dataChaveLimpa.startsWith(mesFiltro)) {
-                let nFunc = normalizarTexto(p.colaborador);
-                let chaveAgrupada = `${dataChaveLimpa}_${nFunc}`;
-                if (!mapaPontos[chaveAgrupada]) mapaPontos[chaveAgrupada] = [];
-
-                mapaPontos[chaveAgrupada].push({
-                  tipo: normalizarTexto(p.tipo),
-                  horario: p.horario,
-                  fotoSelfie: p.fotoSelfie || null,
-                  latitude: parseFloat(p.latitude) || null,
-                  longitude: parseFloat(p.longitude) || null
-                });
-              }
-            }
-          });
-        }
-
-        let funcionariosFiltrados = Object.keys(memoriaFuncionarios).filter(nome => {
-          const info = memoriaFuncionarios[nome];
-          if (lojaFiltro !== "TODAS" && String(info.loja).trim() !== String(lojaFiltro).trim()) return false;
-          if (colabFiltro !== "TODOS" && nome !== colabFiltro) return false;
-          return true;
-        }).sort();
-
-        let htmlTabela = "";
-
-        funcionariosFiltrados.forEach(nome => {
-          const cadastro = memoriaFuncionarios[nome];
-          const chaveAppNome = cadastro.chaveApp || normalizarTexto(nome);
-          const coordLojaAlvo = coordenadasLojas[cadastro.loja];
-          
-          let diasTrabalhados = 0, faltas = 0, pontosForaDoLimite = 0;
-
-          for (let dia = 1; dia <= totalDiasMes; dia++) {
-            const diaFormatado = String(dia).padStart(2, '0');
-            const mesFormatado = String(mesZeroBased + 1).padStart(2, '0');
-            const dataChaveDia = `${ano}-${mesFormatado}-${diaFormatado}`;
-            const dataExibicao = `${diaFormatado}/${mesFormatado}/${ano}`;
-
-            const chaveAgrupadaBusca = `${dataChaveDia}_${chaveAppNome}`;
-            const registrosDoDia = mapaPontos[chaveAgrupadaBusca] || [];
-
-            let ent = "--", almSai = "--", almRet = "--", saiFim = "--";
-            let statusAuditoriaGeo = '<span class="status-regular">✅ No Limite</span>';
-
-            if (registrosDoDia.length > 0) {
-              diasTrabalhados++;
-              registrosDoDia.forEach(reg => {
-                let containerAcao = `<div class="bloco-ponto-acoes"><span class="titulo-hora">${reg.horario}</span>`;
-                if (reg.fotoSelfie) containerAcao += `<button class="btn-foto" onclick="abrirModalFoto('${reg.fotoSelfie}')">📸 FOTO</button>`;
-                if (reg.latitude && reg.longitude) {
-                  containerAcao += `<button class="btn-mapa" onclick="abrirMapaGeolocalizacao(${reg.latitude},${reg.longitude})">🗺️ MAPA</button>`;
-                  if (coordLojaAlvo) {
-                    let dist = calcularDistanciaMetros(reg.latitude, reg.longitude, coordLojaAlvo.lat, coordLojaAlvo.lng);
-                    if (dist !== null && dist > 100) {
-                      statusAuditoriaGeo = '<span class="status-alerta">⚠️ Fora (>100m)</span>';
-                      pontosForaDoLimite++;
-                    }
-                  }
-                }
-                containerAcao += '</div>';
-
-                let t = reg.tipo;
-                if (t.includes("entradaexpediente") || (t.includes("entrada") && !t.includes("alm"))) {
-                  ent = containerAcao;
-                } else if (t.includes("saidaalmoco") || t === "almoco" || (t.includes("saida") && t.includes("alm"))) {
-                  almSai = containerAcao;
-                } else if (t.includes("retornoalmoco") || t.includes("retalm") || (t.includes("volta") && t.includes("alm"))) {
-                  almRet = containerAcao;
-                } else if (t.includes("saidafim") || t.includes("fim") || (t.includes("saida") && !t.includes("alm"))) {
-                  saiFim = containerAcao;
-                }
-              });
-            } else {
-              if (new Date(ano, mesZeroBased, dia, 23, 59) < new Date()) {
-                ent = '<span class="status-falta">❌ FALTA</span>';
-                statusAuditoriaGeo = "Ausência";
-                faltas++;
-              }
-            }
-
-            htmlTabela += `<tr><td>${dataExibicao}</td><td style="font-weight:bold; color:var(--cor-principal);">${nome}</td><td>${cadastro.setor} (L${cadastro.loja})</td><td>${ent}</td><td>${almSai}</td><td>${almRet}</td><td>${saiFim}</td><td>${statusAuditoriaGeo}</td></tr>`;
-          }
-
-          registrosProcessadosCache.push({ nome: nome, setor: cadastro.setor, loja: cadastro.loja, trabalhados: diasTrabalhados, faltas: faltas, foraLimite: pontosForaDoLimite });
-        });
-
-        corpo.innerHTML = htmlTabela;
-      }).catch(erro => {
-        corpo.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center;">Falha de comunicação.</td></tr>';
+    function removerJustificativaNoBanco(nome, dataStr) {
+      const nodeChave = nome.replace(/[.#$[\]]/g, "_") + "_" + dataStr.replace(/\//g, "-");
+      database.ref('justificativas_ponto/' + nodeChave).remove().then(() => {
+        alert("❌ Justificativa limpa. Voltou para Falta!");
+        consultarPeriodoBanco();
       });
     }
 
-    function abrirMapaGeolocalizacao(lat, lng) {
-      window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank');
+    // ==========================================
+    // PROCESSAMENTO E RENDERIZAÇÃO DO ESPELHO
+    // ==========================================
+    function consultarPeriodoBanco() {
+      const mesFiltro = document.getElementById('filtroMes').value;
+      if (!mesFiltro) {
+        alert("⚠️ Por favor, escolha o mês para o relatório.");
+        return;
+      }
+
+      const corpo = document.getElementById('tabelaCorpo');
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; font-weight:bold;">Buscando registros no banco de dados...</td></tr>';
+
+      // Puxa as justificativas salvas e depois as batidas normais
+      database.ref('justificativas_ponto').once('value').then(snapshotJust => {
+        const justificativasSalvas = snapshotJust.val() || {};
+
+        database.ref('pontos_registrados').once('value').then(snapshotPontos => {
+          const batidasBanco = snapshotPontos.val() || {};
+          gerarEspelhoDias(batidasBanco, justificativasSalvas, mesFiltro);
+        });
+      }).catch(err => {
+        alert("Erro ao ler banco: " + err.message);
+      });
     }
 
-    function abrirModalFoto(urlFoto) {
-      document.getElementById('modalImg').src = urlFoto;
-      document.getElementById('modalFoto').style.display = 'flex';
+    function gerarEspelhoDias(batidas, justificativas, mesAno) {
+      const corpo = document.getElementById('tabelaCorpo');
+      corpo.innerHTML = "";
+
+      const [ano, mes] = mesAno.split("-");
+      const totalDias = new Date(ano, mes, 0).getDate();
+
+      const filtroLoja = document.getElementById('filtroLoja').value;
+      const filtroColaborador = document.getElementById('filtroColaborador').value;
+
+      let listaParaProcessar = [];
+      if (filtroColaborador === "TODOS") {
+        Object.keys(memoriaFuncionarios).forEach(n => {
+          const f = memoriaFuncionarios[n];
+          if (filtroLoja === "TODAS" || String(f.loja).trim() === String(filtroLoja).trim()) {
+            listaParaProcessar.push(n);
+          }
+        });
+      } else {
+        listaParaProcessar.push(filtroColaborador);
+      }
+
+      if (listaParaProcessar.length === 0) {
+        corpo.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px;">Nenhum colaborador encontrado nessa loja.</td></tr>';
+        return;
+      }
+
+      registrosProcessadosCache = [];
+      let htmlConstruido = "";
+
+      listaParaProcessar.sort().forEach(nomeFunc => {
+        const cadastro = memoriaFuncionarios[nomeFunc] || {};
+        const txtSetorLoja = `${cadastro.setor || 'N/A'} (Loja ${cadastro.loja || '?'})`;
+
+        for (let d = 1; d <= totalDias; d++) {
+          const dStr = String(d).padStart(2, '0');
+          const dataFormatada = `${dStr}/${mes}/${ano}`;
+          
+          // Chave única para buscar no nó do Firebase
+          const chaveJustificativa = nomeFunc.replace(/[.#$[\]]/g, "_") + "_" + dataFormatada.replace(/\//g, "-");
+          const statusJustificado = justificativas[chaveJustificativa] ? justificativas[chaveJustificativa].status : null;
+
+          // Busca as batidas reais do funcionário no dia
+          let batidasDoDia = [];
+          if (batidas[nomeFunc] && batidas[nomeFunc][dataFormatada]) {
+            batidasDoDia = Object.values(batidas[nomeFunc][dataFormatada]);
+            batidasDoDia.sort((a, b) => a.hora.localeCompare(b.hora));
+          }
+
+          let celulaE = "-", celulaSA = "-", celulaRA = "-", celulaS = "-", celulaGPS = "-";
+          let classeLinhaExcecao = "";
+          let temPonto = batidasDoDia.length > 0;
+
+          // Monta os blocos visuais das batidas reais se existirem
+          if (temPonto) {
+            batidasDoDia.forEach((b, idx) => {
+              let bVisual = `
+                <div class="bloco-ponto-acoes">
+                  <span class="titulo-hora">${b.tipo}</span>
+                  <span class="hora-txt">${b.hora}</span>
+                  <button class="btn-foto" onclick="visualizarFotoModal('${b.fotoUrl}')">📸 Ver Foto</button>
+                  <a class="btn-mapa" href="https://www.google.com/maps?q=${b.latitude},${b.longitude}" target="_blank">🗺️ Mapa</a>
+                </div>
+              `;
+              if (idx === 0) celulaE = bVisual;
+              else if (idx === 1) celulaSA = bVisual;
+              else if (idx === 2) celulaRA = bVisual;
+              else if (idx === 3) celulaS = bVisual;
+            });
+            celulaGPS = `<span class="status-regular">✔ Processado</span>`;
+          } else {
+            // Caso NÃO haja batidas, verifica se existe justificativa de folga ou atestado manual
+            if (statusJustificado === "FOLGA") {
+              classeLinhaExcecao = "class='linha-folga'";
+              celulaE = `<td colspan="4" style="text-align:center;"><span class="status-folga-tag">🏖️ FOLGA DA ESCALA</span></td>`;
+              celulaGPS = `<button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Mudar Status">⚙️ Alterar</button>`;
+            } else if (statusJustificado === "ATESTADO") {
+              classeLinhaExcecao = "class='linha-atestado'";
+              celulaE = `<td colspan="4" style="text-align:center;"><span class="status-atestado-tag">🤕 ATESTADO MÉDICO</span></td>`;
+              celulaGPS = `<button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Mudar Status">⚙️ Alterar</button>`;
+            } else {
+              // Falta padrão do sistema com o botão de engrenagem operacional
+              celulaE = `
+                <td>
+                  <span class="status-falta">
+                    ❌ Falta 
+                    <button class="btn-engrenagem" onclick="abrirMenuJustificativa('${nomeFunc.replace(/'/g, "\\'")}', '${dataFormatada}')" title="Justificar">⚙️</button>
+                  </span>
+                </td>
+              `;
+              celulaSA = "<td>-</td>"; celulaRA = "<td>-</td>"; celulaS = "<td>-</td>";
+              celulaGPS = `<span class="status-alerta">Sem Registro</span>`;
+            }
+          }
+
+          // Cache para exportação de planilhas/PDF
+          registrosProcessadosCache.push({
+            data: dataFormatada,
+            nome: nomeFunc,
+            setorLoja: txtSetorLoja,
+            e: temPonto && batidasDoDia[0] ? batidasDoDia[0].hora : (statusJustificado || "FALTA"),
+            sa: temPonto && batidasDoDia[1] ? batidasDoDia[1].hora : "-",
+            ra: temPonto && batidasDoDia[2] ? batidasDoDia[2].hora : "-",
+            s: temPonto && batidasDoDia[3] ? batidasDoDia[3].hora : "-"
+          });
+
+          if (statusJustificado === "FOLGA" || statusJustificado === "ATESTADO") {
+            htmlConstruido += `
+              <tr ${classeLinhaExcecao}>
+                <td><b>${dataFormatada}</b></td>
+                <td>${nomeFunc}</td>
+                <td>${txtSetorLoja}</td>
+                ${celulaE}
+                <td>${celulaGPS}</td>
+              </tr>
+            `;
+          } else {
+            htmlConstruido += `
+              <tr>
+                <td><b>${dataFormatada}</b></td>
+                <td>${nomeFunc}</td>
+                <td>${txtSetorLoja}</td>
+                ${celulaE}
+                ${celulaSA}
+                ${celulaRA}
+                ${celulaS}
+                <td>${celulaGPS}</td>
+              </tr>
+            `;
+          }
+        }
+      });
+
+      corpo.innerHTML = htmlConstruido;
+    }
+
+    function visualizarFotoModal(url) {
+      if(!url) return alert("Url Inválida!");
+      document.getElementById('modalImg').src = url;
+      document.getElementById('modalFoto').style.display = "flex";
     }
 
     function fecharModalFoto() {
-      document.getElementById('modalFoto').style.display = 'none';
+      document.getElementById('modalFoto').style.display = "none";
     }
 
     function exportarParaExcel() {
-      if (registrosProcessadosCache.length === 0) { alert("Consulte o período antes."); return; }
-      let exp = registrosProcessadosCache.map(f => ({ "Colaborador": f.nome, "Setor": f.setor, "Loja": "Loja " + f.loja, "Dias Trabalhados": f.trabalhados, "Total de Faltas": f.faltas, "Registros Fora do Limite": f.foraLimite }));
+      if(registrosProcessadosCache.length === 0) return alert("Consulte primeiro!");
+      const mapeado = registrosProcessadosCache.map(r => ({
+        "Data": r.data, "Colaborador": r.nome, "Setor e Loja": r.setorLoja,
+        "Entrada": r.e, "Saída Almoço": r.sa, "Retorno Almoço": r.ra, "Saída Fim": r.s
+      }));
+      const ws = XLSX.utils.json_to_sheet(mapeado);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(exp), "Fechamento");
-      XLSX.writeFile(wb, `Pontos_SR_${document.getElementById('filtroMes').value}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Espelho_Ponto");
+      XLSX.writeFile(wb, `Ponto_SaoRaimundo_${document.getElementById('filtroMes').value}.xlsx`);
     }
 
     function exportarParaPDF() {
-      if (registrosProcessadosCache.length === 0) { alert("Efetue a consulta antes de gerar o PDF!"); return; }
+      if(registrosProcessadosCache.length === 0) return alert("Consulte primeiro!");
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'pt', 'a4');
-      doc.setFillColor(0, 100, 48); doc.rect(0, 0, 595, 80, 'F');
-      doc.setFont("Helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(255, 215, 0); doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 38);
-      doc.setFont("Helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(255, 255, 255); doc.text("Relatório Gerencial de Ponto — Período: " + document.getElementById('filtroMes').value, 40, 58);
+      const doc = new jsPDF('l', 'mm', 'a4');
       
-      let res = registrosProcessadosCache.map((f, i) => [String(i + 1).padStart(2, '0'), f.nome, `${f.setor} (Loja ${f.loja})`, `${f.trabalhados} dias`, f.foraLimite > 0 ? `${f.faltas} (${f.foraLimite} Fora)` : f.faltas, "___________________________"]);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("SUPERMERCADO SÃO RAIMUNDO - RELATÓRIO EXECUTIVO DE FREQUÊNCIA", 14, 15);
+      doc.setFontSize(10);
+      doc.setFont("Helvetica", "normal");
+      doc.text(`Período de Referência: ${document.getElementById('filtroMes').value}`, 14, 21);
+
+      const colunas = ["Data", "Funcionário", "Loja/Setor", "Entrada", "S. Almoço", "R. Almoço", "Saída Fim"];
+      const linhas = registrosProcessadosCache.map(r => [r.data, r.nome, r.setorLoja, r.e, r.sa, r.ra, r.s]);
+
       doc.autoTable({
-        head: [['Nº', 'Colaborador', 'Setor / Unidade', 'Dias Trab.', 'Faltas', 'Assinatura']],
-        body: res, startY: 120, theme: 'grid', styles: { fontSize: 8.5 },
-        headStyles: { fillColor: [0, 100, 48] }
+        startY: 26, head: [colunas], body: lines,
+        theme: 'grid', headStyles: { fillColor: [0, 100, 48] },
+        styles: { fontSize: 8 }, columnStyles: { 1: { cellWidth: 60 } }
       });
-      doc.save(`Fechamento_SR_${document.getElementById('filtroMes').value}.pdf`);
+
+      doc.save(`PDF_Ponto_SaoRaimundo_${document.getElementById('filtroMes').value}.pdf`);
     }
 
     sincronizarFuncionariosComBanco();
