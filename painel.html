@@ -152,23 +152,31 @@
     </div>
 
     <div id="abaAtestados" class="conteudo-aba">
-      <h3 style="margin-top: 0; color: #e65100;">🏥 Lançamento de Atestados Médicos com Comprovação por Imagem</h3>
+      <h3 style="margin-top: 0; color: #e65100;">🏥 Lançamento de Atestados Médicos com Período e Imagem</h3>
       <div class="form-cadastro">
         <div class="campo-form">
           <label for="atestadoColaborador">Selecionar Funcionário:</label>
           <select id="atestadoColaborador"><option value="">-- Escolha o Funcionário --</option></select>
         </div>
         <div class="campo-form">
-          <label for="atestadoData">Data do Atestado:</label>
-          <input type="date" id="atestadoData">
+          <label for="atestadoDataInicio">Data de Início:</label>
+          <input type="date" id="atestadoDataInicio">
+        </div>
+        <div class="campo-form">
+          <label for="atestadoDataFim">Data de Término:</label>
+          <input type="date" id="atestadoDataFim">
         </div>
         <div class="campo-form" style="min-width: 280px;">
           <label>Captura do Documento:</label>
           <video id="cameraPreview" autoplay playsinline></video>
           <canvas id="canvasFoto" style="display:none;"></canvas>
-          <button class="btn" style="background:#673ab7; width:100%; justify-content:center;" onclick="capturarFotoAtestado()">📸 Bater Foto do Atestado</button>
+          
+          <button class="btn" style="background:#673ab7; width:100%; justify-content:center; margin-bottom:8px;" onclick="capturarFotoAtestado()">📸 Bater Foto do Atestado</button>
+          
+          <button class="btn" style="background:#0b5394; width:100%; justify-content:center;" onclick="document.getElementById('inputArquivoAtestado').click()">📁 Importar Arquivo/Imagem</button>
+          <input type="file" id="inputArquivoAtestado" accept="image/*" style="display:none;" onchange="importarArquivoImagem(this)">
         </div>
-        <div class="campo-form" id="statusUploadAtestado" style="display:flex; align-items:center; font-weight:bold; color:green; padding-top:20px;"></div>
+        <div class="campo-form" id="statusUploadAtestado" style="display:flex; align-items:center; font-weight:bold; color:green; padding-top:20px; min-width:200px;"></div>
         <button class="btn btn-salvar" style="background:#e65100;" onclick="salvarAtestadoBanco()">💾 Registrar Atestado</button>
       </div>
 
@@ -178,8 +186,8 @@
           <thead>
             <tr>
               <th>Funcionário</th>
-              <th>Data Justificada</th>
-              <th>Documento Comprobatório</th>
+              <th>Período Justificado</th>
+              <th>Visualização</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -333,7 +341,20 @@
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
       fotoAtestadoBase64 = canvas.toDataURL('image/jpeg');
-      document.getElementById('statusUploadAtestado').innerText = "📸 Imagem capturada com sucesso!";
+      document.getElementById('statusUploadAtestado').innerText = "📸 Imagem da câmera capturada!";
+    }
+
+    // NOVA FUNÇÃO: Processa o arquivo anexado e converte em Base64
+    function importarArquivoImagem(input) {
+      const arquivo = input.files[0];
+      if (!arquivo) return;
+
+      const leitor = new FileReader();
+      leitor.onload = function(e) {
+        fotoAtestadoBase64 = e.target.result;
+        document.getElementById('statusUploadAtestado').innerText = "📁 Arquivo importado com sucesso!";
+      };
+      leitor.readAsDataURL(arquivo);
     }
 
     function iniciarEscutasBanco() {
@@ -377,20 +398,35 @@
 
     function salvarAtestadoBanco() {
       const colab = document.getElementById('atestadoColaborador').value;
-      const dataEvt = document.getElementById('atestadoData').value;
-      if (!colab || !dataEvt || !fotoAtestadoBase64) return alert("Preencha todos os campos e tire a foto do documento!");
+      const dataInicio = document.getElementById('atestadoDataInicio').value;
+      const dataFim = document.getElementById('atestadoDataFim').value;
+      if (!colab || !dataInicio || !dataFim || !fotoAtestadoBase64) {
+        return alert("Preencha o funcionário, as datas de início/término e forneça a imagem do atestado!");
+      }
 
-      const chave = `${dataEvt}_${colab.replace(/[^A-Z0-9]/gi, '')}`;
+      if (new Date(dataInicio) > new Date(dataFim)) {
+        return alert("A data de início não pode ser maior do que a data de término!");
+      }
+
+      const chave = `${dataInicio}_${colab.replace(/[^A-Z0-9]/gi, '')}`;
       database.ref('atestados_painel/' + chave).set({
         colaborador: colab,
-        data: dataEvt,
+        dataInicio: dataInicio,
+        dataFim: dataFim,
         foto: fotoAtestadoBase64
       }).then(() => {
-        alert("Atestado registrado com arquivamento visual!");
+        alert("Atestado registrado com sucesso para o período informado!");
         document.getElementById('statusUploadAtestado').innerText = "";
+        document.getElementById('inputArquivoAtestado').value = "";
         fotoAtestadoBase64 = "";
-        document.getElementById('atestadoData').value = "";
+        document.getElementById('atestadoDataInicio').value = "";
+        document.getElementById('atestadoDataFim').value = "";
       });
+    }
+
+    function formatarDataVis(d) {
+      if(!d) return "--";
+      return d.split('-').reverse().join('/');
     }
 
     function renderTabelaAtestadosLocal() {
@@ -403,15 +439,41 @@
         return;
       }
       
-      Object.keys(memoriaAtestados).forEach(k => {
+      Object.keys(memoriaAtestados).sort().reverse().forEach(k => {
         const item = memoriaAtestados[k];
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><b>${item.colaborador}</b></td>
-          <td>${item.data.split('-').reverse().join('/')}</td>
-          <td><button class="btn" style="background:#673ab7; padding:4px 8px; font-size:11px;" onclick="verComprovante('${k}')">📄 Ver Anexo</button></td>
-          <td><button class="btn" style="background:#d32f2f; padding:4px 8px; font-size:11px;" onclick="deletarAtestado('${k}')">🗑️ Excluir</button></td>`;
+        
+        const periodoStr = item.dataFim 
+          ? `<b>${formatarDataVis(item.dataInicio)}</b> até <b>${formatarDataVis(item.dataFim)}</b>` 
+          : `<b>${formatarDataVis(item.data)}</b> (Dia único)`;
+
+        tr.innerHTML = `
+          <td><b>${item.colaborador}</b></td>
+          <td>${periodoStr}</td>
+          <td>
+            <button class="btn" style="background:#673ab7; padding:4px 8px; font-size:11px;" onclick="verComprovante('${k}')">👁️ Ver Tela</button>
+            <button class="btn" style="background:#2e7d32; padding:4px 8px; font-size:11px;" onclick="baixarFotoAtestado('${k}')">💾 Baixar Foto</button>
+          </td>
+          <td>
+            <button class="btn" style="background:#d32f2f; padding:4px 8px; font-size:11px;" onclick="deletarAtestado('${k}')">🗑️ Excluir</button>
+          </td>`;
         box.appendChild(tr);
       });
+    }
+
+    function baixarFotoAtestado(k) {
+      const item = memoriaAtestados[k];
+      if (!item || !item.foto) return alert("Erro ao carregar arquivo de imagem!");
+
+      const linkBaixar = document.createElement('a');
+      linkBaixar.href = item.foto;
+      
+      const nomeArquivo = `Atestado_${item.colaborador.replace(/\s+/g, '_')}_De_${item.dataInicio}.jpg`;
+      linkBaixar.download = nomeArquivo;
+      
+      document.body.appendChild(linkBaixar);
+      linkBaixar.click();
+      document.body.removeChild(linkBaixar);
     }
 
     function verComprovante(k) {
@@ -488,6 +550,23 @@
       return t ? t.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "") : "";
     }
 
+    function verificarAtestadoNoPeriodo(nomeFunc, dataDia) {
+      let flagAtestado = false;
+      Object.keys(memoriaAtestados).forEach(k => {
+        const item = memoriaAtestados[k];
+        if (normalizarTexto(item.colaborador) === normalizarTexto(nomeFunc)) {
+          if (item.dataInicio && item.dataFim) {
+            if (dataDia >= item.dataInicio && dataDia <= item.dataFim) {
+              flagAtestado = true;
+            }
+          } else if (item.data === dataDia) {
+            flagAtestado = true;
+          }
+        }
+      });
+      return flagAtestado;
+    }
+
     function consultarPeriodoBanco() {
       const lojaFiltro = document.getElementById('filtroLoja').value;
       const colabFiltro = document.getElementById('filtroColaborador').value;
@@ -518,7 +597,7 @@
           });
         }
 
-        let selecionados = Object.keys(memoriaFuncionarios).filter(n => {
+        letGrid = Object.keys(memoriaFuncionarios).filter(n => {
           if (lojaFiltro !== "TODAS" && String(memoriaFuncionarios[n].loja) !== String(lojaFiltro)) return false;
           if (colabFiltro !== "TODOS" && n !== colabFiltro) return false;
           return true;
@@ -530,7 +609,7 @@
         const minRetEsperado = converterParaMinutos(JORNADA_PADRAO.retornoAlmoco);
         const minFimEsperado = converterParaMinutos(JORNADA_PADRAO.saidaFim);
 
-        selecionados.forEach(nome => {
+        letGrid.forEach(nome => {
           let tTrab = 0, tFaltas = 0, saldoMinutosAcumulado = 0;
           const cadastro = memoriaFuncionarios[nome];
           const nNorm = normalizarTexto(nome);
@@ -546,14 +625,14 @@
 
             let tokenComp = `${dStr}_${nome.replace(/[^A-Z0-9]/gi, '')}`;
             let ocr = memoriaOcorrencias[tokenComp];
-            let ats = memoriaAtestados[tokenComp];
+            let possuiAtestado = verificarAtestadoNoPeriodo(nome, dStr);
 
             if (batidas.length > 0) {
               tTrab++;
               batidas.forEach(b => {
                 let horaStr = b.horario;
                 let elem = `<div class="bloco-ponto-acoes"><span class="titulo-hora">${horaStr}</span>`;
-                if(b.fotoSelfie) elem += `<button class="btn-foto" onclick="abrirModalFoto('${b.fotoSelfie}')">📸 VER</button>`;
+                if(b.fotoSelfie) elem += `<button class="btn-foto" onclick="document.getElementById('modalImg').src='${b.fotoSelfie}'; document.getElementById('modalFoto').style.display='flex';">📸 VER</button>`;
                 elem += '</div>';
 
                 let tipo = normalizarTexto(b.tipo);
@@ -584,7 +663,7 @@
 
             } else {
               let colEntrada = "";
-              if (ats) {
+              if (possuiAtestado) {
                 colEntrada = '<span style="color:#e65100; font-weight:bold; background:#fff3e0; padding:4px 8px; border-radius:4px;">🏥 ATESTADO MÉDICO</span>';
               } else if (ocr && ocr.tipo === 'FOLGA') {
                 colEntrada = '<span style="color:#0d47a1; font-weight:bold; background:#e3f2fd; padding:4px 8px; border-radius:4px;">🌴 FOLGA PROGRAMADA</span>';
