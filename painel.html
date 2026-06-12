@@ -57,11 +57,6 @@
     td { padding: 10px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; color: var(--cor-texto); }
     tr:hover { background-color: var(--cor-tabela-hover); }
     
-    .status-falta-box { display: inline-flex; align-items: center; gap: 5px; }
-    .status-falta { color: #c62828; font-weight: bold; background: #ffebee; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-    .status-folga { color: #0d47a1; font-weight: bold; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-    .status-atestado { color: #e65100; font-weight: bold; background: #fff3e0; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-    
     .btn-engrenagem { background: #e0e0e0; border: 1px solid #bcbcbc; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; color: #444; }
     .btn-engrenagem:hover { background: #d5d5d5; }
 
@@ -73,7 +68,6 @@
     .titulo-hora { font-size: 11px; font-weight: bold; color: #004a26; }
     .btn-foto { background: #673ab7; color: white; border: none; padding: 2px 4px; border-radius: 3px; font-size: 9px; cursor: pointer; width: 100%; margin-top: 2px; }
 
-    /* Modais Estilizados */
     .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
     .modal-content { background-color: white; padding: 20px; border-radius: 12px; max-width: 420px; width: 90%; text-align: center; color: #333; box-shadow: 0 4px 25px rgba(0,0,0,0.2); }
     .opcao-dialogo { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; text-align: left; font-size: 14px; font-weight: bold; cursor: pointer; background: #fafafa; }
@@ -262,7 +256,6 @@
   </div>
 
   <script>
-    // Inicialização do Banco de Dados
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -276,7 +269,6 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Horários Base Padrão para Cálculo da CLT (Carga Horária Comercial Padrão)
     const JORNADA_PADRAO = {
       entrada: "08:00",
       saidaAlmoco: "12:00",
@@ -307,7 +299,6 @@
       }
     }
 
-    // Gerenciador de Câmera Nativa para Atestados
     function inicializarCamera() {
       const video = document.getElementById('cameraPreview');
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
@@ -345,7 +336,6 @@
       document.getElementById('statusUploadAtestado').innerText = "📸 Imagem capturada com sucesso!";
     }
 
-    // Sincronização em tempo real das coleções do Firebase
     function iniciarEscutasBanco() {
       database.ref('config_funcionarios').on('value', snap => {
         memoriaFuncionarios = snap.val() || {};
@@ -356,13 +346,14 @@
       });
       database.ref('atestados_painel').on('value', snap => {
         memoriaAtestados = snap.val() || {};
-        if(document.getElementById('abaAtestados').classList.contains('ativa')) renderizarTabelaAtestadosLocal();
+        renderTabelaAtestadosLocal();
       });
     }
 
     function atualizarListaFuncionariosPainel() {
       const loja = document.getElementById('filtroLoja').value;
       const sel = document.getElementById('filtroColaborador');
+      if(!sel) return;
       sel.innerHTML = '<option value="TODOS">-- Todos os Funcionários --</option>';
       Object.keys(memoriaFuncionarios).sort().forEach(n => {
         if (loja === "TODAS" || String(memoriaFuncionarios[n].loja) === String(loja)) {
@@ -373,13 +364,17 @@
 
     function carregarListaFuncionariosAtestado() {
       const sel = document.getElementById('atestadoColaborador');
+      if(!sel) return;
       sel.innerHTML = '<option value="">-- Escolha o Funcionário --</option>';
       Object.keys(memoriaFuncionarios).sort().forEach(n => {
         sel.options[sel.options.length] = new Option(n, n);
       });
     }
 
-    // Salvar Atestado na Aba Separada
+    function carregarTabelaAtestados() {
+      renderTabelaAtestadosLocal();
+    }
+
     function salvarAtestadoBanco() {
       const colab = document.getElementById('atestadoColaborador').value;
       const dataEvt = document.getElementById('atestadoData').value;
@@ -398,13 +393,16 @@
       });
     }
 
-    function renderizarTabelaAtestadosLocal() {
+    function renderTabelaAtestadosLocal() {
       const box = document.getElementById('tabelaAtestadosCorpo');
+      if(!box) return;
       box.innerHTML = "";
+      
       if(Object.keys(memoriaAtestados).length === 0) {
         box.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum atestado guardado.</td></tr>';
         return;
       }
+      
       Object.keys(memoriaAtestados).forEach(k => {
         const item = memoriaAtestados[k];
         const tr = document.createElement('tr');
@@ -417,15 +415,18 @@
     }
 
     function verComprovante(k) {
-      document.getElementById('modalImg').src = memoriaAtestados[k].foto;
-      document.getElementById('modalFoto').style.display = 'flex';
+      if(memoriaAtestados[k]) {
+        document.getElementById('modalImg').src = memoriaAtestados[k].foto;
+        document.getElementById('modalFoto').style.display = 'flex';
+      }
     }
 
     function deletarAtestado(k) {
-      if(confirm("Remover este registro de atestado médico?")) database.ref('atestados_painel/' + k).remove();
+      if(confirm("Remover este registro de atestado médico?")) {
+        database.ref('atestados_painel/' + k).remove();
+      }
     }
 
-    // Acionador das Ocorrências Estilo Engrenagem (Individual por Dia/Funcionário)
     function gerenciarDiaIndividual(data, funcionario) {
       ocorrenciaAtivaData = data;
       ocorrenciaAtivaFuncionario = funcionario;
@@ -456,7 +457,6 @@
       }
     }
 
-    // MOTOR DE CÁLCULO DE MINUTOS E COMPENSAÇÃO DE ATRASOS/EXTRAS CONFORME A CLT
     function converterParaMinutos(horario) {
       if (!horario || horario === "--" || horario.includes("<span")) return null;
       const partes = horario.split(':');
@@ -466,9 +466,6 @@
     function calcularCompensacaoClt(real, esperado, tipoBatida) {
       if (real === null || esperado === null) return 0;
       let diferenca = real - esperado;
-      
-      // Para saídas (Almoço ou Fim), bater depois do esperado significa horas positivas (Extra)
-      // Para entradas, bater depois do esperado significa horas negativas (Atraso)
       if (tipoBatida === "entrada" || tipoBatida === "retornoAlmoco") {
         return -diferenca; 
       } else {
@@ -478,23 +475,19 @@
 
     function formatarMinutosSaldo(totalMinutos) {
       if (Math.abs(totalMinutos) <= 10) return `<span class="saldo-neutro">00:00 (Tolerância)</span>`;
-      
       const sinal = totalMinutos >= 0 ? "+" : "-";
       const minAbsolutos = Math.abs(totalMinutos);
       const horas = Math.floor(minAbsolutos / 60);
       const mins = minAbsolutos % 60;
-      const strTime = `${String(horas).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-      
       return totalMinutos >= 0 
-        ? `<span class="saldo-positivo">▲ Extra ${sinal}${strTime}</span>` 
-        : `<span class="saldo-negativo">▼ Atraso ${sinal}${strTime}</span>`;
+        ? `<span class="saldo-positivo">▲ Extra ${sinal}${String(horas).padStart(2,'0')}:${String(mins).padStart(2,'0')}</span>` 
+        : `<span class="saldo-negativo">▼ Atraso ${sinal}${String(horas).padStart(2,'0')}:${String(mins).padStart(2,'0')}</span>`;
     }
 
     function normalizarTexto(t) {
       return t ? t.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "") : "";
     }
 
-    // Consulta de Período e Montagem de Tabela Comercial
     function consultarPeriodoBanco() {
       const lojaFiltro = document.getElementById('filtroLoja').value;
       const colabFiltro = document.getElementById('filtroColaborador').value;
@@ -532,8 +525,6 @@
         }).sort();
 
         let html = "";
-        
-        // Horários esperados transformados em minutos absolutos
         const minEntesperada = converterParaMinutos(JORNADA_PADRAO.entrada);
         const minAlmEsperado = converterParaMinutos(JORNADA_PADRAO.saidaAlmoco);
         const minRetEsperado = converterParaMinutos(JORNADA_PADRAO.retornoAlmoco);
@@ -547,7 +538,6 @@
           for (let d = 1; d <= totalDias; d++) {
             let dStr = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let dVis = `${String(d).padStart(2,'0')}/${String(mes+1).padStart(2,'0')}/${ano}`;
-            
             let chaveBusca = `${dStr}_${nNorm}`;
             let batidas = mapa[chaveBusca] || [];
             
@@ -573,7 +563,6 @@
                 else if (tipo.includes("saidafim") || tipo.includes("fim")) { fim = elem; hFim = horaStr; }
               });
 
-              // Processador de Minutos Individuais do Dia
               let mEnt = converterParaMinutos(hEnt);
               let mAlm = converterParaMinutos(hAlm);
               let mRet = converterParaMinutos(hRet);
@@ -585,39 +574,26 @@
               saldoDia += calcularCompensacaoClt(mRet, minRetEsperado, "retornoAlmoco");
               saldoDia += calcularCompensacaoClt(mFim, minFimEsperado, "saidaFim");
 
-              // Aplicação da regra da CLT: Variações totais de até 10 minutos diários são desconsideradas
-              if (Math.abs(saldoDia) <= 10) {
-                saldoDia = 0;
-              }
+              if (Math.abs(saldoDia) <= 10) saldoDia = 0;
               saldoMinutosAcumulado += saldoDia;
 
               let colSaldo = formatarMinutosSaldo(saldoDia);
               let acaoEngrenagem = `<button class="btn-engrenagem" onclick="gerenciarDiaIndividual('${dStr}','${nome.replace(/'/g,"\\'")}')">⚙️</button>`;
 
-              html += `<tr>
-                <td>${dVis}</td>
-                <td><b>${nome}</b></td>
-                <td>${ent}</td>
-                <td>${alm}</td>
-                <td>${ret}</td>
-                <td>${fim}</td>
-                <td>${colSaldo}</td>
-                <td>${acaoEngrenagem}</td>
-              </tr>`;
+              html += `<tr><td>${dVis}</td><td><b>${nome}</b></td><td>${ent}</td><td>${alm}</td><td>${ret}</td><td>${fim}</td><td>${colSaldo}</td><td>${acaoEngrenagem}</td></tr>`;
 
             } else {
-              // Verificação de Abatimento por Atestado ou Ocorrência Individual Manual
               let colEntrada = "";
               if (ats) {
-                colEntrada = '<span class="status-atestado">🏥 ATESTADO MÉDICO</span>';
+                colEntrada = '<span style="color:#e65100; font-weight:bold; background:#fff3e0; padding:4px 8px; border-radius:4px;">🏥 ATESTADO MÉDICO</span>';
               } else if (ocr && ocr.tipo === 'FOLGA') {
-                colEntrada = '<span class="status-folga">🌴 FOLGA PROGRAMADA</span>';
+                colEntrada = '<span style="color:#0d47a1; font-weight:bold; background:#e3f2fd; padding:4px 8px; border-radius:4px;">🌴 FOLGA PROGRAMADA</span>';
               } else if (ocr && ocr.tipo === 'FALTA') {
-                colEntrada = '<span class="status-falta">❌ FALTA LANÇADA</span>';
+                colEntrada = '<span style="color:#c62828; font-weight:bold; background:#ffebee; padding:4px 8px; border-radius:4px;">❌ FALTA LANÇADA</span>';
                 tFaltas++;
               } else {
                 if (new Date(ano, mes, d, 23, 59) < new Date()) {
-                  colEntrada = '<span class="status-falta">❌ FALTA</span>';
+                  colEntrada = '<span style="color:#c62828; font-weight:bold; background:#ffebee; padding:4px 8px; border-radius:4px;">❌ FALTA</span>';
                   tFaltas++;
                 } else {
                   colEntrada = '<span style="color:#999;">--</span>';
@@ -625,24 +601,12 @@
               }
 
               let acaoEngrenagem = `<button class="btn-engrenagem" onclick="gerenciarDiaIndividual('${dStr}','${nome.replace(/'/g,"\\'")}')">⚙️</button>`;
-
-              html += `<tr>
-                <td>${dVis}</td>
-                <td><b>${nome}</b></td>
-                <td colspan="4">${colEntrada}</td>
-                <td>--</td>
-                <td>${acaoEngrenagem}</td>
-              </tr>`;
+              html += `<tr><td>${dVis}</td><td><b>${nome}</b></td><td colspan="4">${colEntrada}</td><td>--</td><td>${acaoEngrenagem}</td></tr>`;
             }
           }
 
           registrosProcessadosCache.push({ 
-            nome: nome, 
-            setor: cadastro.setor, 
-            loja: cadastro.loja, 
-            trabalhados: tTrab, 
-            faltas: tFaltas, 
-            saldoMinutos: saldoMinutosAcumulado 
+            nome: nome, setor: cadastro.setor, loja: cadastro.loja, trabalhados: tTrab, faltas: tFaltas, saldoMinutos: saldoMinutosAcumulado 
           });
         });
 
@@ -650,23 +614,16 @@
       });
     }
 
-    function abrirModalFoto(url) {
-      document.getElementById('modalImg').src = url;
-      document.getElementById('modalFoto').style.display = 'flex';
-    }
-
-    // Exportação Consolidada para Fechamento de Folha de Pagamento
     function exportarParaExcel() {
       if (registrosProcessadosCache.length === 0) return alert("Execute a consulta primeiro!");
       let dados = registrosProcessadosCache.map(f => {
-        let horasFormatadas = (f.saldoMinutos / 60).toFixed(2);
         return {
           "Funcionário": f.nome,
           "Setor": f.setor,
           "Unidade": "Loja " + f.loja,
           "Dias Ativos": f.trabalhados,
           "Faltas Comercial": f.faltas,
-          "Saldo Horas (Decimal)": horasFormatadas
+          "Saldo Horas (Decimal)": (f.saldoMinutos / 60).toFixed(2)
         };
       });
       const wb = XLSX.utils.book_new();
@@ -688,9 +645,7 @@
         let h = Math.floor(Math.abs(f.saldoMinutos) / 60);
         let m = Math.abs(f.saldoMinutos) % 60;
         let saldoStr = Math.abs(f.saldoMinutos) <= 10 ? "00:00" : `${sinal}${h}:${String(m).padStart(2,'0')}`;
-        return [
-          String(i+1), f.nome, f.setor, `Loja ${f.loja}`, `${f.trabalhados} d`, `${f.faltas} f`, saldoStr
-        ];
+        return [String(i+1), f.nome, f.setor, `Loja ${f.loja}`, `${f.trabalhados} d`, `${f.faltas} f`, saldoStr];
       });
 
       doc.autoTable({
@@ -712,9 +667,8 @@
       }
     }
 
-    // Métodos Auxiliares de Controle de Funcionários
     function carregarTabelaFuncionarios() {
-      const box = document.getElementById('tabelaFuncionariosCorpo'); box.innerHTML = "";
+      const box = document.getElementById('tabelaFuncionariosCorpo'); if(!box) return; box.innerHTML = "";
       Object.keys(memoriaFuncionarios).sort().forEach(n => {
         const f = memoriaFuncionarios[n];
         const tr = document.createElement('tr');
