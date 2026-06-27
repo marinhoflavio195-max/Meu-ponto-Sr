@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Ponto - Supermercado São Raimundo</title>
+  <title>Painel de Ponto - Supermercado Raimundo</title>
   
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -100,6 +100,7 @@
       <button class="aba-btn ativa" onclick="alternarAba('abaPontos', this)">📊 Central de Pontos</button>
       <button class="aba-btn" onclick="alternarAba('abaAtestados', this); carregarListaFuncionariosAtestado(); carregarTabelaAtestados();">🏥 Aba de Atestados Médicos</button>
       <button class="aba-btn" onclick="alternarAba('abaFuncionarios', this); carregarTabelaFuncionarios();">👥 Gerenciar Funcionários</button>
+      <button class="aba-btn" onclick="alternarAba('abaExFuncionarios', this); carregarTabelaExFuncionarios();">💼 Ex-Colaboradores</button>
     </div>
 
     <div id="abaPontos" class="conteudo-aba ativa">
@@ -225,7 +226,7 @@
         </div>
         <button class="btn btn-salvar" onclick="salvarFuncionariovb()">💾 Gravar Cadastro</button>
       </div>
-      <h3>👥 Funcionários Cadastrados</h3>
+      <h3>👥 Funcionários Ativos</h3>
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -238,6 +239,27 @@
             </tr>
           </thead>
           <tbody id="tabelaFuncionariosCorpo"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="abaExFuncionarios" class="conteudo-aba">
+      <h3 style="margin-top: 0; color: #444;">💼 Histórico de Ex-Colaboradores Desligados</h3>
+      <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Estes funcionários foram desligados, mas seus históricos de pontos e saldos continuam arquivados no sistema para consultas.</p>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome Completo</th>
+              <th>Último Setor</th>
+              <th>Loja Ocupada</th>
+              <th>Chave Unidade</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaExFuncionariosCorpo">
+            <tr><td colspan="5" style="text-align: center; padding: 15px;">Nenhum ex-colaborador na lista.</td></tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -344,7 +366,6 @@
       document.getElementById('statusUploadAtestado').innerText = "📸 Imagem da câmera capturada!";
     }
 
-    // NOVA FUNÇÃO: Processa o arquivo anexado e converte em Base64
     function importarArquivoImagem(input) {
       const arquivo = input.files[0];
       if (!arquivo) return;
@@ -388,7 +409,9 @@
       if(!sel) return;
       sel.innerHTML = '<option value="">-- Escolha o Funcionário --</option>';
       Object.keys(memoriaFuncionarios).sort().forEach(n => {
-        sel.options[sel.options.length] = new Option(n, n);
+        if (memoriaFuncionarios[n].status !== 'desativado') {
+          sel.options[sel.options.length] = new Option(n, n);
+        }
       });
     }
 
@@ -614,6 +637,17 @@
           const cadastro = memoriaFuncionarios[nome];
           const nNorm = normalizarTexto(nome);
 
+          let temBatidaNoMes = false;
+          for (let d = 1; d <= totalDias; d++) {
+            let dStr = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            let chaveBusca = `${dStr}_${nNorm}`;
+            if (mapa[chaveBusca]) { temBatidaNoMes = true; break; }
+          }
+
+          if (cadastro.status === 'desativado' && !temBatidaNoMes && colabFiltro === "TODOS") {
+            return;
+          }
+
           for (let d = 1; d <= totalDias; d++) {
             let dStr = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let dVis = `${String(d).padStart(2,'0')}/${String(mes+1).padStart(2,'0')}/${ano}`;
@@ -659,9 +693,11 @@
               let colSaldo = formatarMinutosSaldo(saldoDia);
               let acaoEngrenagem = `<button class="btn-engrenagem" onclick="gerenciarDiaIndividual('${dStr}','${nome.replace(/'/g,"\\'")}')">⚙️</button>`;
 
-              html += `<tr><td>${dVis}</td><td><b>${nome}</b></td><td>${ent}</td><td>${alm}</td><td>${ret}</td><td>${fim}</td><td>${colSaldo}</td><td>${acaoEngrenagem}</td></tr>`;
+              html += `<tr><td>${dVis}</td><td><b>${nome} ${cadastro.status === 'desativado' ? '<span style="color:red; font-size:10px;">(DESLIGADO)</span>' : ''}</b></td><td>${ent}</td><td>${alm}</td><td>${ret}</td><td>${fim}</td><td>${colSaldo}</td><td>${acaoEngrenagem}</td></tr>`;
 
             } else {
+              if (cadastro.status === 'desativado') continue;
+
               let colEntrada = "";
               if (possuiAtestado) {
                 colEntrada = '<span style="color:#e65100; font-weight:bold; background:#fff3e0; padding:4px 8px; border-radius:4px;">🏥 ATESTADO MÉDICO</span>';
@@ -684,12 +720,14 @@
             }
           }
 
-          registrosProcessadosCache.push({ 
-            nome: nome, setor: cadastro.setor, loja: cadastro.loja, trabalhados: tTrab, faltas: tFaltas, saldoMinutos: saldoMinutosAcumulado 
-          });
+          if (tTrab > 0 || cadastro.status !== 'desativado') {
+            registrosProcessadosCache.push({ 
+              nome: nome + (cadastro.status === 'desativado' ? " (DESLIGADO)" : ""), setor: cadastro.setor, loja: cadastro.loja, trabalhados: tTrab, faltas: tFaltas, saldoMinutos: saldoMinutosAcumulado 
+            });
+          }
         });
 
-        corpo.innerHTML = html;
+        corpo.innerHTML = html || '<tr><td colspan="8" style="text-align: center; padding: 15px;">Nenhum registro encontrado para os filtros selecionados.</td></tr>';
       });
     }
 
@@ -748,13 +786,63 @@
 
     function carregarTabelaFuncionarios() {
       const box = document.getElementById('tabelaFuncionariosCorpo'); if(!box) return; box.innerHTML = "";
+      let cont = 0;
       Object.keys(memoriaFuncionarios).sort().forEach(n => {
         const f = memoriaFuncionarios[n];
+        if (f.status === 'desativado') return; 
+        cont++;
         const tr = document.createElement('tr');
         tr.innerHTML = `<td><b>${n}</b></td><td>${f.setor||'--'}</td><td>Loja ${f.loja||'--'}</td><td><code>${f.chaveApp||'--'}</code></td>
-        <td><button class="btn" style="background:#f57c00; padding:4px 6px;" onclick="carregarParaEditar('${n.replace(/'/g,"\\'")}')">✏️</button></td>`;
+        <td>
+          <button class="btn" style="background:#f57c00; padding:4px 6px; margin-right:4px;" onclick="carregarParaEditar('${n.replace(/'/g,"\\'")}')">✏️ Editar</button>
+          <button class="btn" style="background:#d32f2f; padding:4px 6px;" onclick="desligarColaborador('${n.replace(/'/g,"\\'")}')">🗑️ Desligar</button>
+        </td>`;
         box.appendChild(tr);
       });
+      if(cont === 0) {
+        box.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px;">Nenhum funcionário ativo cadastrado.</td></tr>';
+      }
+    }
+
+    function carregarTabelaExFuncionarios() {
+      const box = document.getElementById('tabelaExFuncionariosCorpo'); if(!box) return; box.innerHTML = "";
+      let cont = 0;
+      Object.keys(memoriaFuncionarios).sort().forEach(n => {
+        const f = memoriaFuncionarios[n];
+        if (f.status !== 'desativado') return; 
+        cont++;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><b>${n}</b></td><td>${f.setor||'--'}</td><td>Loja ${f.loja||'--'}</td><td><code>${f.chaveApp||'--'}</code></td>
+        <td>
+          <button class="btn" style="background:#2e7d32; padding:4px 6px;" onclick="reativarColaborador('${n.replace(/'/g,"\\'")}')">🔄 Reativar</button>
+        </td>`;
+        box.appendChild(tr);
+      });
+      if(cont === 0) {
+        box.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px;">Nenhum ex-colaborador na lista.</td></tr>';
+      }
+    }
+
+    function desligarColaborador(nome) {
+      if (confirm(`Tem certeza de que deseja desligar o colaborador ${nome}?\nEle será movido para a lista de Ex-Colaboradores e o histórico de pontos dele será mantido.`)) {
+        database.ref('config_funcionarios/' + nome).update({
+          status: 'desativado'
+        }).then(() => {
+          alert(`${nome} foi desligado com sucesso!`);
+          carregarTabelaFuncionarios();
+        });
+      }
+    }
+
+    function reativarColaborador(nome) {
+      if (confirm(`Deseja reativar o cadastro do colaborador ${nome} para a lista de funcionários ativos?`)) {
+        database.ref('config_funcionarios/' + nome).update({
+          status: 'ativo'
+        }).then(() => {
+          alert(`${nome} foi reativado com sucesso!`);
+          carregarTabelaExFuncionarios();
+        });
+      }
     }
 
     function salvarFuncionariovb() {
@@ -764,7 +852,14 @@
       const chave = document.getElementById('formChave').value.trim().toLowerCase();
       if(!nome || !setor || !chave) return alert("Preencha tudo!");
 
-      database.ref('config_funcionarios/' + nome).set({ setor, loja, chaveApp: chave }).then(() => {
+      const statusAtual = (memoriaFuncionarios[nome] && memoriaFuncionarios[nome].status) ? memoriaFuncionarios[nome].status : 'ativo';
+
+      database.ref('config_funcionarios/' + nome).set({ 
+        setor, 
+        loja, 
+        chaveApp: chave,
+        status: statusAtual
+      }).then(() => {
         alert("Salvo com sucesso!");
         document.getElementById('formNome').value = "";
         document.getElementById('formSetor').value = "";
