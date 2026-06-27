@@ -299,6 +299,9 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // DEFINIÇÃO DA SENHA MASTER DE EXCLUSÃO
+    const SENHA_MASTER = "1234";
+
     const JORNADA_PADRAO = {
       entrada: "08:00",
       saidaAlmoco: "12:00",
@@ -620,7 +623,8 @@
           });
         }
 
-        letGrid = Object.keys(memoriaFuncionarios).filter(n => {
+        // CORREÇÃO AQUI: adicionado o escopo correto da variável para não quebrar o código
+        const letGrid = Object.keys(memoriaFuncionarios).filter(n => {
           if (lojaFiltro !== "TODAS" && String(memoriaFuncionarios[n].loja) !== String(lojaFiltro)) return false;
           if (colabFiltro !== "TODOS" && n !== colabFiltro) return false;
           return true;
@@ -792,10 +796,12 @@
         if (f.status === 'desativado') return; 
         cont++;
         const tr = document.createElement('tr');
+        // IMPLEMENTADOS: Botões Editar, Desligar e Excluir
         tr.innerHTML = `<td><b>${n}</b></td><td>${f.setor||'--'}</td><td>Loja ${f.loja||'--'}</td><td><code>${f.chaveApp||'--'}</code></td>
         <td>
           <button class="btn" style="background:#f57c00; padding:4px 6px; margin-right:4px;" onclick="carregarParaEditar('${n.replace(/'/g,"\\'")}')">✏️ Editar</button>
-          <button class="btn" style="background:#d32f2f; padding:4px 6px;" onclick="desligarColaborador('${n.replace(/'/g,"\\'")}')">🗑️ Desligar</button>
+          <button class="btn" style="background:#0288d1; padding:4px 6px; margin-right:4px;" onclick="desligarColaborador('${n.replace(/'/g,"\\'")}')">💼 Desligar</button>
+          <button class="btn" style="background:#d32f2f; padding:4px 6px;" onclick="excluirColaboradorDefinitivo('${n.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
         </td>`;
         box.appendChild(tr);
       });
@@ -812,9 +818,11 @@
         if (f.status !== 'desativado') return; 
         cont++;
         const tr = document.createElement('tr');
+        // IMPLEMENTADOS: Reativar e Excluir definitivo para ex-colaboradores
         tr.innerHTML = `<td><b>${n}</b></td><td>${f.setor||'--'}</td><td>Loja ${f.loja||'--'}</td><td><code>${f.chaveApp||'--'}</code></td>
         <td>
-          <button class="btn" style="background:#2e7d32; padding:4px 6px;" onclick="reativarColaborador('${n.replace(/'/g,"\\'")}')">🔄 Reativar</button>
+          <button class="btn" style="background:#2e7d32; padding:4px 6px; margin-right:4px;" onclick="reativarColaborador('${n.replace(/'/g,"\\'")}')">🔄 Reativar</button>
+          <button class="btn" style="background:#d32f2f; padding:4px 6px;" onclick="excluirColaboradorDefinitivo('${n.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
         </td>`;
         box.appendChild(tr);
       });
@@ -831,6 +839,25 @@
           alert(`${nome} foi desligado com sucesso!`);
           carregarTabelaFuncionarios();
         });
+      }
+    }
+
+    // NOVA FUNÇÃO: Exclusão com verificação de senha master
+    function excluirColaboradorDefinitivo(nome) {
+      const senhaDigitada = prompt(`⚠️ ATENÇÃO: Isso removerá permanentemente o colaborador "${nome}" do Firebase.\nDigite a senha administrativa para confirmar:`);
+      
+      if (senhaDigitada === null) return; // Se cancelar o prompt, não faz nada
+
+      if (senhaDigitada === SENHA_MASTER) {
+        if (confirm(`Confirmação final: Deseja REALMENTE deletar por completo o cadastro de ${nome}?`)) {
+          database.ref('config_funcionarios/' + nome).remove().then(() => {
+            alert(`O cadastro de ${nome} foi excluído definitivamente.`);
+            carregarTabelaFuncionarios();
+            carregarTabelaExFuncionarios();
+          });
+        }
+      } else {
+        alert("❌ Senha incorreta! Operação abortada.");
       }
     }
 
