@@ -9,14 +9,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <style>
-    /* Mudança global para a nova paleta de cores (Vermelho) */
     body { font-family: Arial, sans-serif; background-color: #fcebee; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
     .container-ponto { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(186,12,12,0.15); border-top: 6px solid #d32f2f; box-sizing: border-box; }
     
-    /* Área de inserção de Logos */
-    .area-logo-topo { text-align: center; margin-bottom: 15px; background-color: #ffffff; padding: 10px; border-radius: 8px; }
-    .area-logo-rodape { text-align: center; margin-top: 20px; background-color: #ffffff; padding: 10px; border-radius: 8px; border-top: 1px solid #eee; }
-    .logo-img { max-width: 100%; height: auto; max-height: 90px; object-fit: contain; }
+    /* Ajuste refinado para exibição correta das logos nos espaços em branco */
+    .area-logo-topo { text-align: center; margin-bottom: 20px; background-color: #ffffff; padding: 5px; display: flex; justify-content: center; align-items: center; min-height: 80px; }
+    .area-logo-rodape { text-align: center; margin-top: 25px; background-color: #ffffff; padding: 5px; border-top: 1px solid #eee; display: flex; justify-content: center; align-items: center; min-height: 80px; }
+    .logo-img { max-width: 100%; height: auto; max-height: 100px; border-radius: 6px; object-fit: contain; display: block; }
 
     h2 { color: #d32f2f; text-align: center; margin-top: 0; margin-bottom: 5px; font-size: 22px; letter-spacing: 0.5px; }
     .subtitulo { text-align: center; color: #555; font-size: 13px; margin-bottom: 25px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #ffd700; padding-bottom: 8px; }
@@ -40,7 +39,7 @@
     
     #statusCarregamentoInicial { text-align: center; color: #d32f2f; font-weight: bold; font-size: 14px; margin-bottom: 15px; background: #ffebee; padding: 8px; border-radius: 6px; }
 
-    /* --- ESTILIZAÇÃO DO BOTÃO E MODAL DE SUPORTE --- */
+    /* BOTÃO E MODAL DE SUPORTE */
     .btn-suporte-flutuante { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background-color: #d32f2f; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 9999; user-select: none; transition: transform 0.2s; }
     .btn-suporte-flutuante:hover { transform: scale(1.1); background-color: #b71c1c; }
     
@@ -60,7 +59,7 @@
 
   <div class="container-ponto">
     <div class="area-logo-topo">
-      <img src="SUA_LOGO_AQUI.jpg" alt="Logo São Raimundo Topo" class="logo-img" onerror="this.style.display='none';">
+      <img src="logo.jpg" alt="Logo São Raimundo" class="logo-img">
     </div>
 
     <h2>SUPERMERCADO SÃO RAIMUNDO</h2>
@@ -105,7 +104,7 @@
     </div>
 
     <div class="area-logo-rodape">
-      <img src="SUA_LOGO_AQUI.jpg" alt="Logo São Raimundo Rodapé" class="logo-img" onerror="this.style.display='none';">
+      <img src="logo.jp" alt="Logo São Raimundo" class="logo-img">
     </div>
   </div>
 
@@ -132,7 +131,6 @@
   </div>
 
   <script>
-    /* Funções do Modal de Suporte */
     function abrirModalSuporte() {
       document.getElementById('janelaModalSuporte').style.display = 'flex';
     }
