@@ -9,35 +9,60 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f0f4f1; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
-    .container-ponto { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,74,38,0.15); border-top: 6px solid #006430; box-sizing: border-box; }
+    /* Mudança global para a nova paleta de cores (Vermelho) */
+    body { font-family: Arial, sans-serif; background-color: #fcebee; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+    .container-ponto { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(186,12,12,0.15); border-top: 6px solid #d32f2f; box-sizing: border-box; }
     
-    h2 { color: #006430; text-align: center; margin-top: 0; margin-bottom: 5px; font-size: 22px; letter-spacing: 0.5px; }
-    .subtitulo { text-align: center; color: #666; font-size: 13px; margin-bottom: 25px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #ffd700; padding-bottom: 8px; }
+    /* Área de inserção de Logos */
+    .area-logo-topo { text-align: center; margin-bottom: 15px; background-color: #ffffff; padding: 10px; border-radius: 8px; }
+    .area-logo-rodape { text-align: center; margin-top: 20px; background-color: #ffffff; padding: 10px; border-radius: 8px; border-top: 1px solid #eee; }
+    .logo-img { max-width: 100%; height: auto; max-height: 90px; object-fit: contain; }
+
+    h2 { color: #d32f2f; text-align: center; margin-top: 0; margin-bottom: 5px; font-size: 22px; letter-spacing: 0.5px; }
+    .subtitulo { text-align: center; color: #555; font-size: 13px; margin-bottom: 25px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #ffd700; padding-bottom: 8px; }
     
     .campo-grupo { margin-bottom: 18px; }
-    .campo-grupo label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #004a26; }
-    .campo-grupo select { width: 100%; padding: 12px; border: 2px solid #a5d6a7; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #ffffff; color: #333; font-weight: bold; transition: border-color 0.2s; }
-    .campo-grupo select:focus { border-color: #006430; outline: none; }
+    .campo-grupo label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #b71c1c; }
+    .campo-grupo select { width: 100%; padding: 12px; border: 2px solid #ef9a9a; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #ffffff; color: #333; font-weight: bold; transition: border-color 0.2s; }
+    .campo-grupo select:focus { border-color: #d32f2f; outline: none; }
     .campo-grupo select:disabled { background-color: #f5f5f5; border-color: #e0e0e0; color: #999; }
     
     .status-gps { padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 15px; display: none; }
     .gps-sucesso { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-    .gps-erro { background-color: #ffebee; color: #c62828; border: 1px solid #ffbaf2; }
+    .gps-erro { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
 
-    .area-camera { display: none; text-align: center; margin-top: 20px; border-top: 2px dashed #a5d6a7; padding-top: 20px; }
-    #video { width: 100%; max-width: 320px; height: auto; border-radius: 8px; border: 3px solid #006430; background: #222; transform: scaleX(-1); }
+    .area-camera { display: none; text-align: center; margin-top: 20px; border-top: 2px dashed #ef9a9a; padding-top: 20px; }
+    #video { width: 100%; max-width: 320px; height: auto; border-radius: 8px; border: 3px solid #d32f2f; background: #222; transform: scaleX(-1); }
     #canvas { display: none; }
     
-    .btn-bater { width: 100%; padding: 15px; background-color: #2e7d32; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
-    .btn-bater:hover { background-color: #1b5e20; }
+    .btn-bater { width: 100%; padding: 15px; background-color: #d32f2f; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); transition: background 0.2s; }
+    .btn-bater:hover { background-color: #b71c1c; }
     
-    #statusCarregamentoInicial { text-align: center; color: #006430; font-weight: bold; font-size: 14px; margin-bottom: 15px; background: #e8f5e9; padding: 8px; border-radius: 6px; }
+    #statusCarregamentoInicial { text-align: center; color: #d32f2f; font-weight: bold; font-size: 14px; margin-bottom: 15px; background: #ffebee; padding: 8px; border-radius: 6px; }
+
+    /* --- ESTILIZAÇÃO DO BOTÃO E MODAL DE SUPORTE --- */
+    .btn-suporte-flutuante { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background-color: #d32f2f; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 9999; user-select: none; transition: transform 0.2s; }
+    .btn-suporte-flutuante:hover { transform: scale(1.1); background-color: #b71c1c; }
+    
+    .modal-suporte { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 10000; }
+    .conteudo-modal { background: white; padding: 25px; border-radius: 12px; max-width: 320px; width: 85%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
+    .conteudo-modal h3 { margin-top: 0; color: #d32f2f; font-size: 18px; }
+    .conteudo-modal p { color: #555; font-size: 14px; line-height: 1.5; margin: 10px 0; }
+    
+    .btn-wpp-suporte { display: inline-flex; align-items: center; justify-content: center; background-color: #25d366; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; margin-top: 15px; font-size: 15px; width: 100%; box-sizing: border-box; }
+    .btn-wpp-suporte:hover { background-color: #128c7e; }
+    
+    .btn-fechar-modal { background: #eee; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; color: #666; font-weight: bold; margin-top: 10px; width: 100%; }
+    .btn-fechar-modal:hover { background: #ddd; }
   </style>
 </head>
 <body>
 
   <div class="container-ponto">
+    <div class="area-logo-topo">
+      <img src="SUA_LOGO_AQUI.jpg" alt="Logo São Raimundo Topo" class="logo-img" onerror="this.style.display='none';">
+    </div>
+
     <h2>SUPERMERCADO SÃO RAIMUNDO</h2>
     <div class="subtitulo">Registro de Ponto com Trava GPS</div>
 
@@ -66,22 +91,55 @@
 
     <div class="campo-grupo" id="grupoTipoBatida" style="display: none;">
       <label for="selecaoTipo">4. O QUE ESTÁ REGISTRANDO AGORA?</label>
-      <select id="selecaoTipo">
-        </select>
+      <select id="selecaoTipo"></select>
     </div>
 
     <div id="caixaStatusGps" class="status-gps"></div>
 
     <div class="area-camera" id="blocoValidacao">
-      <label style="display:block; font-weight:bold; color:#004a26; margin-bottom:10px;">OLHE PARA A CÂMERA PARA CONFIRMAÇÃO:</label>
+      <label style="display:block; font-weight:bold; color:#b71c1c; margin-bottom:10px;">OLHE PARA A CÂMERA PARA CONFIRMAÇÃO:</label>
       <video id="video" autoplay playsinline muted></video>
       <canvas id="canvas" width="320" height="240"></canvas>
       
       <button id="btnRegistrarPonto" class="btn-bater" onclick="registrarPontoFinal()">📸 CONFIRMAR E REGISTRAR PONTO</button>
     </div>
+
+    <div class="area-logo-rodape">
+      <img src="SUA_LOGO_AQUI.jpg" alt="Logo São Raimundo Rodapé" class="logo-img" onerror="this.style.display='none';">
+    </div>
+  </div>
+
+  <div class="btn-suporte-flutuante" onclick="abrirModalSuporte()">?</div>
+
+  <div class="modal-suporte" id="janelaModalSuporte">
+    <div class="conteudo-modal">
+      <h3>Suporte Técnico</h3>
+      <p>Precisando de ajuda com o sistema de batimento de ponto?</p>
+      
+      <a href="https://wa.me/5599988592997?text=Olá%20Flávio,%20estou%20com%20uma%20dúvida%20no%20sistema%20de%20ponto." target="_blank" class="btn-wpp-suporte">
+        💬 Chamar no WhatsApp
+      </a>
+      
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+      <p style="font-size: 11px; color: #999; margin: 0;">
+        <strong>Aplicativo:</strong> Ponto Interno SR<br>
+        <strong>Ano de Criação:</strong> 2026<br>
+        <strong>Versão:</strong> 0.10
+      </p>
+      
+      <button class="btn-fechar-modal" onclick="fecharModalSuporte()">Fechar</button>
+    </div>
   </div>
 
   <script>
+    /* Funções do Modal de Suporte */
+    function abrirModalSuporte() {
+      document.getElementById('janelaModalSuporte').style.display = 'flex';
+    }
+    function fecharModalSuporte() {
+      document.getElementById('janelaModalSuporte').style.display = 'none';
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
       authDomain: "meu-ponto-sr.firebaseapp.com",
@@ -111,7 +169,6 @@
     let lonAtual = null;
 
     function carregarDadosDoServidor() {
-      // Captura erros caso as regras do Firebase estejam bloqueando o app
       database.ref('config_funcionarios').on('value', snapshot => {
         if(snapshot.exists()) {
           funcionariosMemoria = snapshot.val();
