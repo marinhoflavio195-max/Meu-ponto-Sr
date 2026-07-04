@@ -10,12 +10,29 @@
 
   <style>
     body { font-family: Arial, sans-serif; background-color: #fcebee; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
-    .container-ponto { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(186,12,12,0.15); border-top: 6px solid #d32f2f; box-sizing: border-box; }
+    .container-ponto { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(186,12,12,0.15); border-top: 6px solid #d32f2f; box-sizing: border-box; position: relative; }
     
-    /* Ajuste refinado para exibição correta das logos nos espaços em branco */
+    /* SISTEMA DE ABAS COESAS */
+    .abas-navegacao { display: flex; border-bottom: 2px solid #ef9a9a; margin-bottom: 20px; gap: 5px; }
+    .aba-item { flex: 1; text-align: center; padding: 12px 5px; cursor: pointer; font-weight: bold; font-size: 14px; color: #b71c1c; background: #ffebee; border-radius: 8px 8px 0 0; transition: all 0.2s; border: 1px solid #ef9a9a; border-bottom: none; }
+    .aba-item.ativa { background: #d32f2f; color: white; border-color: #d32f2f; }
+    .conteudo-aba { display: none; }
+    .conteudo-aba.ativa { display: block; }
+
+    /* Logo Superior */
     .area-logo-topo { text-align: center; margin-bottom: 20px; background-color: #ffffff; padding: 5px; display: flex; justify-content: center; align-items: center; min-height: 80px; }
-    .area-logo-rodape { text-align: center; margin-top: 25px; background-color: #ffffff; padding: 5px; border-top: 1px solid #eee; display: flex; justify-content: center; align-items: center; min-height: 80px; }
     .logo-img { max-width: 100%; height: auto; max-height: 100px; border-radius: 6px; object-fit: contain; display: block; }
+
+    /* NOVO: CONTAINER DE BANNER DE PROPAGANDA/OFERTAS (Substituindo a logo inferior de 1000569322.jpg) */
+    .area-banner-propaganda { text-align: center; margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; position: relative; overflow: hidden; border-radius: 8px; }
+    .banner-titulo { font-size: 11px; font-weight: bold; color: #777; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; text-align: left; padding-left: 2px; }
+    .slide-banner { width: 100%; height: 120px; border-radius: 8px; object-fit: cover; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); animation: fadeEffect 0.8s; }
+    .slide-banner.ativo { display: block; }
+
+    @keyframes fadeEffect {
+      from { opacity: 0.4; } 
+      to { opacity: 1; }
+    }
 
     h2 { color: #d32f2f; text-align: center; margin-top: 0; margin-bottom: 5px; font-size: 22px; letter-spacing: 0.5px; }
     .subtitulo { text-align: center; color: #555; font-size: 13px; margin-bottom: 25px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #ffd700; padding-bottom: 8px; }
@@ -29,6 +46,23 @@
     .status-gps { padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 15px; display: none; }
     .gps-sucesso { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
     .gps-erro { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+
+    /* ESTILIZAÇÃO DO HISTÓRICO EM TIMELINE */
+    .container-historico { background: #fdf6f6; border: 1px solid #ffcdd2; border-radius: 8px; padding: 15px; margin-bottom: 18px; }
+    .titulo-historico { font-size: 14px; font-weight: bold; color: #b71c1c; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; }
+    .timeline { display: flex; flex-direction: column; gap: 14px; position: relative; padding-left: 15px; }
+    .timeline::before { content: ''; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 2px; background: #ffcdd2; }
+    .item-timeline { display: flex; justify-content: space-between; align-items: center; font-size: 13px; position: relative; color: #777; padding-bottom: 2px; }
+    .item-timeline::before { content: ''; position: absolute; left: -15px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #e0e0e0; border: 2px solid #fff; box-shadow: 0 0 0 1px #ccc; }
+    
+    .item-timeline.realizado { color: #2e7d32; font-weight: bold; }
+    .item-timeline.realizado::before { background: #2e7d32; box-shadow: 0 0 0 1px #2e7d32; }
+    .item-timeline .direita-timeline { display: flex; align-items: center; gap: 8px; }
+    .item-timeline .hora-ponto { background: #e0e0e0; padding: 3px 7px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #555; }
+    .item-timeline.realizado .hora-ponto { background: #e8f5e9; color: #2e7d32; }
+    
+    .btn-comprovante { background: #d32f2f; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+    .btn-comprovante:hover { background: #b71c1c; }
 
     .area-camera { display: none; text-align: center; margin-top: 20px; border-top: 2px dashed #ef9a9a; padding-top: 20px; }
     #video { width: 100%; max-width: 320px; height: auto; border-radius: 8px; border: 3px solid #d32f2f; background: #222; transform: scaleX(-1); }
@@ -53,11 +87,31 @@
     
     .btn-fechar-modal { background: #eee; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; color: #666; font-weight: bold; margin-top: 10px; width: 100%; }
     .btn-fechar-modal:hover { background: #ddd; }
+
+    /* COMPROVANTE ELETRÔNICO */
+    .modal-comprovante { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 20000; padding: 10px; box-sizing: border-box; }
+    .recibo-papel { background: #fffde7; border: 1px solid #d4c883; padding: 20px; max-width: 360px; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-family: 'Courier New', Courier, monospace; color: #000; border-radius: 4px; }
+    .recibo-titulo { text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 8px; text-transform: uppercase; }
+    .recibo-linha { font-size: 12px; margin: 6px 0; word-break: break-all; }
+    .recibo-label { font-weight: bold; text-transform: uppercase; }
+    .recibo-qrcode-area { text-align: center; margin: 15px 0; }
+    .recibo-qrcode-area img { width: 130px; height: 130px; border: 1px solid #ccc; background: white; padding: 3px; }
+    .recibo-rodape { font-size: 10px; text-align: center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 8px; color: #444; }
+    .botoes-recibo { display: flex; gap: 8px; margin-top: 15px; font-family: Arial, sans-serif; }
+    .btn-recibo-acao { flex: 1; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+    .btn-print { background: #2e7d32; color: white; }
+    .btn-close-recibo { background: #777; color: white; }
   </style>
 </head>
 <body>
 
   <div class="container-ponto">
+    <!-- MENU DE ABAS FIXAS NO TOPO -->
+    <div class="abas-navegacao">
+      <div class="aba-item ativa" id="abaTab1" onclick="alternarAbas(1)">👉 Bater Ponto</div>
+      <div class="aba-item" id="abaTab2" onclick="alternarAbas(2)">📋 Histórico de Hoje</div>
+    </div>
+
     <div class="area-logo-topo">
       <img src="logo.jpg" alt="Logo São Raimundo" class="logo-img">
     </div>
@@ -67,44 +121,97 @@
 
     <div id="statusCarregamentoInicial">🔄 Sincronizando dados com o servidor...</div>
 
-    <div class="campo-grupo">
-      <label for="selecaoLoja">1. SELECIONE A SUA LOJA:</label>
-      <select id="selecaoLoja" onchange="configurarFiltroSetores()" disabled>
-        <option value="">-- Carregando sistema... --</option>
-      </select>
+    <!-- CONTEÚDO DA ABA 1: REALIZAR BATIDA DE PONTO -->
+    <div id="conteudoTab1" class="conteudo-aba ativa">
+      <div class="campo-grupo">
+        <label for="selecaoLoja">1. SELECIONE A SUA LOJA:</label>
+        <select id="selecaoLoja" onchange="configurarFiltroSetores()" disabled>
+          <option value="">-- Carregando sistema... --</option>
+        </select>
+      </div>
+
+      <div class="campo-grupo">
+        <label for="selecaoSetor">2. SELECIONE O SEU SETOR:</label>
+        <select id="selecaoSetor" onchange="configurarFiltroNomes()" disabled>
+          <option value="">-- Aguardando Loja... --</option>
+        </select>
+      </div>
+
+      <div class="campo-grupo">
+        <label for="selecaoNome">3. SELECIONE SEU NOME COMPLETO:</label>
+        <select id="selecaoNome" onchange="verificarLocalizacaoEValida()" disabled>
+          <option value="">-- Aguardando Setor... --</option>
+        </select>
+      </div>
+
+      <div class="campo-grupo" id="grupoTipoBatida" style="display: none;">
+        <label for="selecaoTipo">4. O QUE ESTÁ REGISTRANDO AGORA?</label>
+        <select id="selecaoTipo"></select>
+      </div>
+
+      <div id="caixaStatusGps" class="status-gps"></div>
+
+      <div class="area-camera" id="blocoValidacao">
+        <label style="display:block; font-weight:bold; color:#b71c1c; margin-bottom:10px;">OLHE PARA A CÂMERA PARA CONFIRMAÇÃO:</label>
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="canvas" width="320" height="240"></canvas>
+        
+        <button id="btnRegistrarPonto" class="btn-bater" onclick="registrarPontoFinal()">📸 CONFIRMAR E REGISTRAR PONTO</button>
+      </div>
     </div>
 
-    <div class="campo-grupo">
-      <label for="selecaoSetor">2. SELECIONE O SEU SETOR:</label>
-      <select id="selecaoSetor" onchange="configurarFiltroNomes()" disabled>
-        <option value="">-- Aguardando Loja... --</option>
-      </select>
+    <!-- CONTEÚDO DA ABA 2: HISTÓRICO DE BATIDAS DO DIA -->
+    <div id="conteudoTab2" class="conteudo-aba">
+      <div class="container-historico">
+        <div class="titulo-historico" id="tituloNomeHistorico">📋 Seus registros de hoje:</div>
+        <div class="timeline" id="linhaTempoHistorico">
+          <p style="text-align: center; color: #777; font-size: 13px; margin: 10px 0;" id="textoAvisoSelecao">
+            ⚠️ Selecione seu nome na aba "Bater Ponto" para visualizar seu histórico do dia de hoje.
+          </p>
+        </div>
+      </div>
     </div>
 
-    <div class="campo-grupo">
-      <label for="selecaoNome">3. SELECIONE SEU NOME COMPLETO:</label>
-      <select id="selecaoNome" onchange="verificarLocalizacaoEValida()" disabled>
-        <option value="">-- Aguardando Setor... --</option>
-      </select>
+    <!-- MÓDULO DE PROPAGANDA INTERNA ROTATIVA (Substituiu a logo repetida do rodapé) -->
+    <div class="area-banner-propaganda">
+      <div class="banner-titulo">📢 Informativos e Ofertas da Semana:</div>
+      <img src="propaganda1.jpg" alt="Oferta 1" class="slide-banner ativo">
+      <img src="propaganda2.jpg" alt="Oferta 2" class="slide-banner">
+      <img src="propaganda3.jpg" alt=" RH Comunicado" class="slide-banner">
     </div>
 
-    <div class="campo-grupo" id="grupoTipoBatida" style="display: none;">
-      <label for="selecaoTipo">4. O QUE ESTÁ REGISTRANDO AGORA?</label>
-      <select id="selecaoTipo"></select>
-    </div>
+  </div>
 
-    <div id="caixaStatusGps" class="status-gps"></div>
-
-    <div class="area-camera" id="blocoValidacao">
-      <label style="display:block; font-weight:bold; color:#b71c1c; margin-bottom:10px;">OLHE PARA A CÂMERA PARA CONFIRMAÇÃO:</label>
-      <video id="video" autoplay playsinline muted></video>
-      <canvas id="canvas" width="320" height="240"></canvas>
+  <!-- MODAL DO COMPROVANTE ELETRÔNICO -->
+  <div class="modal-comprovante" id="janelaComprovante">
+    <div class="recibo-papel" id="areaImpressaoRecibo">
+      <div class="recibo-titulo">
+        Comprovante de Registro de<br>Ponto Eletrônico
+      </div>
+      <div class="recibo-linha"><span class="recibo-label">EMPRESA:</span> Supermercado São Raimundo</div>
+      <div class="recibo-linha"><span class="recibo-label">CNPJ:</span> 07.452.889/0001-99</div>
+      <div class="recibo-linha"><span class="recibo-label">LOCAL:</span> Loja <span id="reciboLoja">--</span></div>
+      <div class="recibo-linha"><span class="recibo-label">SETOR:</span> <span id="reciboSetor">--</span></div>
+      <div class="recibo-linha" style="border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px;"><span class="recibo-label">COLABORADOR:</span> <span id="reciboNome">--</span></div>
+      <div class="recibo-linha"><span class="recibo-label">OPERACAO:</span> <span id="reciboTipo">--</span></div>
+      <div class="recibo-linha"><span class="recibo-label">DATA:</span> <span id="reciboData">--</span></div>
+      <div class="recibo-linha"><span class="recibo-label">HORA:</span> <span id="reciboHora">--</span></div>
+      <div class="recibo-linha"><span class="recibo-label">AUTENTICACAO:</span> <span id="reciboNsr" style="font-size: 11px;">--</span></div>
       
-      <button id="btnRegistrarPonto" class="btn-bater" onclick="registrarPontoFinal()">📸 CONFIRMAR E REGISTRAR PONTO</button>
-    </div>
+      <div class="recibo-qrcode-area">
+        <img id="reciboQrCode" src="" alt="QR Code Autenticação">
+      </div>
+      
+      <div class="recibo-rodape">
+        Aplicativo: Ponto Interno SR v0.10<br>
+        Registro efetuado via Geofencing GPS<br>
+        Preserve este comprovante do seu dia.
+      </div>
 
-    <div class="area-logo-rodape">
-      <img src="logo.jp" alt="Logo São Raimundo" class="logo-img">
+      <div class="botoes-recibo">
+        <button class="btn-recibo-acao btn-print" onclick="window.print()">🖨️ IMPRIMIR</button>
+        <button class="btn-recibo-acao btn-close-recibo" onclick="fecharComprovante()">FECHAR</button>
+      </div>
     </div>
   </div>
 
@@ -131,11 +238,62 @@
   </div>
 
   <script>
+    // SCRIPT DO CARROSSEL AUTOMÁTICO DE PROPAGANDAS
+    let indexBanner = 0;
+    function rodarCarrosselPropagandas() {
+      const banners = document.querySelectorAll('.slide-banner');
+      if(banners.length === 0) return;
+      
+      banners.forEach(b => b.classList.remove('ativo'));
+      indexBanner++;
+      if (indexBanner >= banners.length) { indexBanner = 0; }
+      banners[indexBanner].classList.add('ativo');
+    }
+    // Muda a propaganda automaticamente a cada 5 segundos (5000ms)
+    setInterval(rodarCarrosselPropagandas, 5000);
+
+    // LÓGICA DE TRANSIÇÃO DE ABAS
+    function alternarAbas(numeroAba) {
+      document.getElementById('abaTab1').classList.remove('ativa');
+      document.getElementById('abaTab2').classList.remove('ativa');
+      document.getElementById('conteudoTab1').classList.remove('ativa');
+      document.getElementById('conteudoTab2').classList.remove('ativa');
+
+      document.getElementById(`abaTab${numeroAba}`).classList.add('ativa');
+      document.getElementById(`conteudoTab${numeroAba}`).classList.add('ativa');
+    }
+
     function abrirModalSuporte() {
       document.getElementById('janelaModalSuporte').style.display = 'flex';
     }
     function fecharModalSuporte() {
       document.getElementById('janelaModalSuporte').style.display = 'none';
+    }
+
+    let cacheDadosBatidasHoje = {};
+
+    function abrirComprovante(tipoChave) {
+      const item = cacheDadosBatidasHoje[tipoChave];
+      if(!item) return;
+
+      document.getElementById('reciboLoja').innerText = item.loja || "--";
+      document.getElementById('reciboSetor').innerText = item.setor || "--";
+      document.getElementById('reciboNome').innerText = item.colaborador || "--";
+      document.getElementById('reciboTipo').innerText = item.tipo || "--";
+      document.getElementById('reciboData').innerText = item.data || "--";
+      document.getElementById('reciboHora').innerText = item.horario || "--";
+      
+      const nsrUnico = "SR-" + Math.floor(100000 + Math.random() * 900000) + "/" + item.dataChave.replace(/-/g, "");
+      document.getElementById('reciboNsr').innerText = nsrUnico;
+
+      const dadosValidacaoStr = `EMPRESA: SAO RAIMUNDO | COLABORADOR: ${item.colaborador} | OPERACAO: ${item.tipo} | DATA: ${item.data} | HORA: ${item.horario} | AUTH: ${nsrUnico}`;
+      document.getElementById('reciboQrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(dadosValidacaoStr)}`;
+
+      document.getElementById('janelaComprovante').style.display = 'flex';
+    }
+
+    function fecharComprovante() {
+      document.getElementById('janelaComprovante').style.display = 'none';
     }
 
     const firebaseConfig = {
@@ -241,7 +399,10 @@
       const statusBox = document.getElementById('caixaStatusGps');
       const btnRegistrar = document.getElementById('btnRegistrarPonto');
       const blocoValidacao = document.getElementById('blocoValidacao');
+      const linhaTempo = document.getElementById('linhaTempoHistorico');
       
+      document.getElementById('tituloNomeHistorico').innerHTML = `📋 Registros de: <span style="color:#d32f2f;">${nomeColaborador.split(' ')[0]}</span>`;
+
       const agora = new Date();
       const diaStr = String(agora.getDate()).padStart(2, '0');
       const mesStr = String(agora.getMonth() + 1).padStart(2, '0');
@@ -249,11 +410,19 @@
       const dataChaveHoje = `${anoStr}-${mesStr}-${diaStr}`;
 
       comboTipo.innerHTML = '<option value="">Analisando histórico de hoje...</option>';
+      cacheDadosBatidasHoje = {}; 
 
       database.ref('pontos_registrados')
         .orderByChild('dataChave')
         .equalTo(dataChaveHoje)
         .once('value', snapshot => {
+          let mapeamentoBatidas = {
+            "Entrada Expediente": "--:--",
+            "Saida Almoço": "--:--",
+            "Retorno Almoço": "--:--",
+            "Saida Fim": "--:--"
+          };
+          
           let batidasEfetivadas = [];
           
           if(snapshot.exists()) {
@@ -261,9 +430,42 @@
               const registro = child.val();
               if(registro.colaborador && registro.colaborador.toUpperCase() === nomeColaborador.toUpperCase()) {
                 batidasEfetivadas.push(registro.tipo);
+                if(registro.horario) {
+                  mapeamentoBatidas[registro.tipo] = registro.horario.substring(0, 5);
+                  cacheDadosBatidasHoje[registro.tipo] = registro; 
+                }
               }
             });
           }
+
+          const listaTiposPadrao = ["Entrada Expediente", "Saida Almoço", "Retorno Almoço", "Saida Fim"];
+          const rotulosExibicao = {
+            "Entrada Expediente": "Entrada Expediente",
+            "Saida Almoço": "Saída para Almoço",
+            "Retorno Almoço": "Retorno do Almoço",
+            "Saida Fim": "Saída Fim de Expediente"
+          };
+
+          let htmlTimeline = "";
+          listaTiposPadrao.forEach(tipo => {
+            const jaRegistrado = batidasEfetivadas.includes(tipo);
+            const classeStatus = jaRegistrado ? "item-timeline realizado" : "item-timeline";
+            const textoHora = jaRegistrado ? mapeamentoBatidas[tipo] : "Pendente";
+            
+            const botaoReciboHtml = jaRegistrado ? `<button class="btn-comprovante" onclick="abrirComprovante('${tipo}')">📄 Recibo</button>` : '';
+
+            htmlTimeline += `
+              <div class="${classeStatus}">
+                <span>${rotulosExibicao[tipo]}</span>
+                <div class="direita-timeline">
+                  <span class="hora-ponto">${textoHora}</span>
+                  ${botaoReciboHtml}
+                </div>
+              </div>
+            `;
+          });
+          
+          linhaTempo.innerHTML = htmlTimeline;
 
           let jaCompletouTudo = false;
 
@@ -313,6 +515,13 @@
       const lojaSel = document.getElementById('selecaoLoja').value;
       const statusBox = document.getElementById('caixaStatusGps');
       const blocoValidacao = document.getElementById('blocoValidacao');
+      
+      document.getElementById('tituloNomeHistorico').innerText = "📋 Seus registros de hoje:";
+      document.getElementById('linhaTempoHistorico').innerHTML = `
+        <p style="text-align: center; color: #777; font-size: 13px; margin: 10px 0;">
+          ⚠️ Selecione seu nome na aba "Bater Ponto" para visualizar seu histórico do dia de hoje.
+        </p>
+      `;
 
       if(!nomeSel) { fecharCamera(); return; }
 
