@@ -264,7 +264,6 @@
   </div>
 
   <script>
-    // Inicializa o input com a data de hoje por padrão
     const hoje = new Date();
     const stringHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
     document.getElementById('selecaoDataHistorico').value = stringHoje;
@@ -290,7 +289,6 @@
       document.getElementById(`abaTab${numeroAba}`).classList.add('ativa');
       document.getElementById(`conteudoTab${numeroAba}`).classList.add('ativa');
       
-      // Reseta os inputs de segurança por privacidade
       document.getElementById('senhaHistorico').value = "";
       document.getElementById('novaSenhaHistorico').value = "";
       gerenciarInterfaceSenhaOuBusca();
@@ -493,7 +491,6 @@
       comboNome.disabled = false;
     }
 
-    // NOVA INTELIGÊNCIA: ANALISA SE O FUNCIONÁRIO JÁ POSSUI SENHA REGISTRADA
     function gerenciarInterfaceSenhaOuBusca() {
       const nomeColaborador = document.getElementById('selecaoNomeHistorico').value;
       const blocoValidar = document.getElementById('grupoValidarSenha');
@@ -511,22 +508,22 @@
       const possuiSenha = fDados && fDados.senha !== undefined && String(fDados.senha).trim() !== "";
 
       if (possuiSenha) {
-        // Se já tem cadastrado, exige a senha para abrir
         blocoCadastrar.style.display = 'none';
         blocoValidar.style.display = 'block';
         buscarHistoricoSemGps();
       } else {
-        // Se NÃO tem senha, esconde o campo de validação e mostra o de auto-cadastro!
         blocoValidar.style.display = 'none';
         blocoCadastrar.style.display = 'block';
         linhaTempo.innerHTML = `<p style="text-align: center; color: #2e7d32; font-weight: bold; font-size: 13px; margin: 10px 0;">👋 Detectamos seu primeiro acesso! Cadastre sua senha de proteção acima.</p>`;
       }
     }
 
-    // EXECUTA O GRAVAMENTO DA PRIMEIRA SENHA CRIADA PELO PRÓPRIO TRABALHADOR
+    // FUNÇÃO CORRIGIDA PARA DESTRAVAR A TELA IMEDIATAMENTE APÓS SALVAR
     function ejecutarPrimeiroCadastroSenha() {
       const nomeColaborador = document.getElementById('selecaoNomeHistorico').value;
       const novaSenha = document.getElementById('novaSenhaHistorico').value.trim();
+      const blocoValidar = document.getElementById('grupoValidarSenha');
+      const blocoCadastrar = document.getElementById('grupoCadastrarSenha');
 
       if (!nomeColaborador) return;
       
@@ -535,19 +532,31 @@
         return;
       }
 
-      // Altera diretamente o nó do funcionário selecionado no banco
       database.ref(`config_funcionarios/${nomeColaborador}/senha`).set(novaSenha)
         .then(() => {
           alert("🎉 Senha cadastrada com absoluto sucesso! Guarde-a bem. Agora seu extrato está protegido.");
+          
+          // Força a injeção local da senha para contornar o delay do Firebase
+          if (funcionariosMemoria[nomeColaborador]) {
+            funcionariosMemoria[nomeColaborador].senha = novaSenha;
+          }
+
+          // Alterna as telas visualmente na hora
+          blocoCadastrar.style.display = 'none';
+          blocoValidar.style.display = 'block';
+          
+          // Move o valor salvo para o campo de senha padrão e limpa o antigo
+          document.getElementById('senhaHistorico').value = novaSenha;
           document.getElementById('novaSenhaHistorico').value = "";
-          // A sincronização em tempo real (.on) do Firebase atualizará 'funcionariosMemoria' automaticamente, limpando a tela
+          
+          // Abre a listagem do histórico imediatamente
+          buscarHistoricoSemGps();
         })
         .catch(err => {
           alert("Erro técnico ao salvar senha. Tente novamente.");
         });
     }
 
-    // BUSCA E CONSTRUÇÃO DO HISTÓRICO APÓS VALIDAÇÃO DA SENHA CADASTRADA
     function buscarHistoricoSemGps() {
       const nomeColaborador = document.getElementById('selecaoNomeHistorico').value;
       const senhaDigitada = document.getElementById('senhaHistorico').value;
@@ -559,7 +568,6 @@
       const fDados = funcionariosMemoria[nomeColaborador];
       const senhaCorreta = fDados && fDados.senha ? String(fDados.senha) : "";
 
-      // Verifica se confere
       if(!senhaDigitada || senhaDigitada !== senhaCorreta) {
         linhaTempo.innerHTML = `<p style="text-align: center; color: #d32f2f; font-size: 13px; font-weight: bold; margin: 10px 0;">🔒 Senha incorreta ou pendente.</p>`;
         return;
