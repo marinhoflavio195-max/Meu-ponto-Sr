@@ -75,6 +75,10 @@
     .btn-fechar { background: #757575; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
     
     #cameraPreview { width: 100%; max-height: 240px; background: #000; border-radius: 6px; margin-bottom: 10px; transform: scaleX(-1); }
+    
+    /* Pré-visualização do Banner no Painel */
+    .preview-banner-container { margin-top: 15px; max-width: 450px; border: 2px dashed #ccc; border-radius: 8px; padding: 10px; background: #fafafa; }
+    .preview-banner-container img { width: 100%; height: auto; display: block; border-radius: 6px; }
   </style>
 </head>
 <body>
@@ -101,6 +105,7 @@
       <button class="aba-btn" onclick="alternarAba('abaAtestados', this); carregarListaFuncionariosAtestado(); carregarTabelaAtestados();">🏥 Aba de Atestados Médicos</button>
       <button class="aba-btn" onclick="alternarAba('abaFuncionarios', this); carregarTabelaFuncionarios();">👥 Gerenciar Funcionários</button>
       <button class="aba-btn" onclick="alternarAba('abaExFuncionarios', this); carregarTabelaExFuncionarios();">💼 Ex-Colaboradores</button>
+      <button class="aba-btn" onclick="alternarAba('abaGerenciarBanner', this); puxarBannerAtualBanco();">🎨 Banner de Ofertas</button>
     </div>
 
     <div id="abaPontos" class="conteudo-aba ativa">
@@ -264,6 +269,24 @@
       </div>
     </div>
 
+    <div id="abaGerenciarBanner" class="conteudo-aba">
+      <h3 style="margin-top: 0; color: #0b5394;">🎨 Atualização em Tempo Real do Banner do Aplicativo</h3>
+      <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Insira o link direto da imagem hospedada (ImgBB, Postimages, etc.) para alterar o mural informativo no app dos funcionários.</p>
+      
+      <div class="form-cadastro">
+        <div class="campo-form" style="min-width: 70%;">
+          <label for="inputUrlBanner">URL Direta do Novo Banner (Link da Imagem):</label>
+          <input type="text" id="inputUrlBanner" placeholder="https://i.ibb.co/.../imagem.jpg">
+        </div>
+        <button class="btn btn-salvar" style="background:#0b5394;" onclick="atualizarBannerBanco()">💾 Atualizar Banner</button>
+      </div>
+
+      <h4>Visualização Atual no Aplicativo:</h4>
+      <div class="preview-banner-container">
+        <img id="imgPreviewBannerPainel" src="https://i.ibb.co/6RJqF652/image.jpg" alt="Sem imagem carregada">
+      </div>
+    </div>
+
   </div>
 
   <div id="modalOcorrenciaDireta" class="modal">
@@ -299,7 +322,6 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // DEFINIÇÃO DA SENHA MASTER DE EXCLUSÃO
     const SENHA_MASTER = "1234";
 
     const JORNADA_PADRAO = {
@@ -330,6 +352,32 @@
       } else {
         desligarCamera();
       }
+    }
+
+    /* SISTEMA DINÂMICO DE BANNER VIA REALTIME DATABASE */
+    function puxarBannerAtualBanco() {
+      database.ref('config_banner/url').once('value', snap => {
+        if(snap.exists()) {
+          const urlSalva = snap.val();
+          document.getElementById('inputUrlBanner').value = urlSalva;
+          document.getElementById('imgPreviewBannerPainel').src = urlSalva;
+        }
+      });
+    }
+
+    function atualizarBannerBanco() {
+      const urlDigitada = document.getElementById('inputUrlBanner').value.trim();
+      if(!urlDigitada) return alert("Por favor, cole uma URL válida de imagem.");
+
+      database.ref('config_banner').set({
+        url: urlDigitada,
+        atualizadoEm: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        alert("✅ Banner atualizado com sucesso! Ele já mudou nos celulares de todos os funcionários.");
+        document.getElementById('imgPreviewBannerPainel').src = urlDigitada;
+      }).catch(err => {
+        alert("Erro ao gravar link: " + err.message);
+      });
     }
 
     function inicializarCamera() {
@@ -623,7 +671,6 @@
           });
         }
 
-        // CORREÇÃO AQUI: adicionado o escopo correto da variável para não quebrar o código
         const letGrid = Object.keys(memoriaFuncionarios).filter(n => {
           if (lojaFiltro !== "TODAS" && String(memoriaFuncionarios[n].loja) !== String(lojaFiltro)) return false;
           if (colabFiltro !== "TODOS" && n !== colabFiltro) return false;
@@ -771,7 +818,7 @@
 
       doc.autoTable({
         head: [['Nº', 'Funcionário', 'Cargo/Setor', 'Filial', 'Dias Trab.', 'Faltas', 'Saldo Banco Horas']],
-        body: linhas, startY: 100, theme: 'grid', styles: { fontSize: 8 },
+        body: líneas, startY: 100, theme: 'grid', styles: { fontSize: 8 },
         headStyles: { fillColor: [0, 100, 48] }
       });
       doc.save("Relatorio_Folha_Pagamento.pdf");
@@ -796,7 +843,6 @@
         if (f.status === 'desativado') return; 
         cont++;
         const tr = document.createElement('tr');
-        // IMPLEMENTADOS: Botões Editar, Desligar e Excluir
         tr.innerHTML = `<td><b>${n}</b></td><td>${f.setor||'--'}</td><td>Loja ${f.loja||'--'}</td><td><code>${f.chaveApp||'--'}</code></td>
         <td>
           <button class="btn" style="background:#f57c00; padding:4px 6px; margin-right:4px;" onclick="carregarParaEditar('${n.replace(/'/g,"\\'")}')">✏️ Editar</button>
@@ -818,7 +864,6 @@
         if (f.status !== 'desativado') return; 
         cont++;
         const tr = document.createElement('tr');
-        // IMPLEMENTADOS: Reativar e Excluir definitivo para ex-colaboradores
         tr.innerHTML = `<td><b>${n}</b></td><td>${f.setor||'--'}</td><td>Loja ${f.loja||'--'}</td><td><code>${f.chaveApp||'--'}</code></td>
         <td>
           <button class="btn" style="background:#2e7d32; padding:4px 6px; margin-right:4px;" onclick="reativarColaborador('${n.replace(/'/g,"\\'")}')">🔄 Reativar</button>
@@ -842,12 +887,9 @@
       }
     }
 
-    // NOVA FUNÇÃO: Exclusão com verificação de senha master
     function excluirColaboradorDefinitivo(nome) {
       const senhaDigitada = prompt(`⚠️ ATENÇÃO: Isso removerá permanentemente o colaborador "${nome}" do Firebase.\nDigite a senha administrativa para confirmar:`);
-      
-      if (senhaDigitada === null) return; // Se cancelar o prompt, não faz nada
-
+      if (senhaDigitada === null) return;
       if (senhaDigitada === SENHA_MASTER) {
         if (confirm(`Confirmação final: Deseja REALMENTE deletar por completo o cadastro de ${nome}?`)) {
           database.ref('config_funcionarios/' + nome).remove().then(() => {
