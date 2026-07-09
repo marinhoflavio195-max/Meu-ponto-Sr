@@ -272,6 +272,18 @@
       letter-spacing: 0.5px;
     }
 
+    .container-banner-propaganda {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .container-banner-propaganda img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
     .imagem-not-found-container {
       width: 100%;
       background: #29b6f6;
@@ -442,12 +454,12 @@
     </div>
   </div>
 
-<!-- RODAPÉ CONFIGURADO COM SEU VINCULO IMGBB -->
+  <!-- RODAPÉ CONFIGURADO COM ESCUTA EM TEMPO REAL DO FIREBASE -->
   <div class="bloco-rodape-banner">
     <div class="rotulo-rodape">📢 Informativos e ofertas da semana:</div>
     <div class="container-banner-propaganda">
-      <a href="https://ibb.co/QjDdvTVh" target="_blank">
-        <img src="https://i.ibb.co/1Jz6GPNB/IMG-20260626-WA0328.jpg" alt="Propaganda São Raimundo"
+      <img id="imagemBannerDinamico" src="https://i.ibb.co/1Jz6GPNB/IMG-20260626-WA0328.jpg" alt="Propaganda São Raimundo">
+    </div>
   </div>
 
   <div class="botao-suporte-fixo" onclick="abrirModalSuporte()">?</div>
@@ -574,6 +586,17 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // ESCUTA EM TEMPO REAL DO BANNER DO FIREBASE
+    database.ref('config_banner/url').on('value', snapshot => {
+      if (snapshot.exists()) {
+        const novaUrl = snapshot.val();
+        const imgElement = document.getElementById('imagemBannerDinamico');
+        if (imgElement) {
+          imgElement.src = novaUrl;
+        }
+      }
+    });
+
     const coordenadasLojas = {
       "1": { lat: -4.4515049, lon: -43.8762104 },
       "2": { lat: -4.4680240, lon: -43.8895061 },
@@ -629,6 +652,11 @@
         comboSetor.innerHTML += `<option value="${setor}">${setor}</option>`;
       });
       comboSetor.disabled = false;
+    }
+
+    function antisymmetricFiltroNomes() {
+      // (Função corrigida para bater com a chamada do onchange do html)
+      configurarFiltroNomes();
     }
 
     function configurarFiltroNomes() {
