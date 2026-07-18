@@ -163,6 +163,7 @@
         <button class="btn btn-filtrar" onclick="consultarPeriodoBanco()">🔍 Consultar Período</button>
         <button class="btn btn-excel" onclick="exportarParaExcel()">📊 Exportar Excel</button>
         <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF Executivo</button>
+        <button class="btn" style="background-color: #0b5394;" onclick="gerarEspelhoDePontoPDF()">📋 Gerar Espelho de Ponto</button>
       </div>
 
       <div class="table-container">
@@ -389,7 +390,7 @@
         url: urlDigitada,
         atualizadoEm: firebase.database.ServerValue.TIMESTAMP
       }).then(() => {
-        alert("✅ Banner atualizado com sucesso!");
+        alert("✅ Banner updated successfully!");
         document.getElementById('imgPreviewBannerPainel').src = urlDigitada;
       }).catch(err => alert("Erro: " + err.message));
     }
@@ -727,6 +728,99 @@
         }
       });
       doc.save("Relatorio_Executivo_Customizado.pdf");
+    }
+
+    function gerarEspelhoDePontoPDF() {
+      if (detalhadoDiasCache.length === 0) return alert("Execute a consulta antes de gerar o Espelho!");
+      
+      const filtrados = filtrarDadosModulares();
+      if (filtrados.length === 0) return alert("Nenhum registro ativo nos checkboxes selecionados!");
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'pt', 'a4');
+      
+      // Agrupa os registros por funcionário para criar folhas organizadas separadamente
+      let dadosPorFuncionario = {};
+      filtrados.forEach(f => {
+        if (!dadosPorFuncionario[f.nome]) {
+          dadosPorFuncionario[f.nome] = {
+            cargo: f.cargo,
+            filial: f.filial,
+            dias: []
+          };
+        }
+        dadosPorFuncionario[f.nome].dias.push(f);
+      });
+
+      let primeiro = true;
+
+      Object.keys(dadosPorFuncionario).forEach(nomeFunc => {
+        if (!primeiro) doc.addPage();
+        primeiro = false;
+
+        const info = dadosPorFuncionario[nomeFunc];
+
+        // Cabeçalho institucional do Espelho de Ponto Oficial
+        doc.setFillColor(0, 100, 48); doc.rect(40, 30, 515, 45, 'F');
+        doc.setFont("Helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(255, 215, 0); 
+        doc.text("SUPERMERCADO SÃO RAIMUNDO", 55, 48);
+        doc.setFontSize(10); doc.setTextColor(255,255,255); 
+        doc.text("ESPELHO DE PONTO INDIVIDUAL — CONTROLE DA JORNADA DE TRABALHO", 55, 65);
+
+        // Bloco de Informações do Colaborador
+        doc.setFont("Helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(44, 62, 80);
+        doc.text(`Colaborador: ${nomeFunc}`, 40, 95);
+        doc.text(`Cargo / Setor: ${info.cargo || '--'}`, 40, 110);
+        doc.text(`Unidade: ${info.filial || '--'}`, 380, 95);
+        doc.text(`Período de Apuração: ${document.getElementById('filtroMes').value.split('-').reverse().join('/')}`, 380, 110);
+        
+        doc.setDrawColor(200, 200, 200); doc.line(40, 120, 555, 120);
+
+        let linhasTabela = info.dias.map(f => {
+          let txtSaldo = "00:00";
+          if (f.saldo > 0) txtSaldo = `+${f.saldo} min`;
+          else if (f.saldo < 0) txtSaldo = `${f.saldo} min`;
+          return [f.data, f.entrada, f.sAlmoco, f.rAlmoco, f.saida, txtSaldo, f.tipoOcorrencia];
+        });
+
+        // Renderização da tabela de dados via autotable
+        doc.autoTable({
+          head: [['Data', 'Entrada', 'S. Almoço', 'R. Almoço', 'Saída Fim', 'Saldo do Dia', 'Apuração/Status']],
+          body: linhasTabela,
+          startY: 135,
+          theme: 'grid',
+          styles: { fontSize: 8, cellPadding: 4, alignment: 'center' },
+          headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' },
+          columnStyles: {
+            0: { cellWidth: 55 },
+            5: { fontStyle: 'bold' },
+            6: { cellWidth: 140, fontStyle: 'bold' }
+          }
+        });
+
+        // Bloco de validação legal e assinatura do rodapé
+        let finalY = doc.lastAutoTable.finalY + 40;
+
+        // Impede que a assinatura fique isolada em uma nova página em branco caso falte espaço
+        if (finalY > 730) {
+          doc.addPage();
+          finalY = 50;
+        }
+
+        doc.setFont("Helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(100, 110, 120);
+        const declaracao = "Declaro para os devidos fins de direito que recebi a notificação das ocorrências/faltas acima descritas e valido os registros de ponto constantes neste espelho, referentes à jornada de trabalho computada no período indicado.";
+        let linhasTexto = doc.splitTextToSize(declaracao, 515);
+        doc.text(linhasTexto, 40, finalY);
+
+        finalY += 60;
+        doc.setDrawColor(100, 110, 120); doc.line(140, finalY, 455, finalY);
+        doc.setFont("Helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(44, 62, 80);
+        doc.text("Assinatura do Colaborador", 235, finalY + 15);
+        doc.setFont("Helvetica", "normal"); doc.setFontSize(8);
+        doc.text(`Ciente em: ____/____/2026`, 248, finalY + 30);
+      });
+
+      doc.save(`Espelho_de_Ponto_Oficial_${document.getElementById('filtroMes').value}.pdf`);
     }
 
     function mudarTemaPainel(t) {
