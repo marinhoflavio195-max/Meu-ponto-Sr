@@ -14,44 +14,43 @@
 
   <style>
     :root {
-      --cor-principal: #006430;
-      --cor-principal-hover: #004a26;
-      --cor-fundo-tela: #f4f6f8;
+      --cor-principal: #1e3a8a;          /* Azul Marinho Corporativo */
+      --cor-principal-hover: #1e293b;    /* Slate / Grafite Escuro */
+      --cor-fundo-tela: #f8fafc;         /* Cinza Nevoeiro */
       --cor-fundo-card: #ffffff;
-      --cor-texto: #2c3e50;
-      --cor-sub-barra: #ffd700;
-      --cor-tabela-hover: #f1f8f3;
+      --cor-texto: #1e293b;              /* Texto Escuro de Alto Contraste */
+      --cor-sub-barra: #3b82f6;          /* Azul Royal de Destaque */
+      --cor-tabela-hover: #f1f5f9;       /* Hover Neutro */
       --cor-borda-filtro: #e2e8f0;
-      --cor-fundo-filtro: #f8fafc;
+      --cor-fundo-filtro: #f1f5f9;
     }
 
     body { font-family: 'Segoe UI', system-ui, Arial, sans-serif; background-color: var(--cor-fundo-tela); margin: 0; padding: 25px; color: var(--cor-texto); }
-    .painel-container { width: 100%; max-width: 1440px; margin: 0 auto; background: var(--cor-fundo-card); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); box-sizing: border-box; border-top: 8px solid var(--cor-principal); }
+    .painel-container { width: 100%; max-width: 1440px; margin: 0 auto; background: var(--cor-fundo-card); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box; border-top: 8px solid var(--cor-principal); }
     
     .topo-painel { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
     h1 { color: var(--cor-principal); margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
     
-    .logo-substituta { background: linear-gradient(135deg, var(--cor-principal), var(--cor-principal-hover)); color: white; padding: 18px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 20px; margin-bottom: 20px; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(0,100,48,0.15); position: relative; overflow: hidden; }
+    .logo-substituta { background: linear-gradient(135deg, var(--cor-principal), var(--cor-principal-hover)); color: white; padding: 18px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 20px; margin-bottom: 20px; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(30,58,138,0.2); position: relative; overflow: hidden; }
     .logo-substituta::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background-color: var(--cor-sub-barra); }
 
     .menu-abas { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; flex-wrap: wrap; }
-    .aba-btn { padding: 12px 20px; border: none; background: #edf2f7; color: #4a5568; font-weight: 600; cursor: pointer; border-radius: 8px; font-size: 14px; transition: all 0.2s ease; }
-    .aba-btn:hover { background: #e2e8f0; }
-    .aba-btn.ativa { background: var(--cor-principal); color: white; box-shadow: 0 4px 10px rgba(0,100,48,0.15); }
+    .aba-btn { padding: 12px 20px; border: none; background: #e2e8f0; color: #475569; font-weight: 600; cursor: pointer; border-radius: 8px; font-size: 14px; transition: all 0.2s ease; }
+    .aba-btn:hover { background: #cbd5e1; color: #1e293b; }
+    .aba-btn.ativa { background: var(--cor-principal); color: white; box-shadow: 0 4px 10px rgba(30,58,138,0.25); }
     
     .conteudo-aba { display: none; }
     .conteudo-aba.ativa { display: block; }
 
     .filtros-topo, .form-cadastro { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; background: var(--cor-fundo-filtro); padding: 20px; border-radius: 12px; border: 1px solid var(--cor-borda-filtro); }
     .campo-filtro, .campo-form { flex: 1; min-width: 220px; }
-    .campo-filtro label, .campo-form label { display: block; font-weight: 700; font-size: 11px; margin-bottom: 8px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
+    .campo-filtro label, .campo-form label { display: block; font-weight: 700; font-size: 11px; margin-bottom: 8px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
     .campo-filtro select, .campo-filtro input, .campo-form select, .campo-form input { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box; background-color: white; color: #334155; transition: border-color 0.2s; }
     .campo-filtro select:focus, .campo-filtro input:focus { border-color: var(--cor-principal); outline: none; }
     
-    /* Container customizado para os Checkboxes de Relatórios */
     .secao-opcoes-relatorio { width: 100%; background: #ffffff; padding: 15px; border-radius: 10px; border: 1px dashed #cbd5e1; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
     .secao-opcoes-relatorio p { margin: 0; font-weight: 700; font-size: 12px; color: var(--cor-principal); text-transform: uppercase; width: 100%; margin-bottom: 5px; }
-    .opcao-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #4a5568; cursor: pointer; }
+    .opcao-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; }
     .opcao-check input { width: 16px; height: 16px; accent-color: var(--cor-principal); cursor: pointer; }
 
     .botoes-acoes { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 25px; }
@@ -59,9 +58,9 @@
     .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     
     .btn-filtrar { background-color: var(--cor-principal); }
-    .btn-excel { background-color: #107c41; }
-    .btn-pdf { background-color: #c0392b; }
-    .btn-salvar { background-color: #107c41; height: 42px; margin-top: 18px; }
+    .btn-excel { background-color: #0f766e; }
+    .btn-pdf { background-color: #be123c; }
+    .btn-salvar { background-color: #1e3a8a; height: 42px; margin-top: 18px; }
 
     .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
@@ -77,14 +76,14 @@
     .saldo-neutro { color: #64748b; font-size: 11px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; }
 
     .bloco-ponto-acoes { display: inline-flex; flex-direction: column; align-items: center; background: #f8fafc; padding: 6px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 80px; color: #334155; margin: 2px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-    .titulo-hora { font-size: 12px; font-weight: 700; color: var(--cor-principal-hover); }
-    .btn-foto { background: #4f46e5; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 4px; transition: background 0.2s; }
-    .btn-foto:hover { background: #4338ca; }
+    .titulo-hora { font-size: 12px; font-weight: 700; color: var(--cor-principal); }
+    .btn-foto { background: #3b82f6; color: white; border: none; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 4px; transition: background 0.2s; }
+    .btn-foto:hover { background: #1d4ed8; }
 
     .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
     .modal-content { background-color: white; padding: 25px; border-radius: 16px; max-width: 440px; width: 90%; text-align: center; color: #1e293b; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
     .opcao-dialogo { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 8px; text-align: left; font-size: 14px; font-weight: 600; cursor: pointer; background: #f8fafc; color: #334155; transition: all 0.2s; }
-    .opcao-dialogo:hover { background: #f0fdf4; border-color: var(--cor-principal); color: var(--cor-principal-hover); padding-left: 18px; }
+    .opcao-dialogo:hover { background: #eff6ff; border-color: var(--cor-principal); color: var(--cor-principal); padding-left: 18px; }
     .btn-fechar { background: #64748b; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 12px; font-size: 14px; transition: background 0.2s; }
     .btn-fechar:hover { background: #475569; }
     
@@ -98,15 +97,15 @@
   <div class="painel-container">
     
     <div class="logo-substituta">
-       🛒 SUPERMERCADO SÃO RAIMUNDO — GESTÃO INTEGRADA DE PONTO
+       🏢 SUPERMERCADO SÃO RAIMUNDO — GESTÃO INTEGRADA DE PONTO
     </div>
 
     <div class="topo-painel">
       <h1>PAINEL ADMINISTRATIVO</h1>
       <div class="campo-filtro" style="min-width:auto;">
         <select id="seletorTema" onchange="mudarTemaPainel(this.value)" style="padding: 6px; font-size: 12px; border-radius: 6px;">
-          <option value="verde">Verde Padrão</option>
           <option value="azul">Azul Corporativo</option>
+          <option value="grafite">Grafite Sábio</option>
           <option value="escuro">Modo Black</option>
         </select>
       </div>
@@ -114,7 +113,7 @@
 
     <div class="menu-abas">
       <button class="aba-btn ativa" onclick="alternarAba('abaPontos', this)">📊 Central de Pontos</button>
-      <button class="aba-btn" onclick="alternarAba('abaAtestados', this); carregarListaFuncionariosAtestado(); carregarTabelaAtestados();">🏥 Aba de Atestados Médicos</button>
+      <button class="aba-btn" onclick="alternarAba('abaAtestados', this); carregarListaFuncionariosAtestado(); carregarTabelaAtestados();">🏥 Licenças & Afastamentos</button>
       <button class="aba-btn" onclick="alternarAba('abaFuncionarios', this); carregarTabelaFuncionarios();">👥 Gerenciar Funcionários</button>
       <button class="aba-btn" onclick="alternarAba('abaExFuncionarios', this); carregarTabelaExFuncionarios();">💼 Ex-Colaboradores</button>
       <button class="aba-btn" onclick="alternarAba('abaGerenciarBanner', this); puxarBannerAtualBanco();">🎨 Banner de Ofertas</button>
@@ -141,7 +140,6 @@
           <input type="month" id="filtroMes" value="2026-06">
         </div>
 
-        <!-- SEÇÃO DE MODULARIZAÇÃO DE RELATÓRIO EXECUTIVO -->
         <div class="secao-opcoes-relatorio">
           <p>⚙️ Configuração Modular de Exportação (Filtros para PDF / Excel)</p>
           <label class="opcao-check">
@@ -163,7 +161,7 @@
         <button class="btn btn-filtrar" onclick="consultarPeriodoBanco()">🔍 Consultar Período</button>
         <button class="btn btn-excel" onclick="exportarParaExcel()">📊 Exportar Excel</button>
         <button class="btn btn-pdf" onclick="exportarParaPDF()">📄 Gerar PDF Executivo</button>
-        <button class="btn" style="background-color: #0b5394;" onclick="gerarEspelhoDePontoPDF()">📋 Gerar Espelho de Ponto</button>
+        <button class="btn" style="background-color: #1e3a8a;" onclick="gerarEspelhoDePontoPDF()">📋 Gerar Espelho de Ponto</button>
       </div>
 
       <div class="table-container">
@@ -187,12 +185,22 @@
       </div>
     </div>
 
+    <!-- ABA: LICENÇAS, FÉRIAS E AUXÍLIO DOENÇA -->
     <div id="abaAtestados" class="conteudo-aba">
-      <h3 style="margin-top: 0; color: #e65100;">🏥 Lançamento de Atestados Médicos com Período e Imagem</h3>
+      <h3 style="margin-top: 0; color: #1e3a8a;">🏥 Lançamento de Atestados, Licenças, Férias e Auxílio-Doença</h3>
       <div class="form-cadastro">
         <div class="campo-form">
           <label for="atestadoColaborador">Selecionar Funcionário:</label>
           <select id="atestadoColaborador"><option value="">-- Escolha o Funcionário --</option></select>
+        </div>
+        <div class="campo-form">
+          <label for="atestadoTipo">Tipo de Afastamento / Ocorrência:</label>
+          <select id="atestadoTipo" onchange="atualizarInterfaceTipoAfastamento()">
+            <option value="ATESTADO">🏥 Atestado Médico</option>
+            <option value="AUXILIO_DOENCA">🏥 Auxílio-Doença (INSS)</option>
+            <option value="LICENCA_MATERNIDADE">👶 Licença Maternidade</option>
+            <option value="FERIAS">🌴 Férias Programadas</option>
+          </select>
         </div>
         <div class="campo-form">
           <label for="atestadoDataInicio">Data de Início:</label>
@@ -202,40 +210,44 @@
           <label for="atestadoDataFim">Data de Término:</label>
           <input type="date" id="atestadoDataFim">
         </div>
-        <div class="campo-form" style="min-width: 280px;">
-          <label>Captura do Documento:</label>
+        
+        <!-- Bloco de Captura de Documento -->
+        <div class="campo-form" id="blocoCapturaDocumento" style="min-width: 280px;">
+          <label>Captura do Documento / Comprovante:</label>
           <video id="cameraPreview" autoplay playsinline></video>
           <canvas id="canvasFoto" style="display:none;"></canvas>
           
-          <button class="btn" style="background:#673ab7; width:100%; justify-content:center; margin-bottom:8px;" onclick="capturarFotoAtestado()">📸 Bater Foto do Atestado</button>
+          <button class="btn" style="background:#475569; width:100%; justify-content:center; margin-bottom:8px;" onclick="capturarFotoAtestado()">📸 Bater Foto do Documento</button>
           
-          <button class="btn" style="background:#0b5394; width:100%; justify-content:center;" onclick="document.getElementById('inputArquivoAtestado').click()">📁 Importar Arquivo/Imagem</button>
+          <button class="btn" style="background:#1e3a8a; width:100%; justify-content:center;" onclick="document.getElementById('inputArquivoAtestado').click()">📁 Importar Arquivo/Imagem</button>
           <input type="file" id="inputArquivoAtestado" accept="image/*" style="display:none;" onchange="importarArquivoImagem(this)">
         </div>
-        <div class="campo-form" id="statusUploadAtestado" style="display:flex; align-items:center; font-weight:bold; color:green; padding-top:20px; min-width:200px;"></div>
-        <button class="btn btn-salvar" style="background:#e65100;" onclick="salvarAtestadoBanco()">💾 Registrar Atestado</button>
+
+        <div class="campo-form" id="statusUploadAtestado" style="display:flex; align-items:center; font-weight:bold; color:#1e3a8a; padding-top:20px; min-width:200px;"></div>
+        <button id="btnSalvarAfastamento" class="btn btn-salvar" style="background:#1e3a8a;" onclick="salvarAtestadoBanco()">💾 Registrar Lançamento</button>
       </div>
 
-      <h3>📋 Registros de Atestados Médicos Arquivados</h3>
+      <h3>📋 Registros de Afastamentos e Licenças Guardados</h3>
       <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>Funcionário</th>
-              <th>Período Justificado</th>
-              <th>Visualização</th>
+              <th>Tipo de Ocorrência</th>
+              <th>Período Cadastrado</th>
+              <th>Comprovante</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody id="tabelaAtestadosCorpo">
-            <tr><td colspan="4" style="text-align: center; padding: 15px;">Carregando repositório...</td></tr>
+            <tr><td colspan="5" style="text-align: center; padding: 15px;">Carregando repositório...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
     <div id="abaFuncionarios" class="conteudo-aba">
-      <h3 id="tituloFormFuncionarios" style="margin-top: 0;">➕ Adicionar Novo Funcionário</h3>
+      <h3 id="tituloFormFuncionarios" style="margin-top: 0; color: #1e3a8a;">➕ Adicionar Novo Funcionário</h3>
       <div class="form-cadastro">
         <input type="hidden" id="editandoId" value="">
         <div class="campo-form">
@@ -279,8 +291,8 @@
     </div>
 
     <div id="abaExFuncionarios" class="conteudo-aba">
-      <h3 style="margin-top: 0; color: #444;">💼 Histórico de Ex-Colaboradores Desligados</h3>
-      <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Estes funcionários foram desligados, mas seus históricos de pontos continua arquivado.</p>
+      <h3 style="margin-top: 0; color: #475569;">💼 Histórico de Ex-Colaboradores Desligados</h3>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Estes funcionários foram desligados, mas seus históricos de pontos continua arquivado.</p>
       <div class="table-container">
         <table>
           <thead>
@@ -300,13 +312,13 @@
     </div>
 
     <div id="abaGerenciarBanner" class="conteudo-aba">
-      <h3 style="margin-top: 0; color: #0b5394;">🎨 Atualização em Tempo Real do Banner do Aplicativo</h3>
+      <h3 style="margin-top: 0; color: #1e3a8a;">🎨 Atualização em Tempo Real do Banner do Aplicativo</h3>
       <div class="form-cadastro">
         <div class="campo-form" style="min-width: 70%;">
           <label for="inputUrlBanner">URL Direta do Novo Banner (Link da Imagem):</label>
           <input type="text" id="inputUrlBanner" placeholder="https://i.ibb.co/.../imagem.jpg">
         </div>
-        <button class="btn btn-salvar" style="background:#0b5394;" onclick="atualizarBannerBanco()">💾 Atualizar Banner</button>
+        <button class="btn btn-salvar" style="background:#1e3a8a;" onclick="atualizarBannerBanco()">💾 Atualizar Banner</button>
       </div>
       <h4>Visualização Atual no Aplicativo:</h4>
       <div class="preview-banner-container">
@@ -356,7 +368,6 @@
     let memoriaOcorrencias = {};
     let memoriaAtestados = {};
     
-    // Cache expandido para guardar o espelho de ponto analítico detalhado dia a dia
     let registrosProcessadosCache = [];
     let detalhadoDiasCache = []; 
     
@@ -370,7 +381,29 @@
       document.querySelectorAll('.aba-btn').forEach(el => el.classList.remove('ativa'));
       document.getElementById(abaId).classList.add('ativa');
       botao.classList.add('ativa');
-      if (abaId === 'abaAtestados') inicializarCamera(); else desligarCamera();
+      if (abaId === 'abaAtestados') {
+        atualizarInterfaceTipoAfastamento();
+      } else {
+        desligarCamera();
+      }
+    }
+
+    function atualizarInterfaceTipoAfastamento() {
+      const tipo = document.getElementById('atestadoTipo').value;
+      const blocoCam = document.getElementById('blocoCapturaDocumento');
+      const btnSalvar = document.getElementById('btnSalvarAfastamento');
+
+      if (tipo === 'LICENCA_MATERNIDADE' || tipo === 'FERIAS') {
+        blocoCam.style.display = 'none';
+        desligarCamera();
+        btnSalvar.style.backgroundColor = '#1e3a8a';
+        btnSalvar.innerText = '💾 Registrar Licença / Férias';
+      } else {
+        blocoCam.style.display = 'block';
+        inicializarCamera();
+        btnSalvar.style.backgroundColor = '#be123c'; 
+        btnSalvar.innerText = '📸 Capturar Documento & Registrar';
+      }
     }
 
     function puxarBannerAtualBanco() {
@@ -390,7 +423,7 @@
         url: urlDigitada,
         atualizadoEm: firebase.database.ServerValue.TIMESTAMP
       }).then(() => {
-        alert("✅ Banner updated successfully!");
+        alert("✅ Banner atualizado com sucesso!");
         document.getElementById('imgPreviewBannerPainel').src = urlDigitada;
       }).catch(err => alert("Erro: " + err.message));
     }
@@ -453,14 +486,26 @@
 
     function salvarAtestadoBanco() {
       const colab = document.getElementById('atestadoColaborador').value;
+      const tipo = document.getElementById('atestadoTipo').value;
       const dataInicio = document.getElementById('atestadoDataInicio').value;
       const dataFim = document.getElementById('atestadoDataFim').value;
-      if (!colab || !dataInicio || !dataFim || !fotoAtestadoBase64) return alert("Preencha todos os dados!");
-      if (new Date(dataInicio) > new Date(dataFim)) return alert("Data inicial inválida!");
+      
+      if (!colab || !dataInicio || !dataFim) return alert("Preencha o funcionário e o período completo!");
+      if (new Date(dataInicio) > new Date(dataFim)) return alert("Data inicial deve ser menor ou igual à data de término!");
+
+      if ((tipo === 'ATESTADO' || tipo === 'AUXILIO_DOENCA') && !fotoAtestadoBase64) {
+        return alert("É necessário capturar a foto ou importar o comprovante para este tipo de afastamento!");
+      }
 
       const chave = `${dataInicio}_${colab.replace(/[^A-Z0-9]/gi, '')}`;
-      database.ref('atestados_painel/' + chave).set({ colaborador: colab, dataInicio, dataFim, foto: fotoAtestadoBase64 }).then(() => {
-        alert("Atestado registrado!");
+      database.ref('atestados_painel/' + chave).set({ 
+        colaborador: colab, 
+        tipo: tipo,
+        dataInicio, 
+        dataFim, 
+        foto: fotoAtestadoBase64 || "" 
+      }).then(() => {
+        alert("✅ Lançamento registrado com sucesso!");
         document.getElementById('statusUploadAtestado').innerText = "";
         fotoAtestadoBase64 = "";
       });
@@ -468,31 +513,47 @@
 
     function formatarDataVis(d) { return d ? d.split('-').reverse().join('/') : "--"; }
 
+    function obterRotuloTipo(tipo) {
+      switch(tipo) {
+        case 'LICENCA_MATERNIDADE': return '👶 Licença Maternidade';
+        case 'AUXILIO_DOENCA': return '🏥 Auxílio-Doença (INSS)';
+        case 'FERIAS': return '🌴 Férias Programadas';
+        default: return '🏥 Atestado Médico';
+      }
+    }
+
     function renderTabelaAtestadosLocal() {
       const box = document.getElementById('tabelaAtestadosCorpo'); if(!box) return; box.innerHTML = "";
-      if(Object.keys(memoriaAtestados).length === 0) { box.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum atestado guardado.</td></tr>'; return; }
+      if(Object.keys(memoriaAtestados).length === 0) { box.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum registro arquivado.</td></tr>'; return; }
       Object.keys(memoriaAtestados).sort().reverse().forEach(k => {
         const item = memoriaAtestados[k]; const tr = document.createElement('tr');
         const pStr = `<b>${formatarDataVis(item.dataInicio)}</b> até <b>${formatarDataVis(item.dataFim)}</b>`;
-        tr.innerHTML = `<td><b>${item.colaborador}</b></td><td>${pStr}</td>
-          <td>
-            <button class="btn" style="background:#673ab7; padding:4px 8px; font-size:11px;" onclick="verComprovante('${k}')">👁️ Ver</button>
-            <button class="btn" style="background:#2e7d32; padding:4px 8px; font-size:11px;" onclick="baixarFotoAtestado('${k}')">💾 Baixar</button>
-          </td>
-          <td><button class="btn" style="background:#d32f2f; padding:4px 8px; font-size:11px;" onclick="deletarAtestado('${k}')">🗑️ Excluir</button></td>`;
+        const rotulo = obterRotuloTipo(item.tipo);
+        
+        let acaoFoto = item.foto ? `
+          <button class="btn" style="background:#1e3a8a; padding:4px 8px; font-size:11px;" onclick="verComprovante('${k}')">👁️ Ver</button>
+          <button class="btn" style="background:#0f766e; padding:4px 8px; font-size:11px;" onclick="baixarFotoAtestado('${k}')">💾 Baixar</button>
+        ` : '<span style="color:#94a3b8; font-size:11px;">Sem Comprovante</span>';
+
+        tr.innerHTML = `
+          <td><b>${item.colaborador}</b></td>
+          <td><b>${rotulo}</b></td>
+          <td>${pStr}</td>
+          <td>${acaoFoto}</td>
+          <td><button class="btn" style="background:#be123c; padding:4px 8px; font-size:11px;" onclick="deletarAtestado('${k}')">🗑️ Excluir</button></td>`;
         box.appendChild(tr);
       });
     }
 
     function baixarFotoAtestado(k) {
-      const item = memoriaAtestados[k]; if (!item || !item.foto) return alert("Erro!");
+      const item = memoriaAtestados[k]; if (!item || !item.foto) return alert("Erro ao baixar!");
       const link = document.createElement('a'); link.href = item.foto;
-      link.download = `Atestado_${item.colaborador.replace(/\s+/g, '_')}.jpg`;
+      link.download = `Afastamento_${item.colaborador.replace(/\s+/g, '_')}.jpg`;
       document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
-    function verComprovante(k) { if(memoriaAtestados[k]) { document.getElementById('modalImg').src = memoriaAtestados[k].foto; document.getElementById('modalFoto').style.display = 'flex'; } }
-    function deletarAtestado(k) { if(confirm("Excluir registro?")) database.ref('atestados_painel/' + k).remove(); }
+    function verComprovante(k) { if(memoriaAtestados[k] && memoriaAtestados[k].foto) { document.getElementById('modalImg').src = memoriaAtestados[k].foto; document.getElementById('modalFoto').style.display = 'flex'; } }
+    function deletarAtestado(k) { if(confirm("Deseja excluir este registro?")) database.ref('atestados_painel/' + k).remove(); }
     function gerenciarDiaIndividual(data, funcionario) { ocorrenciaAtivaData = data; ocorrenciaAtivaFuncionario = funcionario; document.getElementById('modalOcorrenciaInfo').innerText = `Situação de ${funcionario} em ${formatarDataVis(data)}:`; document.getElementById('modalOcorrenciaDireta').style.display = 'flex'; }
     function fecharModalOcorrencia() { document.getElementById('modalOcorrenciaDireta').style.display = 'none'; }
 
@@ -518,15 +579,17 @@
     function normalizarTexto(t) { return t ? t.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "") : ""; }
 
     function verificarAtestadoNoPeriodo(nomeFunc, dataDia) {
-      let flag = false;
+      let resultado = null;
       Object.keys(memoriaAtestados).forEach(k => {
         const item = memoriaAtestados[k];
         if (normalizarTexto(item.colaborador) === normalizarTexto(nomeFunc)) {
-          if (item.dataInicio && item.dataFim) { if (dataDia >= item.dataInicio && dataDia <= item.dataFim) flag = true; }
-          else if (item.data === dataDia) flag = true;
+          if (item.dataInicio && item.dataFim) { 
+            if (dataDia >= item.dataInicio && dataDia <= item.dataFim) resultado = item.tipo || 'ATESTADO'; 
+          }
+          else if (item.data === dataDia) resultado = item.tipo || 'ATESTADO';
         }
       });
-      return flag;
+      return resultado;
     }
 
     function consultarPeriodoBanco() {
@@ -579,7 +642,8 @@
             let ent = "--", alm = "--", ret = "--", fim = "--";
             let hEnt = null, hAlm = null, hRet = null, hFim = null;
             let tokenComp = `${dStr}_${nome.replace(/[^A-Z0-9]/gi, '')}`;
-            let ocr = memoriaOcorrencias[tokenComp]; let possuiAtestado = verificarAtestadoNoPeriodo(nome, dStr);
+            let ocr = memoriaOcorrencias[tokenComp]; 
+            let tipoAfastamento = verificarAtestadoNoPeriodo(nome, dStr);
 
             if (batidas.length > 0) {
               tTrab++;
@@ -609,7 +673,6 @@
               saldoMinAcumulado += saldoDia;
               let statusDiaStr = saldoDia >= 0 ? `Extra +${saldoDia}min` : `Atraso ${saldoDia}min`;
 
-              // Identificar Meio Período (Atraso acumulado maior que 3 horas)
               if (saldoDia <= -180) { statusDiaStr = "FALTA MEIO PERÍODO"; }
 
               detalhadoDiasCache.push({
@@ -626,13 +689,27 @@
               if (cadastro.status === 'desativado') continue;
               let colEntrada = "", labelOcorrencia = "--";
 
-              if (possuiAtestado) { colEntrada = '<span style="color:#e65100; font-weight:bold; background:#fff3e0; padding:4px 8px; border-radius:4px;">🏥 ATESTADO MÉDICO</span>'; labelOcorrencia = "ATESTADO MÉDICO"; }
-              else if (ocr && ocr.tipo === 'FOLGA') { colEntrada = '<span style="color:#0d47a1; font-weight:bold; background:#e3f2fd; padding:4px 8px; border-radius:4px;">🌴 FOLGA PROGRAMADA</span>'; labelOcorrencia = "FOLGA PROGRAMADA"; }
-              else if (ocr && ocr.tipo === 'FALTA') { colEntrada = '<span style="color:#c62828; font-weight:bold; background:#ffebee; padding:4px 8px; border-radius:4px;">❌ FALTA LANÇADA</span>'; labelOcorrencia = "FALTA"; tFaltas++; }
+              if (tipoAfastamento) {
+                if (tipoAfastamento === 'LICENCA_MATERNIDADE') {
+                  colEntrada = '<span style="color:#d81b60; font-weight:bold; background:#fce4ec; padding:4px 8px; border-radius:4px;">👶 LICENÇA MATERNIDADE</span>';
+                  labelOcorrencia = "LICENÇA MATERNIDADE";
+                } else if (tipoAfastamento === 'FERIAS') {
+                  colEntrada = '<span style="color:#0f766e; font-weight:bold; background:#ccfbf1; padding:4px 8px; border-radius:4px;">🌴 FÉRIAS PROGRAMADAS</span>';
+                  labelOcorrencia = "FÉRIAS";
+                } else if (tipoAfastamento === 'AUXILIO_DOENCA') {
+                  colEntrada = '<span style="color:#be123c; font-weight:bold; background:#ffe4e6; padding:4px 8px; border-radius:4px;">🏥 AUXÍLIO-DOENÇA (INSS)</span>';
+                  labelOcorrencia = "AUXÍLIO DOENÇA";
+                } else {
+                  colEntrada = '<span style="color:#c2410c; font-weight:bold; background:#ffedd5; padding:4px 8px; border-radius:4px;">🏥 ATESTADO MÉDICO</span>';
+                  labelOcorrencia = "ATESTADO MÉDICO";
+                }
+              }
+              else if (ocr && ocr.tipo === 'FOLGA') { colEntrada = '<span style="color:#1d4ed8; font-weight:bold; background:#dbeafe; padding:4px 8px; border-radius:4px;">🌴 FOLGA PROGRAMADA</span>'; labelOcorrencia = "FOLGA PROGRAMADA"; }
+              else if (ocr && ocr.tipo === 'FALTA') { colEntrada = '<span style="color:#be123c; font-weight:bold; background:#ffe4e6; padding:4px 8px; border-radius:4px;">❌ FALTA LANÇADA</span>'; labelOcorrencia = "FALTA"; tFaltas++; }
               else {
                 if (new Date(ano, mes, d, 23, 59) < new Date()) {
-                  colEntrada = '<span style="color:#c62828; font-weight:bold; background:#ffebee; padding:4px 8px; border-radius:4px;">❌ FALTA</span>'; labelOcorrencia = "FALTA"; tFaltas++;
-                } else { colEntrada = '<span style="color:#999;">--</span>'; labelOcorrencia = "FUTURO / COMPUTAÇÃO EM ABERTO"; }
+                  colEntrada = '<span style="color:#be123c; font-weight:bold; background:#ffe4e6; padding:4px 8px; border-radius:4px;">❌ FALTA</span>'; labelOcorrencia = "FALTA"; tFaltas++;
+                } else { colEntrada = '<span style="color:#94a3b8;">--</span>'; labelOcorrencia = "FUTURO / COMPUTAÇÃO EM ABERTO"; }
               }
 
               detalhadoDiasCache.push({
@@ -653,7 +730,6 @@
       });
     }
 
-    // Função interna auxiliar para filtrar os dados com base nos Checkboxes ativos do painel
     function filtrarDadosModulares() {
       const inclFaltas = document.getElementById('chkFaltasInteiras').checked;
       const inclMeio = document.getElementById('chkFaltasMeio').checked;
@@ -665,7 +741,7 @@
         if (item.tipoOcorrencia === "FALTA MEIO PERÍODO" && inclMeio) return true;
         if (item.saldo > 0 && item.brutoBatidas && inclExtras) return true;
         if (item.brutoBatidas && inclBatidas && item.saldo <= 0 && item.tipoOcorrencia !== "FALTA MEIO PERÍODO") return true;
-        if ((item.tipoOcorrencia.includes("FOLGA") || item.tipoOcorrencia.includes("ATESTADO")) && inclBatidas) return true;
+        if ((item.tipoOcorrencia.includes("FOLGA") || item.tipoOcorrencia.includes("ATESTADO") || item.tipoOcorrencia.includes("LICENÇA") || item.tipoOcorrencia.includes("FÉRIAS") || item.tipoOcorrencia.includes("AUXÍLIO")) && inclBatidas) return true;
         return false;
       });
     }
@@ -703,9 +779,9 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'pt', 'a4');
       
-      doc.setFillColor(0, 100, 48); doc.rect(0, 0, 595, 75, 'F');
-      doc.setFont("Helvetica", "bold"); doc.setFontSize(15); doc.setTextColor(255, 215, 0); doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 32);
-      doc.setFontSize(10); doc.setTextColor(255,255,255); doc.text("RELATÓRIO EXECUTIVO PERSONALIZADO - AUDITORIA DE FECHAMENTO", 40, 52);
+      doc.setFillColor(30, 58, 138); doc.rect(0, 0, 595, 75, 'F');
+      doc.setFont("Helvetica", "bold"); doc.setFontSize(15); doc.setTextColor(255, 255, 255); doc.text("SUPERMERCADO SÃO RAIMUNDO", 40, 32);
+      doc.setFontSize(10); doc.setTextColor(226, 232, 240); doc.text("RELATÓRIO EXECUTIVO PERSONALIZADO - AUDITORIA DE FECHAMENTO", 40, 52);
       
       let linhas = filtrados.map((f, i) => {
         let txtSaldo = "--";
@@ -720,7 +796,7 @@
         startY: 100, 
         theme: 'grid', 
         styles: { fontSize: 8, cellPadding: 5 },
-        headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255] },
+        headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255] },
         columnStyles: {
           1: { cellWidth: 110 },
           2: { cellWidth: 90 },
@@ -739,7 +815,6 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'pt', 'a4');
       
-      // Agrupa os registros por funcionário para criar folhas organizadas separadamente
       let dadosPorFuncionario = {};
       filtrados.forEach(f => {
         if (!dadosPorFuncionario[f.nome]) {
@@ -760,21 +835,19 @@
 
         const info = dadosPorFuncionario[nomeFunc];
 
-        // Cabeçalho institucional do Espelho de Ponto Oficial
-        doc.setFillColor(0, 100, 48); doc.rect(40, 30, 515, 45, 'F');
-        doc.setFont("Helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(255, 215, 0); 
+        doc.setFillColor(30, 58, 138); doc.rect(40, 30, 515, 45, 'F');
+        doc.setFont("Helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(255, 255, 255); 
         doc.text("SUPERMERCADO SÃO RAIMUNDO", 55, 48);
-        doc.setFontSize(10); doc.setTextColor(255,255,255); 
+        doc.setFontSize(10); doc.setTextColor(226, 232, 240); 
         doc.text("ESPELHO DE PONTO INDIVIDUAL — CONTROLE DA JORNADA DE TRABALHO", 55, 65);
 
-        // Bloco de Informações do Colaborador
-        doc.setFont("Helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(44, 62, 80);
+        doc.setFont("Helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(30, 41, 59);
         doc.text(`Colaborador: ${nomeFunc}`, 40, 95);
         doc.text(`Cargo / Setor: ${info.cargo || '--'}`, 40, 110);
         doc.text(`Unidade: ${info.filial || '--'}`, 380, 95);
         doc.text(`Período de Apuração: ${document.getElementById('filtroMes').value.split('-').reverse().join('/')}`, 380, 110);
         
-        doc.setDrawColor(200, 200, 200); doc.line(40, 120, 555, 120);
+        doc.setDrawColor(203, 213, 225); doc.line(40, 120, 555, 120);
 
         let linhasTabela = info.dias.map(f => {
           let txtSaldo = "00:00";
@@ -783,14 +856,13 @@
           return [f.data, f.entrada, f.sAlmoco, f.rAlmoco, f.saida, txtSaldo, f.tipoOcorrencia];
         });
 
-        // Renderização da tabela de dados via autotable
         doc.autoTable({
           head: [['Data', 'Entrada', 'S. Almoço', 'R. Almoço', 'Saída Fim', 'Saldo do Dia', 'Apuração/Status']],
           body: linhasTabela,
           startY: 135,
           theme: 'grid',
           styles: { fontSize: 8, cellPadding: 4, alignment: 'center' },
-          headStyles: { fillColor: [0, 100, 48], textColor: [255, 255, 255], fontStyle: 'bold' },
+          headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold' },
           columnStyles: {
             0: { cellWidth: 55 },
             5: { fontStyle: 'bold' },
@@ -798,23 +870,21 @@
           }
         });
 
-        // Bloco de validação legal e assinatura do rodapé
         let finalY = doc.lastAutoTable.finalY + 40;
 
-        // Impede que a assinatura fique isolada em uma nova página em branco caso falte espaço
         if (finalY > 730) {
           doc.addPage();
           finalY = 50;
         }
 
-        doc.setFont("Helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(100, 110, 120);
+        doc.setFont("Helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
         const declaracao = "Declaro para os devidos fins de direito que recebi a notificação das ocorrências/faltas acima descritas e valido os registros de ponto constantes neste espelho, referentes à jornada de trabalho computada no período indicado.";
         let linhasTexto = doc.splitTextToSize(declaracao, 515);
         doc.text(linhasTexto, 40, finalY);
 
         finalY += 60;
-        doc.setDrawColor(100, 110, 120); doc.line(140, finalY, 455, finalY);
-        doc.setFont("Helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(44, 62, 80);
+        doc.setDrawColor(100, 116, 139); doc.line(140, finalY, 455, finalY);
+        doc.setFont("Helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(30, 41, 59);
         doc.text("Assinatura do Colaborador", 235, finalY + 15);
         doc.setFont("Helvetica", "normal"); doc.setFontSize(8);
         doc.text(`Ciente em: ____/____/2026`, 248, finalY + 30);
@@ -826,11 +896,11 @@
     function mudarTemaPainel(t) {
       const r = document.documentElement.style;
       if (t === 'escuro') {
-        r.setProperty('--cor-principal', '#1b5e20'); r.setProperty('--cor-fundo-tela', '#121212'); r.setProperty('--cor-fundo-card', '#1e1e1e'); r.setProperty('--cor-texto', '#e0e0e0'); r.setProperty('--cor-tabela-hover', '#2d2d2d'); r.setProperty('--cor-fundo-filtro', '#252525');
-      } else if (t === 'azul') {
-        r.setProperty('--cor-principal', '#0b5394'); r.setProperty('--cor-fundo-tela', '#f0f4f8'); r.setProperty('--cor-fundo-card', '#ffffff'); r.setProperty('--cor-texto', '#333333'); r.setProperty('--cor-tabela-hover', '#e8f0fe'); r.setProperty('--cor-fundo-filtro', '#f2f6fa');
+        r.setProperty('--cor-principal', '#0f172a'); r.setProperty('--cor-fundo-tela', '#090d16'); r.setProperty('--cor-fundo-card', '#1e293b'); r.setProperty('--cor-texto', '#f8fafc'); r.setProperty('--cor-tabela-hover', '#334155'); r.setProperty('--cor-fundo-filtro', '#111827');
+      } else if (t === 'grafite') {
+        r.setProperty('--cor-principal', '#334155'); r.setProperty('--cor-fundo-tela', '#f1f5f9'); r.setProperty('--cor-fundo-card', '#ffffff'); r.setProperty('--cor-texto', '#0f172a'); r.setProperty('--cor-tabela-hover', '#e2e8f0'); r.setProperty('--cor-fundo-filtro', '#f8fafc');
       } else {
-        r.setProperty('--cor-principal', '#006430'); r.setProperty('--cor-fundo-tela', '#f3f7f4'); r.setProperty('--cor-fundo-card', '#ffffff'); r.setProperty('--cor-texto', '#2c3e50'); r.setProperty('--cor-tabela-hover', '#f1f8f3'); r.setProperty('--cor-fundo-filtro', '#f9fdfa');
+        r.setProperty('--cor-principal', '#1e3a8a'); r.setProperty('--cor-fundo-tela', '#f8fafc'); r.setProperty('--cor-fundo-card', '#ffffff'); r.setProperty('--cor-texto', '#1e293b'); r.setProperty('--cor-tabela-hover', '#f1f5f9'); r.setProperty('--cor-fundo-filtro', '#f1f5f9');
       }
     }
 
@@ -842,9 +912,9 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `<td><b>${n}</b></td><td>${f.setor||'--'}</td><td>Loja ${f.loja||'--'}</td><td><code>${f.chaveApp||'--'}</code></td>
         <td>
-          <button class="btn" style="background:#f57c00; padding:4px 6px; margin-right:4px;" onclick="carregarParaEditar('${n.replace(/'/g,"\\'")}')">✏️ Editar</button>
+          <button class="btn" style="background:#d97706; padding:4px 6px; margin-right:4px;" onclick="carregarParaEditar('${n.replace(/'/g,"\\'")}')">✏️ Editar</button>
           <button class="btn" style="background:#0288d1; padding:4px 6px; margin-right:4px;" onclick="desligarColaborador('${n.replace(/'/g,"\\'")}')">💼 Desligar</button>
-          <button class="btn" style="background:#d32f2f; padding:4px 6px;" onclick="excluirColaboradorDefinitivo('${n.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
+          <button class="btn" style="background:#be123c; padding:4px 6px;" onclick="excluirColaboradorDefinitivo('${n.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
         </td>`;
         box.appendChild(tr);
       });
@@ -859,8 +929,8 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `<td><b>${n}</b></td><td>${f.setor||'--'}</td><td>Loja ${f.loja||'--'}</td><td><code>${f.chaveApp||'--'}</code></td>
         <td>
-          <button class="btn" style="background:#2e7d32; padding:4px 6px; margin-right:4px;" onclick="reativarColaborador('${n.replace(/'/g,"\\'")}')">🔄 Reativar</button>
-          <button class="btn" style="background:#d32f2f; padding:4px 6px;" onclick="excluirColaboradorDefinitivo('${n.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
+          <button class="btn" style="background:#0f766e; padding:4px 6px; margin-right:4px;" onclick="reativarColaborador('${n.replace(/'/g,"\\'")}')">🔄 Reativar</button>
+          <button class="btn" style="background:#be123c; padding:4px 6px;" onclick="excluirColaboradorDefinitivo('${n.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
         </td>`;
         box.appendChild(tr);
       });
