@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Ponto - São Raimundo</title>
   
+  <!-- CONFIGURAÇÕES PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c62828">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="logo.jpg">
+
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   
@@ -656,7 +663,6 @@
     }
 
     function antisymmetricFiltroNomes() {
-      // (Função corrigida para bater com a chamada do onchange do html)
       configurarFiltroNomes();
     }
 
@@ -857,6 +863,15 @@
     }
 
     carregarDadosDoServidor();
+
+    // REGISTRO DO SERVICE WORKER (PWA)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registrado com sucesso!', reg))
+          .catch(err => console.log('Erro ao registrar Service Worker:', err));
+      });
+    }
   </script>
 </body>
 </html>
