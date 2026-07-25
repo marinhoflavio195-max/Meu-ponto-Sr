@@ -1,0 +1,23 @@
+{
+  "name": "Supermercado São Raimundo - Ponto",
+  "short_name": "Ponto SR",
+  "description": "Aplicativo de Registro de Ponto Eletrônico com Trava GPS",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#c62828",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
