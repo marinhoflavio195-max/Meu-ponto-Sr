@@ -32,12 +32,12 @@
     }
 
     /* ----------------------------------------------------
-       CABEÇALHO ORIGINAL RESTAURADO (COM LOGO.JPG)
+       CABEÇALHO ORIGINAL RESTAURADO (COM LOGO ANIMADA)
     ------------------------------------------------------- */
     .cabecalho-empresa {
       text-align: center;
       margin-top: 10px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
     .container-logo-original {
@@ -52,6 +52,27 @@
       height: auto;
       display: block;
       border-radius: 100px;
+    }
+
+    /* ANIMAÇÃO DA LOGO (OPÇÃO 1: FLUTUAÇÃO + PULSO) */
+    .logo-animada {
+      animation: flutuarEBrilhar 3s ease-in-out infinite;
+      transition: transform 0.3s ease;
+    }
+
+    @keyframes flutuarEBrilhar {
+      0% {
+        transform: translateY(0px) scale(1);
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+      }
+      50% {
+        transform: translateY(-6px) scale(1.03); /* Eleva levemente e expande 3% */
+        filter: drop-shadow(0 10px 15px rgba(198, 40, 40, 0.4)); /* Sombra/brilho vermelho suave */
+      }
+      100% {
+        transform: translateY(0px) scale(1);
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+      }
     }
 
     .cabecalho-empresa h1 {
@@ -365,7 +386,7 @@
 
   <div class="cabecalho-empresa">
     <div class="container-logo-original">
-      <img src="logo.jpg" alt="Logo São Raimundo">
+      <img src="logo.jpg" alt="Logo São Raimundo" class="logo-animada">
     </div>
     <h1>Supermercado São Raimundo</h1>
     <p>Registro de Ponto com Trava GPS</p>
