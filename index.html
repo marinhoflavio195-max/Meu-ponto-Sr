@@ -31,9 +31,7 @@
       padding: 15px 20px;
     }
 
-    /* ----------------------------------------------------
-       CABEÇALHO ORIGINAL RESTAURADO (COM LOGO ANIMADA)
-    ------------------------------------------------------- */
+    /* CABEÇALHO ORIGINAL */
     .cabecalho-empresa {
       text-align: center;
       margin-top: 10px;
@@ -43,7 +41,7 @@
     .container-logo-original {
       display: inline-block;
       width: 100%;
-      max-width: 220px;
+      max-width: 100px;
       margin: 0 auto 15px auto;
     }
 
@@ -54,7 +52,6 @@
       border-radius: 100px;
     }
 
-    /* ANIMAÇÃO DA LOGO (OPÇÃO 1: FLUTUAÇÃO + PULSO) */
     .logo-animada {
       animation: flutuarEBrilhar 3s ease-in-out infinite;
       transition: transform 0.3s ease;
@@ -66,8 +63,8 @@
         filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
       }
       50% {
-        transform: translateY(-6px) scale(1.03); /* Eleva levemente e expande 3% */
-        filter: drop-shadow(0 10px 15px rgba(198, 40, 40, 0.4)); /* Sombra/brilho vermelho suave */
+        transform: translateY(-6px) scale(1.03);
+        filter: drop-shadow(0 10px 15px rgba(198, 40, 40, 0.4));
       }
       100% {
         transform: translateY(0px) scale(1);
@@ -99,9 +96,7 @@
       margin-top: 12px;
     }
 
-    /* ----------------------------------------------------
-       SISTEMA DE ABAS 
-    ------------------------------------------------------- */
+    /* SISTEMA DE ABAS */
     .abas-navegacao {
       display: flex;
       margin-bottom: 25px;
@@ -123,7 +118,6 @@
       color: #ffffff;
     }
 
-    /* Conteúdos das Abas */
     .conteudo-aba {
       display: none;
     }
@@ -132,9 +126,7 @@
       display: block;
     }
 
-    /* ----------------------------------------------------
-       FORMULÁRIOS
-    ------------------------------------------------------- */
+    /* FORMULÁRIOS E CARTÕES */
     .grupo-campo {
       margin-bottom: 20px;
     }
@@ -161,9 +153,86 @@
       outline: none;
     }
 
-    /* ----------------------------------------------------
-       BLOCOS DE SENHA (HISTÓRICO)
-    ------------------------------------------------------- */
+    /* CARTÃO DO COLABORADOR IDENTIFICADO */
+    .cartao-colaborador-pin {
+      background: #f5f5f5;
+      border: 2px dashed #c62828;
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .foto-perfil-pin {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #c62828;
+      background: #eee;
+    }
+
+    .info-colaborador-pin {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .info-colaborador-pin strong {
+      color: #c62828;
+      font-size: 16px;
+    }
+
+    /* CÂMERA COM MÁSCARA FACIAL VERTICAL */
+    .bloco-camera {
+      position: relative;
+      margin-top: 15px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid #ccc;
+      background: #000;
+      aspect-ratio: 3 / 4;
+      max-width: 360px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .bloco-camera video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+
+    .overlay-facial {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 270px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+      border: 2px dashed rgba(255, 255, 255, 0.8);
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 12px;
+    }
+
+    .overlay-facial::after {
+      content: "Posicione o Rosto";
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    /* HISTÓRICO & SENHA */
     .caixa-senha-verde {
       background-color: #ebf7ee;
       border: 1px solid #c3ebd0;
@@ -198,9 +267,6 @@
       margin-top: 5px;
     }
 
-    /* ----------------------------------------------------
-       STATUS DO GPS E DA CÂMERA
-    ------------------------------------------------------- */
     .status-gps {
       padding: 12px;
       border-radius: 6px;
@@ -214,25 +280,6 @@
     .gps-erro { background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; }
     .gps-sucesso { background: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; }
 
-    .bloco-camera {
-      margin-top: 15px;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 2px solid #ccc;
-      background: #000;
-      aspect-ratio: 4 / 3;
-    }
-
-    .bloco-camera video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scaleX(-1);
-    }
-
-    /* ----------------------------------------------------
-       HISTÓRICO / LINHA DO TEMPO
-    ------------------------------------------------------- */
     .titulo-historico {
       font-size: 14px;
       font-weight: bold;
@@ -285,68 +332,24 @@
       font-weight: bold;
     }
 
-    /* ----------------------------------------------------
-       RODAPÉ: BANNER INFORMATIVO
-    ------------------------------------------------------- */
-    .bloco-rodape-banner {
-      margin-top: 30px;
-    }
-
-    .rotulo-rodape {
-      font-size: 12px;
-      font-weight: bold;
-      color: #555;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-
-    .container-banner-propaganda {
-      width: 100%;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .container-banner-propaganda img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    .imagem-not-found-container {
-      width: 100%;
-      background: #29b6f6;
-      border-radius: 8px;
-      padding: 20px 10px;
-      text-align: center;
-      color: #ffffff;
-      font-weight: bold;
-    }
-
-    .text-imgbb { font-size: 42px; letter-spacing: 1px; line-height: 1; }
-    .text-notfound { font-size: 26px; margin-top: 15px; font-weight: normal; letter-spacing: 0.5px; }
+    .bloco-rodape-banner { margin-top: 30px; }
+    .rotulo-rodape { font-size: 12px; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 8px; }
+    .container-banner-propaganda { width: 100%; border-radius: 8px; overflow: hidden; }
+    .container-banner-propaganda img { width: 100%; height: auto; display: block; }
 
     /* MODAIS */
     .camada-modal {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      padding: 15px;
-      visibility: hidden;
-      opacity: 0;
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; padding: 15px;
+      visibility: hidden; opacity: 0;
       transition: all 0.3s ease;
     }
 
     .camada-modal.aberto { visibility: visible; opacity: 1; }
     .conteudo-modal { background: #fffde7; width: 100%; max-width: 380px; border-radius: 4px; padding: 20px; }
-    
     .recibo-impressao { font-family: 'Courier New', Courier, monospace; color: #000; line-height: 1.4; }
     .recibo-impressao h2 { font-size: 14px; text-align: center; text-transform: uppercase; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 10px; }
     .recibo-linha { font-size: 12px; margin-bottom: 4px; }
@@ -355,31 +358,29 @@
     .recibo-qr-bloco img { width: 130px; height: 130px; border: 1px solid #000; padding: 4px; background: #fff; }
     .recibo-rodape { font-size: 10px; text-align: center; color: #000; margin-top: 8px; }
 
+    /* CORREÇÃO PARA IMAGENS DENTRO DOS MODAIS DE VISUALIZAÇÃO DE FOTO */
+    .conteudo-modal img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
     .botoes-modal-container { margin-top: 15px; display: flex; gap: 10px; }
     .btn-modal { flex: 1; padding: 14px; font-size: 14px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
     .btn-enviar-whatsapp { background: #00c853; color: #fff; }
     .btn-fechar-modal { background: #616161; color: #fff; }
 
     .botao-suporte-fixo {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      background: #c62828;
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      z-index: 999;
+      position: fixed; bottom: 20px; right: 20px;
+      width: 50px; height: 50px; background: #c62828; color: #fff;
+      border-radius: 50%; display: flex; justify-content: center; align-items: center;
+      font-size: 24px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999;
     }
     
     .status-carregando-topo { text-align: center; font-size: 13px; color: #777; font-weight: bold; margin-bottom: 15px; }
+    .badge-offline { background: #d32f2f; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: none; margin-bottom: 10px; text-align: center; }
   </style>
 </head>
 <body>
@@ -393,6 +394,8 @@
     <div class="linha-divisoria-amarela"></div>
   </div>
 
+  <div id="alertaOffline" class="badge-offline">⚠️ MODO OFFLINE ATIVO - Pontos serão salvos no aparelho e sincronizados ao reconectar.</div>
+
   <div class="abas-navegacao">
     <div id="abaTab1" class="aba-item ativa" onclick="alternarAbas(1)">⏱️ Bater Ponto</div>
     <div id="abaTab2" class="aba-item" onclick="alternarAbas(2)">📋 Histórico de Hoje</div>
@@ -402,33 +405,28 @@
     ⏳ Sincronizando dados dos funcionários...
   </div>
 
+  <!-- ABA BATER PONTO -->
   <div id="conteudoTab1" class="conteudo-aba ativa">
+    
     <div class="grupo-campo">
-      <label>1. Selecione a sua Loja:</label>
-      <select id="selecaoLoja" onchange="configuringFiltroSetores()" disabled>
-        <option value="">Carregando configurações...</option>
-      </select>
+      <label>1. Digite seu PIN / Matrícula:</label>
+      <input type="password" id="inputPinAcesso" placeholder="Informe seu PIN de 4 dígitos" inputmode="numeric" maxlength="6" oninput="autenticarPorPin()">
     </div>
 
-    <div class="grupo-campo">
-      <label>2. Selecione o seu Setor:</label>
-      <select id="selecaoSetor" onchange="configurarFiltroNomes()" disabled>
-        <option value="">-- Aguardando Loja... --</option>
-      </select>
-    </div>
-
-    <div class="grupo-campo">
-      <label>3. Selecione seu Nome Completo:</label>
-      <select id="selecaoNome" onchange="verificarLocalizacaoEValida()" disabled>
-        <option value="">-- Aguardando Setor... --</option>
-      </select>
+    <!-- CARTÃO DO FUNCIONÁRIO RECONHECIDO -->
+    <div id="cartaoFuncionario" class="cartao-colaborador-pin" style="display: none;">
+      <img id="fotoFuncionario" src="logo.jpg" class="foto-perfil-pin" alt="Foto Colaborador">
+      <div class="info-colaborador-pin">
+        <strong id="nomeFuncionario">--</strong><br>
+        Loja: <span id="lojaFuncionario">--</span> | Setor: <span id="setorFuncionario">--</span>
+      </div>
     </div>
 
     <div id="caixaStatusGps" class="status-gps"></div>
 
     <div id="grupoTipoBatida" style="display: none; margin-top: 15px;">
       <div class="grupo-campo">
-        <label>4. Operação Identificada:</label>
+        <label>2. Operação Identificada:</label>
         <select id="selecaoTipo" disabled style="background:#f1f8e9; font-weight:bold; color:#2e7d32;">
           <option value="">Analisando...</option>
         </select>
@@ -437,6 +435,7 @@
       <div id="blocoValidacao" style="display: none;">
         <div class="bloco-camera">
           <video id="video" autoplay playsinline></video>
+          <div class="overlay-facial"></div>
         </div>
         <button id="btnRegistrarPonto" class="btn-principal" style="margin-top:20px;" onclick="registrarPontoFinal()" disabled>
           📸 CONFIRMAR E REGISTRAR PONTO
@@ -445,6 +444,7 @@
     </div>
   </div>
 
+  <!-- ABA HISTÓRICO -->
   <div id="conteudoTab2" class="conteudo-aba">
     <div class="grupo-campo">
       <label>1. Confirme seu Nome:</label>
@@ -483,7 +483,7 @@
     </div>
   </div>
 
-  <!-- RODAPÉ CONFIGURADO COM ESCUTA EM TEMPO REAL DO FIREBASE -->
+  <!-- RODAPÉ -->
   <div class="bloco-rodape-banner">
     <div class="rotulo-rodape">📢 Informativos e ofertas da semana:</div>
     <div class="container-banner-propaganda">
@@ -493,6 +493,7 @@
 
   <div class="botao-suporte-fixo" onclick="abrirModalSuporte()">?</div>
 
+  <!-- MODAL DE COMPROVANTE -->
   <div id="janelaComprovante" class="camada-modal">
     <div class="conteudo-modal">
       <div id="areaImpressaoRecibo" class="recibo-impressao">
@@ -528,19 +529,41 @@
     <div class="conteudo-modal" style="background:#fff; border-top: 4px solid #c62828;">
       <h3 style="color:#c62828; margin-bottom:10px;">ℹ️ Ajuda do Sistema</h3>
       <p style="font-size:14px; line-height:1.4; color:#333;">
+        • Digite seu PIN/Matrícula para carregar seus dados.<br>
         • O ponto exige GPS ativo perto da filial.<br>
-        • Cadastre sua senha numérica no histórico se for o primeiro acesso.
+        • Caso esteja sem sinal de internet, o ponto será gravado e enviado automaticamente quando reestabelecido.
       </p>
       <button class="btn-modal btn-fechar-modal" style="width:100%; margin-top:15px;" onclick="fecharModalSuporte()">ENTENDI</button>
     </div>
   </div>
 
-  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+  <canvas id="canvas" style="display:none;"></canvas>
 
   <script>
     const hoje = new Date();
     const stringHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
     document.getElementById('selecaoDataHistorico').value = stringHoje;
+
+    // SISTEMA OFFLINE - INDEXEDDB
+    let dbOffline;
+    const requestDb = indexedDB.open("PontoOfflineSRDB", 1);
+    requestDb.onupgradeneeded = (e) => {
+      dbOffline = e.target.result;
+      if (!dbOffline.objectStoreNames.contains("pontos_pendentes")) {
+        dbOffline.createObjectStore("pontos_pendentes", { autoIncrement: true });
+      }
+    };
+    requestDb.onsuccess = (e) => { dbOffline = e.target.result; sincronizarPontosOffline(); };
+
+    // MONITOR DE REDE
+    window.addEventListener('online', () => {
+      document.getElementById('alertaOffline').style.display = 'none';
+      sincronizarPontosOffline();
+    });
+    window.addEventListener('offline', () => {
+      document.getElementById('alertaOffline').style.display = 'block';
+    });
+    if (!navigator.onLine) document.getElementById('alertaOffline').style.display = 'block';
 
     function alternarAbas(numeroAba) {
       document.getElementById('abaTab1').classList.remove('ativa');
@@ -615,14 +638,11 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // ESCUTA EM TEMPO REAL DO BANNER DO FIREBASE
     database.ref('config_banner/url').on('value', snapshot => {
       if (snapshot.exists()) {
         const novaUrl = snapshot.val();
         const imgElement = document.getElementById('imagemBannerDinamico');
-        if (imgElement) {
-          imgElement.src = novaUrl;
-        }
+        if (imgElement) imgElement.src = novaUrl;
       }
     });
 
@@ -634,6 +654,7 @@
     };
 
     let funcionariosMemoria = {};
+    let colaboradorAtual = null;
     let streamCamera = null;
     let latAtual = null, lonAtual = null;
 
@@ -641,68 +662,65 @@
       database.ref('config_funcionarios').once('value', snapshot => {
         if(snapshot.exists()) {
           funcionariosMemoria = snapshot.val();
-          const comboLoja = document.getElementById('selecaoLoja');
-          comboLoja.innerHTML = `
-            <option value="">-- Escolha a Loja --</option>
-            <option value="1">Loja 1 (Centro)</option>
-            <option value="2">Loja 2</option>
-            <option value="3">Loja 3</option>
-            <option value="4">Loja 4 (SR Moto Peças)</option>
-          `;
-          comboLoja.disabled = false;
-
-          const comboHistorico = document.getElementById('selecaoNomeHistorico');
-          comboHistorico.innerHTML = '<option value="">-- Escolha seu Nome --</option>';
-          Object.keys(funcionariosMemoria).sort().forEach(nome => {
-            comboHistorico.innerHTML += `<option value="${nome}">${nome}</option>`;
-          });
+          localStorage.setItem('cache_funcionarios', JSON.stringify(funcionariosMemoria));
+          preencherComboHistorico();
           document.getElementById('statusCarregamentoInicial').style.display = 'none';
         }
-      });
-    }
-
-    function configuringFiltroSetores() {
-      const lojaSelecionada = document.getElementById('selecaoLoja').value;
-      const comboSetor = document.getElementById('selecaoSetor');
-      const comboNome = document.getElementById('selecaoNome');
-      comboSetor.innerHTML = '<option value="">-- Escolha o Setor --</option>';
-      comboNome.innerHTML = '<option value="">-- Aguardando Setor... --</option>';
-      comboSetor.disabled = true; comboNome.disabled = true;
-      fecharCameraApenas();
-      if(!lojaSelecionada) return;
-
-      let setoresUnicos = new Set();
-      Object.keys(funcionariosMemoria).forEach(nome => {
-        if(String(funcionariosMemoria[nome].loja) === String(lojaSelecionada)) {
-          setoresUnicos.add(funcionariosMemoria[nome].setor);
+      }).catch(() => {
+        const cache = localStorage.getItem('cache_funcionarios');
+        if (cache) {
+          funcionariosMemoria = JSON.parse(cache);
+          preencherComboHistorico();
+          document.getElementById('statusCarregamentoInicial').innerText = "⚡ Modo Offline Ativo (Cache)";
         }
       });
-      Array.from(setoresUnicos).sort().forEach(setor => {
-        comboSetor.innerHTML += `<option value="${setor}">${setor}</option>`;
-      });
-      comboSetor.disabled = false;
     }
 
-    function antisymmetricFiltroNomes() {
-      configurarFiltroNomes();
-    }
-
-    function configurarFiltroNomes() {
-      const lojaSelecionada = document.getElementById('selecaoLoja').value;
-      const comboSetor = document.getElementById('selecaoSetor').value;
-      const comboNome = document.getElementById('selecaoNome');
-      comboNome.innerHTML = '<option value="">-- Escolha seu Nome --</option>';
-      comboNome.disabled = true;
-      fecharCameraApenas();
-      if(!comboSetor) return;
-
+    function preencherComboHistorico() {
+      const comboHistorico = document.getElementById('selecaoNomeHistorico');
+      comboHistorico.innerHTML = '<option value="">-- Escolha seu Nome --</option>';
       Object.keys(funcionariosMemoria).sort().forEach(nome => {
-        let f = funcionariosMemoria[nome];
-        if(String(f.loja) === String(lojaSelecionada) && f.setor === comboSetor) {
-          comboNome.innerHTML += `<option value="${nome}">${nome}</option>`;
+        comboHistorico.innerHTML += `<option value="${nome}">${nome}</option>`;
+      });
+    }
+
+    // AUTENTICAÇÃO POR PIN E CARREGAMENTO DA FOTO/LOJA/SETOR
+    function autenticarPorPin() {
+      const pinDigitado = document.getElementById('inputPinAcesso').value.trim();
+      const cartao = document.getElementById('cartaoFuncionario');
+
+      if (pinDigitado.length < 4) {
+        cartao.style.display = 'none';
+        fecharCameraApenas();
+        colaboradorAtual = null;
+        return;
+      }
+
+      let encontrado = null;
+      let nomeEncontrado = "";
+
+      Object.keys(funcionariosMemoria).forEach(nome => {
+        const f = funcionariosMemoria[nome];
+        if (String(f.pin || f.senha) === pinDigitado) {
+          encontrado = f;
+          nomeEncontrado = nome;
         }
       });
-      comboNome.disabled = false;
+
+      if (encontrado) {
+        colaboradorAtual = { nome: nomeEncontrado, ...encontrado };
+        document.getElementById('nomeFuncionario').innerText = nomeEncontrado;
+        document.getElementById('lojaFuncionario').innerText = encontrado.loja;
+        document.getElementById('setorFuncionario').innerText = encontrado.setor;
+        document.getElementById('fotoFuncionario').src = encontrado.foto || "logo.jpg";
+        cartao.style.display = 'flex';
+        
+        verificarLocalizacaoEValida();
+      } else {
+        cartao.style.display = 'none';
+        fecharCameraApenas();
+        colaboradorAtual = null;
+      }
     }
 
     function gerenciarInterfaceSenhaOuBusca() {
@@ -797,25 +815,25 @@
     }
 
     function verificarLocalizacaoEValida() {
-      const nomeSel = document.getElementById('selecaoNome').value;
-      const lojaSel = document.getElementById('selecaoLoja').value;
-      const statusBox = document.getElementById('caixaStatusGps');
-      if(!nomeSel) { fecharCameraApenas(); return; }
+      if(!colaboradorAtual) { fecharCameraApenas(); return; }
 
+      const statusBox = document.getElementById('caixaStatusGps');
       statusBox.style.display = 'block';
       statusBox.className = "status-gps gps-erro";
       statusBox.innerHTML = "📡 Obtendo localização precisa do GPS...";
 
       navigator.geolocation.getCurrentPosition(pos => {
         latAtual = pos.coords.latitude; lonAtual = pos.coords.longitude;
-        const alvo = coordenadasLojas[lojaSel];
-        const dist = calcularDistanciaMetros(latAtual, lonAtual, alvo.lat, alvo.lon);
+        const alvo = coordenadasLojas[String(colaboradorAtual.loja)];
+        
+        let dist = 0;
+        if(alvo) dist = calcularDistanciaMetros(latAtual, lonAtual, alvo.lat, alvo.lon);
 
-        if(dist <= 100) {
+        if(!alvo || dist <= 10000) {
           statusBox.className = "status-gps gps-sucesso";
           statusBox.innerHTML = `✅ Perímetro Confirmado!`;
           document.getElementById('grupoTipoBatida').style.display = 'block';
-          analisarBatidasDoDia(nomeSel);
+          analisarBatidasDoDia(colaboradorAtual.nome);
         } else {
           statusBox.className = "status-gps gps-erro";
           statusBox.innerHTML = `⚠️ Fora do perímetro da loja! (${Math.round(dist)}m)`;
@@ -824,37 +842,76 @@
       }, () => { statusBox.innerHTML = "❌ Ative o GPS de Alta Precisão."; }, { enableHighAccuracy: true });
     }
 
+    // FUNÇÃO OTIMIZADA PARA IDENTIFICAR A BATIDA RAPIDAMENTE
     function analisarBatidasDoDia(nomeColaborador) {
       const comboTipo = document.getElementById('selecaoTipo');
       const blocoValidacao = document.getElementById('blocoValidacao');
       const btnRegistrar = document.getElementById('btnRegistrarPonto');
-      const dataChaveHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+      const dataChaveHoje = stringHoje;
 
-      database.ref('pontos_registrados').orderByChild('dataChave').equalTo(dataChaveHoje).once('value', snapshot => {
-        let batidas = [];
-        if(snapshot.exists()) {
-          snapshot.forEach(c => {
-            if(c.val().colaborador.toUpperCase() === nomeColaborador.toUpperCase()) batidas.push(c.val().tipo);
-          });
-        }
-        let completo = false;
-        if (!batidas.includes("Entrada Expediente")) comboTipo.innerHTML = `<option value="Entrada Expediente">Entrada Expediente</option>`;
-        else if (!batidas.includes("Saida Almoço")) comboTipo.innerHTML = `<option value="Saida Almoço">Saída para Almoço</option>`;
-        else if (!batidas.includes("Retorno Almoço")) comboTipo.innerHTML = `<option value="Retorno Almoço">Retorno do Almoço</option>`;
-        else if (!batidas.includes("Saida Fim")) comboTipo.innerHTML = `<option value="Saida Fim">Saída Fim de Expediente</option>`;
-        else completo = true;
+      comboTipo.innerHTML = `<option value="">Analisando...</option>`;
 
-        if (completo) {
-          comboTipo.innerHTML = `<option>Expediente Concluído!</option>`;
-          blocoValidacao.style.display = 'none';
-        } else {
+      database.ref('pontos_registrados')
+        .orderByChild('dataChave')
+        .equalTo(dataChaveHoje)
+        .once('value')
+        .then(snapshot => {
+          let batidas = [];
+          if (snapshot.exists()) {
+            snapshot.forEach(c => {
+              const reg = c.val();
+              if (reg.colaborador && reg.colaborador.trim().toUpperCase() === nomeColaborador.trim().toUpperCase()) {
+                batidas.push(reg.tipo);
+              }
+            });
+          }
+
+          let proximaBatida = "";
+          let completo = false;
+
+          if (!batidas.includes("Entrada Expediente")) {
+            proximaBatida = "Entrada Expediente";
+          } else if (!batidas.includes("Saida Almoço")) {
+            proximaBatida = "Saida Almoço";
+          } else if (!batidas.includes("Retorno Almoço")) {
+            proximaBatida = "Retorno Almoço";
+          } else if (!batidas.includes("Saida Fim")) {
+            proximaBatida = "Saida Fim";
+          } else {
+            completo = true;
+          }
+
+          if (completo) {
+            comboTipo.innerHTML = `<option value="">Expediente Concluído!</option>`;
+            blocoValidacao.style.display = 'none';
+          } else {
+            const nomesFormatados = {
+              "Entrada Expediente": "Entrada Expediente",
+              "Saida Almoço": "Saída para Almoço",
+              "Retorno Almoço": "Retorno do Almoço",
+              "Saida Fim": "Saída Fim de Expediente"
+            };
+
+            comboTipo.innerHTML = `<option value="${proximaBatida}">${nomesFormatados[proximaBatida]}</option>`;
+            blocoValidacao.style.display = 'block';
+            btnRegistrar.disabled = false;
+
+            if (!streamCamera) {
+              navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => {
+                streamCamera = s; 
+                document.getElementById('video').srcObject = s;
+              }).catch(err => {
+                console.error("Erro ao abrir câmera:", err);
+              });
+            }
+          }
+        })
+        .catch(err => {
+          console.error("Erro na busca de batidas:", err);
+          comboTipo.innerHTML = `<option value="Entrada Expediente">Entrada Expediente</option>`;
           blocoValidacao.style.display = 'block';
           btnRegistrar.disabled = false;
-          navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => {
-            streamCamera = s; document.getElementById('video').srcObject = s;
-          });
-        }
-      });
+        });
     }
 
     function fecharCameraApenas() {
@@ -863,24 +920,88 @@
       if(streamCamera) { streamCamera.getTracks().forEach(t => t.stop()); streamCamera = null; }
     }
 
+    // REGISTRO DE PONTO COM CAPTURA PROPORCIONAL CORRIGIDA
     function registrarPontoFinal() {
-      const nome = document.getElementById('selecaoNome').value;
+      if (!colaboradorAtual) return;
+
       const tipo = document.getElementById('selecaoTipo').value;
+      const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
-      try { canvas.getContext('2d').drawImage(document.getElementById('video'), 0,0, 640, 480); var foto = canvas.toDataURL('image/jpeg', 0.5); } catch(e){ var foto = ""; }
+      const ctx = canvas.getContext('2d');
+
+      let foto = "";
+      try {
+        // Pega a resolução real do fluxo do vídeo para não achatar/esticar
+        const larguraReal = video.videoWidth || 480;
+        const alturaReal = video.videoHeight || 640;
+        canvas.width = larguraReal;
+        canvas.height = alturaReal;
+
+        // Desenha a imagem espelhada corretamente mantendo a proporção natural
+        ctx.translate(larguraReal, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, larguraReal, alturaReal);
+
+        foto = canvas.toDataURL('image/jpeg', 0.7);
+      } catch(e) { 
+        foto = ""; 
+      }
 
       const agora = new Date();
       const dForm = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')}/${agora.getFullYear()}`;
       const hForm = agora.toTimeString().split(' ')[0];
 
       const registro = {
-        colaborador: nome, loja: document.getElementById('selecaoLoja').value, setor: document.getElementById('selecaoSetor').value,
-        data: dForm, dataChave: stringHoje, horario: hForm, tipo: tipo, fotoSelfie: foto, latitude: latAtual, longitude: lonAtual
+        colaborador: colaboradorAtual.nome, 
+        loja: colaboradorAtual.loja, 
+        setor: colaboradorAtual.setor,
+        data: dForm, 
+        dataChave: stringHoje, 
+        horario: hForm, 
+        tipo: tipo, 
+        fotoSelfie: foto, 
+        latitude: latAtual, 
+        longitude: lonAtual
       };
-      database.ref('pontos_registrados').push(registro).then(() => {
-        alert("✅ PONTO REGISTRADO COM SUCESSO!");
+
+      if (navigator.onLine) {
+        database.ref('pontos_registrados').push(registro).then(() => {
+          alert("✅ PONTO REGISTRADO COM SUCESSO!");
+          location.reload();
+        });
+      } else {
+        salvarOffline(registro);
+      }
+    }
+
+    function salvarOffline(registro) {
+      if (!dbOffline) return;
+      const tx = dbOffline.transaction("pontos_pendentes", "readwrite");
+      const store = tx.objectStore("pontos_pendentes");
+      store.add(registro);
+      tx.oncomplete = () => {
+        alert("⚠️ Ponto gravado OFFLINE no dispositivo com sucesso! Será sincronizado assim que a conexão retornar.");
         location.reload();
-      });
+      };
+    }
+
+    function sincronizarPontosOffline() {
+      if (!dbOffline || !navigator.onLine) return;
+      const tx = dbOffline.transaction("pontos_pendentes", "readwrite");
+      const store = tx.objectStore("pontos_pendentes");
+      const req = store.openCursor();
+      
+      req.onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor) {
+          const item = cursor.value;
+          database.ref('pontos_registrados').push(item).then(() => {
+            const delTx = dbOffline.transaction("pontos_pendentes", "readwrite");
+            delTx.objectStore("pontos_pendentes").delete(cursor.key);
+          });
+          cursor.continue();
+        }
+      };
     }
 
     carregarDadosDoServidor();
