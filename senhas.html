@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Senhas - Supermercado São Raimundo</title>
+  
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --cor-principal: #1e3a8a;
+      --cor-hover: #1e293b;
+      --cor-fundo: #f8fafc;
+      --cor-card: #ffffff;
+      --cor-texto: #1e293b;
+      --cor-borda: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, Arial, sans-serif; }
+    body { background-color: var(--cor-fundo); margin: 0; padding: 10px; color: var(--cor-texto); }
+    
+    .container { 
+      max-width: 100%; 
+      margin: 0 auto; 
+      background: var(--cor-card); 
+      padding: 15px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+      border-top: 6px solid var(--cor-principal); 
+    }
+    
+    .topo { text-align: center; margin-bottom: 15px; border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; }
+    h1 { color: var(--cor-principal); margin: 0 0 4px 0; font-size: 18px; }
+    p.subtitulo { margin: 0; color: #64748b; font-size: 12px; }
+
+    /* Tela de Login Admin */
+    .card-login { background: #f1f5f9; padding: 20px; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center; margin: 20px auto; }
+    
+    /* Formulário de Cadastro/Alteração */
+    .form-grupo { display: flex; flex-direction: column; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid var(--cor-borda); margin-bottom: 15px; }
+    label { display: block; font-weight: 700; font-size: 11px; margin-bottom: 4px; color: #475569; text-transform: uppercase; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; background: white; }
+    input:focus, select:focus { border-color: var(--cor-principal); }
+
+    .btn { padding: 8px 12px; border: none; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; color: white; transition: background 0.2s; white-space: nowrap; }
+    .btn-principal { background: var(--cor-principal); }
+    .btn-principal:hover { background: var(--cor-hover); }
+    .btn-perigo { background: #be123c; }
+    .btn-perigo:hover { background: #9f1239; }
+
+    /* Tabela Otimizada para Celular */
+    .table-container { 
+      max-height: 60vh; 
+      overflow-y: auto; 
+      border-radius: 8px; 
+      border: 1px solid var(--cor-borda); 
+    }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
+    
+    th { 
+      position: sticky; 
+      top: 0; 
+      background-color: var(--cor-principal); 
+      color: white; 
+      padding: 8px 6px; 
+      font-size: 10px; 
+      text-transform: uppercase; 
+      z-index: 10;
+    }
+    
+    td { padding: 8px 6px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
+    tr:hover { background-color: #f1f5f9; }
+
+    .badge-senha { 
+      background: #eff6ff; 
+      color: #1d4ed8; 
+      border: 1px solid #bfdbfe; 
+      padding: 4px 8px; 
+      border-radius: 6px; 
+      font-family: monospace; 
+      font-size: 13px; 
+      font-weight: bold; 
+      letter-spacing: 1px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="topo">
+      <h1>🔐 Módulo de Gestão de Senhas</h1>
+      <p class="subtitulo">Supermercado São Raimundo — Painel de Credenciais</p>
+    </div>
+
+    <!-- TELA DE AUTENTICAÇÃO MASTER -->
+    <div id="areaLoginMaster" class="card-login">
+      <h3 style="margin-top:0; color: var(--cor-principal);">🔒 Acesso Restrito</h3>
+      <p style="font-size:12px; color:#64748b; margin-bottom:15px;">Informe a Senha Master do sistema para continuar.</p>
+      <div style="margin-bottom: 12px;">
+        <input type="password" id="inputSenhaMaster" placeholder="Senha Master" style="text-align: center;">
+      </div>
+      <button class="btn btn-principal" style="width: 100%; padding: 10px;" onclick="autenticarAdmin()">Entrar no Painel</button>
+    </div>
+
+    <!-- ÁREA DE GERENCIAMENTO (LIBERADA APÓS AUTENTICAÇÃO) -->
+    <div id="areaGestaoSenhas" style="display: none;">
+      
+      <!-- FORMULÁRIO DE ALTERAÇÃO / CADASTRO -->
+      <div class="form-grupo">
+        <div>
+          <label for="selectColaborador">Colaborador:</label>
+          <select id="selectColaborador">
+            <option value="">-- Selecione o Funcionário --</option>
+          </select>
+        </div>
+        <div>
+          <label for="inputNovaSenha">Nova Senha:</label>
+          <input type="password" id="inputNovaSenha" placeholder="Digite a nova senha">
+        </div>
+        <div>
+          <button class="btn btn-principal" style="width: 100%; padding: 10px;" onclick="salvarNovaSenha()">💾 Cadastrar / Alterar Senha</button>
+        </div>
+      </div>
+
+      <!-- LISTAGEM APENAS COM SENHAS CADASTRADAS -->
+      <h3 style="color: var(--cor-principal); font-size: 14px; margin: 15px 0 8px 0;">📋 Senhas Cadastradas no Ponto</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Funcionário</th>
+              <th style="text-align: center;">Senha</th>
+              <th style="text-align: right;">Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaSenhasCorpo">
+            <tr><td colspan="3" style="text-align:center; padding: 15px;">Carregando dados...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBJMoG89lg9TXxO9z1d8jxbAzGms9Ts1sc",
+      authDomain: "meu-ponto-sr.firebaseapp.com",
+      databaseURL: "https://meu-ponto-sr-default-rtdb.firebaseio.com",
+      projectId: "meu-ponto-sr",
+      storageBucket: "meu-ponto-sr.appspot.com",
+      messagingSenderId: "356930006135",
+      appId: "1:356930006135:web:90bc643a9cd39a38f02a72"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    const SENHA_MASTER = "1234";
+    let todosFuncionarios = {};
+    let senhasEfetivas = {};
+
+    function normalizar(txt) {
+      if (!txt) return '';
+      return txt.toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toLowerCase();
+    }
+
+    function autenticarAdmin() {
+      const senhaInput = document.getElementById('inputSenhaMaster').value;
+      if (senhaInput === SENHA_MASTER) {
+        document.getElementById('areaLoginMaster').style.display = 'none';
+        document.getElementById('areaGestaoSenhas').style.display = 'block';
+        carregarTudoDoFirebase();
+      } else {
+        alert("Senha Master incorreta!");
+      }
+    }
+
+    function carregarTudoDoFirebase() {
+      database.ref().on('value', snap => {
+        const raiz = snap.val() || {};
+        
+        todosFuncionarios = {};
+        senhasEfetivas = {};
+
+        const configFuncs = raiz.config_funcionarios || {};
+        Object.keys(configFuncs).forEach(nome => {
+          if (configFuncs[nome] && configFuncs[nome].status !== 'desativado') {
+            todosFuncionarios[nome] = configFuncs[nome];
+          }
+        });
+
+        const processarNoh = (objeto) => {
+          if (!objeto || typeof objeto !== 'object') return;
+
+          Object.keys(objeto).forEach(chaveKey => {
+            const item = objeto[chaveKey];
+
+            if (item && typeof item === 'object' && item.senha) {
+              const nomeReal = item.colaborador || chaveKey;
+              adicionarSenhaEncontrada(nomeReal, item.senha, chaveKey);
+            } 
+            else if (typeof item === 'string' && item.trim().length > 0) {
+              adicionarSenhaEncontrada(chaveKey, item, chaveKey);
+            }
+          });
+        };
+
+        if (raiz.senhas_colaboradores) processarNoh(raiz.senhas_colaboradores);
+        if (raiz.senhas) processarNoh(raiz.senhas);
+        if (raiz.config_funcionarios) processarNoh(raiz.config_funcionarios);
+        if (raiz.historico_ponto) processarNoh(raiz.historico_ponto);
+
+        atualizarSelectFuncionarios();
+        renderizarTabelaSenhas();
+      });
+    }
+
+    function adicionarSenhaEncontrada(nomeOriginal, senha, chaveBD) {
+      const norm = normalizar(nomeOriginal);
+      if (!norm) return;
+
+      let nomeParaExibir = nomeOriginal;
+      const chaveCorrespondente = Object.keys(todosFuncionarios).find(f => normalizar(f) === norm);
+      if (chaveCorrespondente) {
+        nomeParaExibir = chaveCorrespondente;
+      }
+
+      senhasEfetivas[norm] = {
+        nomeExibicao: nomeParaExibir,
+        chaveBD: chaveBD,
+        senha: senha
+      };
+    }
+
+    function atualizarSelectFuncionarios() {
+      const select = document.getElementById('selectColaborador');
+      select.innerHTML = '<option value="">-- Selecione o Funcionário --</option>';
+      
+      const conjuntoNomes = new Set([
+        ...Object.keys(todosFuncionarios),
+        ...Object.values(senhasEfetivas).map(s => s.nomeExibicao)
+      ]);
+
+      Array.from(conjuntoNomes).sort().forEach(nome => {
+        select.options[select.options.length] = new Option(nome, nome);
+      });
+    }
+
+    function renderizarTabelaSenhas() {
+      const tbody = document.getElementById('tabelaSenhasCorpo');
+      tbody.innerHTML = "";
+
+      const listaChaves = Object.keys(senhasEfetivas);
+
+      if (listaChaves.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 15px;">Nenhuma senha cadastrada encontrada.</td></tr>';
+        return;
+      }
+
+      listaChaves.sort((a, b) => senhasEfetivas[a].nomeExibicao.localeCompare(senhasEfetivas[b].nomeExibicao));
+
+      listaChaves.forEach(normKey => {
+        const dados = senhasEfetivas[normKey];
+        const infoFunc = todosFuncionarios[dados.nomeExibicao] || {};
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <b>${dados.nomeExibicao}</b><br>
+            <span style="font-size: 10px; color: #64748b;">${infoFunc.setor || 'Ponto'} | Loja ${infoFunc.loja || '--'}</span>
+          </td>
+          <td style="text-align: center;">
+            <span class="badge-senha">${dados.senha}</span>
+          </td>
+          <td style="text-align: right;">
+            <button class="btn btn-principal" style="padding: 4px 6px; font-size: 10px;" onclick="selecionarParaEdicao('${dados.nomeExibicao.replace(/'/g, "\\'")}')">✏️ Editar</button>
+            <button class="btn btn-perigo" style="padding: 4px 6px; font-size: 10px; margin-left:2px;" onclick="resetarSenha('${dados.nomeExibicao.replace(/'/g, "\\'")}', '${dados.chaveBD.replace(/'/g, "\\'")}')">🔄 Reset</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function selecionarParaEdicao(nome) {
+      document.getElementById('selectColaborador').value = nome;
+      document.getElementById('inputNovaSenha').focus();
+    }
+
+    function salvarNovaSenha() {
+      const nomeColaborador = document.getElementById('selectColaborador').value;
+      const novaSenha = document.getElementById('inputNovaSenha').value.trim();
+
+      if (!nomeColaborador) return alert("Selecione um colaborador!");
+      if (!novaSenha) return alert("Digite a nova senha!");
+
+      const chaveNorm = normalizar(nomeColaborador);
+
+      const atualizacoes = {};
+      atualizacoes['senhas_colaboradores/' + chaveNorm] = {
+        colaborador: nomeColaborador,
+        senha: novaSenha,
+        atualizadoEm: firebase.database.ServerValue.TIMESTAMP
+      };
+      atualizacoes['config_funcionarios/' + nomeColaborador + '/senha'] = novaSenha;
+
+      database.ref().update(atualizacoes).then(() => {
+        alert(`✅ Senha de ${nomeColaborador} salva com sucesso!`);
+        document.getElementById('inputNovaSenha').value = "";
+      }).catch(err => alert("Erro ao salvar: " + err.message));
+    }
+
+    function resetarSenha(nomeExibicao, chaveBD) {
+      if (confirm(`Deseja remover a senha individual de "${nomeExibicao}"? Ele voltará a usar a senha padrão.`)) {
+        const chaveNorm = normalizar(nomeExibicao);
+        const atualizacoes = {};
+
+        atualizacoes['senhas_colaboradores/' + chaveNorm] = null;
+        atualizacoes['senhas_colaboradores/' + chaveBD] = null;
+        atualizacoes['config_funcionarios/' + nomeExibicao + '/senha'] = null;
+
+        database.ref().update(atualizacoes).then(() => {
+          alert("✅ Senha removida com sucesso!");
+        });
+      }
+    }
+  </script>
+</body>
+</html>
