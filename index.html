@@ -14,340 +14,120 @@
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
-
-    body {
-      background-color: #ffffff;
-      color: #333;
-      padding: 15px 20px;
-    }
-
-    /* CABEÇALHO ORIGINAL */
-    .cabecalho-empresa {
-      text-align: center;
-      margin-top: 10px;
-      margin-bottom: 20px;
-    }
-
-    .container-logo-original {
-      display: inline-block;
-      width: 100%;
-      max-width: 100px;
-      margin: 0 auto 15px auto;
-    }
-
-    .container-logo-original img {
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 100px;
-    }
-
-    .logo-animada {
-      animation: flutuarEBrilhar 3s ease-in-out infinite;
-      transition: transform 0.3s ease;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    body { background-color: #ffffff; color: #333; padding: 15px 20px 80px 20px; }
+    
+    .cabecalho-empresa { position: relative; text-align: center; margin-top: 10px; margin-bottom: 20px; }
+    .versao-app-topo { position: absolute; top: 0; right: 0; font-size: 11px; font-weight: bold; color: #777; background: #f0f0f0; padding: 3px 8px; border-radius: 12px; border: 1px solid #ddd; }
+    
+    .container-logo-original { display: inline-block; width: 100%; max-width: 100px; margin: 0 auto 15px auto; }
+    .container-logo-original img { width: 100%; height: auto; display: block; border-radius: 100px; }
+    .logo-animada { animation: flutuarEBrilhar 3s ease-in-out infinite; }
     @keyframes flutuarEBrilhar {
-      0% {
-        transform: translateY(0px) scale(1);
-        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
-      }
-      50% {
-        transform: translateY(-6px) scale(1.03);
-        filter: drop-shadow(0 10px 15px rgba(198, 40, 40, 0.4));
-      }
-      100% {
-        transform: translateY(0px) scale(1);
-        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
-      }
+      0% { transform: translateY(0px) scale(1); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15)); }
+      50% { transform: translateY(-6px) scale(1.03); filter: drop-shadow(0 10px 15px rgba(198, 40, 40, 0.4)); }
+      100% { transform: translateY(0px) scale(1); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15)); }
     }
-
-    .cabecalho-empresa h1 {
-      font-size: 24px;
-      font-weight: bold;
-      color: #c62828;
-      text-transform: uppercase;
-      margin-bottom: 5px;
-      letter-spacing: 0.5px;
-    }
-
-    .cabecalho-empresa p {
-      font-size: 13px;
-      font-weight: bold;
-      color: #444;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .linha-divisoria-amarela {
-      height: 2.5px;
-      background: #fbc02d;
+    .cabecalho-empresa h1 { font-size: 24px; font-weight: bold; color: #c62828; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
+    .cabecalho-empresa p { font-size: 13px; font-weight: bold; color: #444; text-transform: uppercase; letter-spacing: 0.5px; }
+    .linha-divisoria-amarela { height: 2.5px; background: #fbc02d; width: 100%; margin-top: 12px; }
+    
+    /* BARRA INFERIOR DE NAVEGAÇÃO ESTILO NATIVO */
+    .barra-navegacao-inferior {
+      position: fixed;
+      bottom: 0;
+      left: 0;
       width: 100%;
-      margin-top: 12px;
-    }
-
-    /* SISTEMA DE ABAS */
-    .abas-navegacao {
+      height: 65px;
+      background-color: #ffffff;
+      border-top: 1px solid #e0e0e0;
       display: flex;
-      margin-bottom: 25px;
-      border-bottom: 1px solid #ddd;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 999;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
     }
-
-    .aba-item {
+    .item-nav-inferior {
       flex: 1;
-      padding: 12px;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #666;
       cursor: pointer;
-      font-weight: bold;
-      font-size: 15px;
-      color: #333;
+      font-size: 11px;
+      font-weight: 500;
+      gap: 3px;
+      padding: 6px 0;
     }
-
-    .aba-item.ativa {
-      background: #c62828;
-      color: #ffffff;
-    }
-
-    .conteudo-aba {
-      display: none;
-    }
-
-    .conteudo-aba.ativa {
-      display: block;
-    }
-
-    /* FORMULÁRIOS E CARTÕES */
-    .grupo-campo {
-      margin-bottom: 20px;
-    }
-
-    .grupo-campo label {
-      display: block;
-      font-size: 14px;
-      font-weight: bold;
-      color: #c62828;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-    }
-
-    .grupo-campo select, 
-    .grupo-campo input {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: bold;
-      border: 1.5px solid #dcdcdc;
-      border-radius: 8px;
-      background: #ffffff;
-      color: #333;
-      outline: none;
-    }
-
-    /* CARTÃO DO COLABORADOR IDENTIFICADO */
-    .cartao-colaborador-pin {
-      background: #f5f5f5;
-      border: 2px dashed #c62828;
-      border-radius: 8px;
-      padding: 15px;
+    .item-nav-inferior .icone-nav {
       display: flex;
       align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .foto-perfil-pin {
-      width: 65px;
-      height: 65px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #c62828;
-      background: #eee;
-    }
-
-    .info-colaborador-pin {
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    .info-colaborador-pin strong {
-      color: #c62828;
-      font-size: 16px;
-    }
-
-    /* CÂMERA COM MÁSCARA FACIAL VERTICAL */
-    .bloco-camera {
-      position: relative;
-      margin-top: 15px;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 2px solid #ccc;
-      background: #000;
-      aspect-ratio: 3 / 4;
-      max-width: 360px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .bloco-camera video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scaleX(-1);
-    }
-
-    .overlay-facial {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 200px;
-      height: 270px;
-      border-radius: 50%;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
-      border: 2px dashed rgba(255, 255, 255, 0.8);
-      pointer-events: none;
-      display: flex;
-      align-items: flex-end;
       justify-content: center;
-      padding-bottom: 12px;
+      height: 26px;
     }
-
-    .overlay-facial::after {
-      content: "Posicione o Rosto";
-      color: #fff;
-      font-size: 12px;
+    .item-nav-inferior.ativo {
+      color: #c62828;
       font-weight: bold;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 4px 10px;
-      border-radius: 12px;
     }
 
-    /* HISTÓRICO & SENHA */
-    .caixa-senha-verde {
-      background-color: #ebf7ee;
-      border: 1px solid #c3ebd0;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
+    .conteudo-aba { display: none; }
+    .conteudo-aba.ativa { display: block; }
+    
+    .grupo-campo { margin-bottom: 20px; }
+    .grupo-campo label { display: block; font-size: 14px; font-weight: bold; color: #c62828; margin-bottom: 8px; text-transform: uppercase; }
+    .grupo-campo input { width: 100%; padding: 14px; font-size: 18px; font-weight: bold; border: 1.5px solid #dcdcdc; border-radius: 8px; background: #ffffff; color: #333; outline: none; text-align: center; letter-spacing: 4px; }
+    
+    .cartao-colaborador-pin { background: #f5f5f5; border: 2px solid #c62828; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+    .perfil-esquerda { display: flex; align-items: center; gap: 12px; }
+    
+    .container-foto-perfil { position: relative; width: 60px; height: 60px; cursor: pointer; }
+    .foto-perfil-pin { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #c62828; background: #eee; }
+    .icone-editar-foto { position: absolute; bottom: 0; right: 0; background: #c62828; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; border: 1.5px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    
+    .info-colaborador-pin { font-size: 13px; line-height: 1.4; }
+    .info-colaborador-pin strong { color: #c62828; font-size: 16px; }
+    .btn-sair-sessao { background: #e0e0e0; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; color: #d32f2f; cursor: pointer; }
 
-    .caixa-senha-laranja {
-      background-color: #fff8f0;
-      border: 1px solid #ffe6cc;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
+    .rotulo-secao-batida { font-size: 13px; font-weight: bold; color: #c62828; text-transform: uppercase; margin-bottom: 10px; text-align: center; }
+    .grade-quadrinhos-batida { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .quadrinho-opcao { background: #f9f9f9; border: 2px solid #e0e0e0; border-radius: 10px; padding: 16px 10px; text-align: center; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+    .quadrinho-opcao:active { transform: scale(0.97); }
+    .quadrinho-opcao .icone-quadro { font-size: 22px; }
+    .quadrinho-opcao .texto-quadro { font-size: 13px; font-weight: bold; color: #333; text-transform: uppercase; line-height: 1.2; }
+    .quadrinho-opcao.selecionado { background: #e8f5e9; border-color: #2e7d32; box-shadow: 0 4px 10px rgba(46, 125, 50, 0.2); }
+    .quadrinho-opcao.selecionado .texto-quadro { color: #1b5e20; }
+    
+    .aviso-expediente-concluido { display: none; background: #e8f5e9; border: 2px dashed #2e7d32; color: #1b5e20; border-radius: 10px; padding: 20px; text-align: center; font-weight: bold; font-size: 15px; margin-bottom: 20px; }
 
-    .btn-principal {
-      width: 100%;
-      background: #2e7d32;
-      color: #fff;
-      border: none;
-      padding: 15px;
-      font-size: 15px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      text-transform: uppercase;
-    }
-
-    .btn-salvar-senha {
-      background: #1b5e20;
-      margin-top: 5px;
-    }
-
-    .status-gps {
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: bold;
-      text-align: center;
-      margin-top: 10px;
-      display: none;
-    }
-
+    .bloco-camera { position: relative; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px solid #ccc; background: #000; aspect-ratio: 3 / 4; max-width: 360px; margin-left: auto; margin-right: auto; }
+    .bloco-camera video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    .overlay-facial { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 270px; border-radius: 50%; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55); border: 2px dashed rgba(255, 255, 255, 0.8); pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px; }
+    .overlay-facial::after { content: "Posicione o Rosto"; color: #fff; font-size: 12px; font-weight: bold; background: rgba(0, 0, 0, 0.7); padding: 4px 10px; border-radius: 12px; }
+    
+    .btn-principal { width: 100%; background: #2e7d32; color: #fff; border: none; padding: 16px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase; }
+    .status-gps { padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; text-align: center; margin-top: 10px; display: none; }
     .gps-erro { background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; }
     .gps-sucesso { background: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; }
-
-    .titulo-historico {
-      font-size: 14px;
-      font-weight: bold;
-      color: #c62828;
-      margin-top: 25px;
-      margin-bottom: 15px;
-      text-transform: uppercase;
-    }
-
-    .item-timeline {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px;
-      border-left: 4px solid #ccc;
-      background: #f9f9f9;
-      margin-bottom: 12px;
-      border-radius: 0 6px 6px 0;
-    }
-
-    .item-timeline.realizado {
-      border-left-color: #2e7d32;
-      background: #f1f8e9;
-    }
-
-    .item-timeline span {
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .direita-timeline {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .hora-ponto {
-      font-weight: bold;
-      font-size: 15px;
-    }
-
-    .btn-comprovante {
-      padding: 6px 12px;
-      font-size: 12px;
-      background: #0288d1;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .bloco-rodape-banner { margin-top: 30px; }
+    
+    .titulo-historico { font-size: 14px; font-weight: bold; color: #c62828; margin-top: 15px; margin-bottom: 15px; text-transform: uppercase; }
+    .item-timeline { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-left: 4px solid #ccc; background: #f9f9f9; margin-bottom: 12px; border-radius: 0 6px 6px 0; }
+    .item-timeline.realizado { border-left-color: #2e7d32; background: #f1f8e9; }
+    .item-timeline span { font-size: 14px; font-weight: bold; }
+    .direita-timeline { display: flex; align-items: center; gap: 12px; }
+    .hora-ponto { font-weight: bold; font-size: 15px; }
+    .btn-comprovante { padding: 6px 12px; font-size: 12px; background: #0288d1; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    
+    .bloco-rodape-banner { margin-top: 25px; margin-bottom: 20px; }
     .rotulo-rodape { font-size: 12px; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 8px; }
     .container-banner-propaganda { width: 100%; border-radius: 8px; overflow: hidden; }
     .container-banner-propaganda img { width: 100%; height: auto; display: block; }
-
-    /* MODAIS */
-    .camada-modal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 9999; padding: 15px;
-      visibility: hidden; opacity: 0;
-      transition: all 0.3s ease;
-    }
-
+    
+    .camada-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 15px; visibility: hidden; opacity: 0; transition: all 0.3s ease; }
     .camada-modal.aberto { visibility: visible; opacity: 1; }
     .conteudo-modal { background: #fffde7; width: 100%; max-width: 380px; border-radius: 4px; padding: 20px; }
     .recibo-impressao { font-family: 'Courier New', Courier, monospace; color: #000; line-height: 1.4; }
@@ -357,133 +137,149 @@
     .recibo-qr-bloco { text-align: center; margin: 12px 0; }
     .recibo-qr-bloco img { width: 130px; height: 130px; border: 1px solid #000; padding: 4px; background: #fff; }
     .recibo-rodape { font-size: 10px; text-align: center; color: #000; margin-top: 8px; }
-
-    /* CORREÇÃO PARA IMAGENS DENTRO DOS MODAIS DE VISUALIZAÇÃO DE FOTO */
-    .conteudo-modal img {
-      max-width: 100%;
-      height: auto;
-      object-fit: contain;
-      border-radius: 6px;
-    }
-
     .botoes-modal-container { margin-top: 15px; display: flex; gap: 10px; }
     .btn-modal { flex: 1; padding: 14px; font-size: 14px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
     .btn-enviar-whatsapp { background: #00c853; color: #fff; }
     .btn-fechar-modal { background: #616161; color: #fff; }
-
-    .botao-suporte-fixo {
-      position: fixed; bottom: 20px; right: 20px;
-      width: 50px; height: 50px; background: #c62828; color: #fff;
-      border-radius: 50%; display: flex; justify-content: center; align-items: center;
-      font-size: 24px; font-weight: bold; cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999;
-    }
-    
-    .status-carregando-topo { text-align: center; font-size: 13px; color: #777; font-weight: bold; margin-bottom: 15px; }
+    .botao-suporte-fixo { position: fixed; bottom: 75px; right: 20px; width: 45px; height: 45px; background: #c62828; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 998; }
     .badge-offline { background: #d32f2f; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: none; margin-bottom: 10px; text-align: center; }
+    .card-sucesso-animado { background: #ffffff; border-radius: 12px; padding: 30px 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: scale(0.8); animation: popupEntrada 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @keyframes popupEntrada { to { transform: scale(1); } }
+    .icone-check-animado { width: 70px; height: 70px; background: #e8f5e9; color: #2e7d32; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; margin: 0 auto 15px auto; animation: pulsoIcone 1.2s infinite ease-in-out; }
+    @keyframes pulsoIcone { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4); } 70% { transform: scale(1.08); box-shadow: 0 0 0 15px rgba(46, 125, 50, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); } }
+    .card-sucesso-animado h3 { color: #2e7d32; font-size: 20px; margin-bottom: 8px; }
+    .card-sucesso-animado p { color: #555; font-size: 14px; line-height: 1.4; margin-bottom: 15px; }
+    .info-ponto-resumo { background: #f5f5f5; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 13px; color: #333; }
+    
+    /* CARTÃO LEMBRETE */
+    .card-lembrete-box { background: #fff3e0; border: 1.5px solid #ffe0b2; border-radius: 8px; padding: 15px; margin-top: 15px; }
+    .card-lembrete-box h4 { color: #e65100; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .card-lembrete-box p { font-size: 13px; color: #4e342e; line-height: 1.4; }
+    .lista-horarios-lembrete { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .tag-horario { background: #ffe0b2; color: #e65100; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
   </style>
 </head>
 <body>
 
   <div class="cabecalho-empresa">
+    <div class="versao-app-topo">v1.5</div>
     <div class="container-logo-original">
       <img src="logo.jpg" alt="Logo São Raimundo" class="logo-animada">
     </div>
     <h1>Supermercado São Raimundo</h1>
-    <p>Registro de Ponto com Trava GPS</p>
+    <p>Registro de Ponto Inteligente</p>
     <div class="linha-divisoria-amarela"></div>
   </div>
 
-  <div id="alertaOffline" class="badge-offline">⚠️ MODO OFFLINE ATIVO - Pontos serão salvos no aparelho e sincronizados ao reconectar.</div>
+  <div id="alertaOffline" class="badge-offline">⚠️ MODO OFFLINE ATIVO - Sincronização automática ao reconectar.</div>
 
-  <div class="abas-navegacao">
-    <div id="abaTab1" class="aba-item ativa" onclick="alternarAbas(1)">⏱️ Bater Ponto</div>
-    <div id="abaTab2" class="aba-item" onclick="alternarAbas(2)">📋 Histórico de Hoje</div>
+  <div id="blocoLoginInicial" style="display: none;">
+    <div class="grupo-campo">
+      <label>DIGITE SUA SENHA / PIN:</label>
+      <input type="password" id="inputLoginSenha" placeholder="••••" inputmode="numeric" maxlength="8" onkeyup="verificarEnterLogin(event)">
+    </div>
+
+    <button class="btn-principal" onclick="realizarLoginSessaoFixa()">🔓 ENTRAR</button>
   </div>
 
-  <div id="statusCarregamentoInicial" class="status-carregando-topo">
-    ⏳ Sincronizando dados dos funcionários...
-  </div>
-
-  <!-- ABA BATER PONTO -->
+  <!-- ABA 1: REGISTRAR PONTO -->
   <div id="conteudoTab1" class="conteudo-aba ativa">
     
-    <div class="grupo-campo">
-      <label>1. Digite seu PIN / Matrícula:</label>
-      <input type="password" id="inputPinAcesso" placeholder="Informe seu PIN de 4 dígitos" inputmode="numeric" maxlength="6" oninput="autenticarPorPin()">
-    </div>
-
-    <!-- CARTÃO DO FUNCIONÁRIO RECONHECIDO -->
     <div id="cartaoFuncionario" class="cartao-colaborador-pin" style="display: none;">
-      <img id="fotoFuncionario" src="logo.jpg" class="foto-perfil-pin" alt="Foto Colaborador">
-      <div class="info-colaborador-pin">
-        <strong id="nomeFuncionario">--</strong><br>
-        Loja: <span id="lojaFuncionario">--</span> | Setor: <span id="setorFuncionario">--</span>
+      <div class="perfil-esquerda">
+        <div class="container-foto-perfil" onclick="document.getElementById('inputFotoPerfil').click()">
+          <img id="fotoFuncionario" src="logo.jpg" class="foto-perfil-pin" alt="Foto Colaborador">
+          <div class="icone-editar-foto">📷</div>
+        </div>
+        <input type="file" id="inputFotoPerfil" accept="image/*" style="display: none;" onchange="atualizarFotoPerfilColaborador(event)">
+        
+        <div class="info-colaborador-pin">
+          <strong id="nomeFuncionario">--</strong><br>
+          Loja: <span id="lojaFuncionario">--</span> | Setor: <span id="setorFuncionario">--</span>
+        </div>
       </div>
+      <button class="btn-sair-sessao" onclick="encerrarSessao()">Sair 🚪</button>
     </div>
 
-    <div id="caixaStatusGps" class="status-gps"></div>
-
-    <div id="grupoTipoBatida" style="display: none; margin-top: 15px;">
-      <div class="grupo-campo">
-        <label>2. Operação Identificada:</label>
-        <select id="selecaoTipo" disabled style="background:#f1f8e9; font-weight:bold; color:#2e7d32;">
-          <option value="">Analisando...</option>
-        </select>
+    <div id="grupoTipoBatida" style="display: none;">
+      <div class="rotulo-secao-batida" id="rotuloOpcaoPonto">Selecione o Tipo de Registro:</div>
+      
+      <div id="mensagemExpedienteConcluido" class="aviso-expediente-concluido">
+        🎉 Todos os registros do expediente de hoje já foram efetuados!
       </div>
+
+      <div class="grade-quadrinhos-batida" id="gradeBotoesPonto">
+        <div id="quadro_Entrada" class="quadrinho-opcao" onclick="selecionarOperacaoManual('Entrada Expediente', 'quadro_Entrada')">
+          <span class="icone-quadro">🌅</span>
+          <span class="texto-quadro">Entrada Expediente</span>
+        </div>
+        <div id="quadro_SaidaAlmoco" class="quadrinho-opcao" onclick="selecionarOperacaoManual('Saida Almoço', 'quadro_SaidaAlmoco')">
+          <span class="icone-quadro">🍽️</span>
+          <span class="texto-quadro">Saída para Almoço</span>
+        </div>
+        <div id="quadro_RetornoAlmoco" class="quadrinho-opcao" onclick="selecionarOperacaoManual('Retorno Almoço', 'quadro_RetornoAlmoco')">
+          <span class="icone-quadro">☕</span>
+          <span class="texto-quadro">Retorno do Almoço</span>
+        </div>
+        <div id="quadro_SaidaFim" class="quadrinho-opcao" onclick="selecionarOperacaoManual('Saida Fim', 'quadro_SaidaFim')">
+          <span class="icone-quadro">🏠</span>
+          <span class="texto-quadro">Saída Expediente</span>
+        </div>
+      </div>
+
+      <div id="caixaStatusGps" class="status-gps"></div>
 
       <div id="blocoValidacao" style="display: none;">
         <div class="bloco-camera">
           <video id="video" autoplay playsinline></video>
           <div class="overlay-facial"></div>
         </div>
-        <button id="btnRegistrarPonto" class="btn-principal" style="margin-top:20px;" onclick="registrarPontoFinal()" disabled>
+        <button id="btnRegistrarPonto" class="btn-principal" style="margin-top:20px;" onclick="registrarPontoFinal()">
           📸 CONFIRMAR E REGISTRAR PONTO
         </button>
       </div>
     </div>
+
   </div>
 
-  <!-- ABA HISTÓRICO -->
+  <!-- ABA 2: HISTÓRICO DE PONTOS -->
   <div id="conteudoTab2" class="conteudo-aba">
     <div class="grupo-campo">
-      <label>1. Confirme seu Nome:</label>
-      <select id="selecaoNomeHistorico" onchange="gerenciarInterfaceSenhaOuBusca()">
-        <option value="">-- Escolha seu Nome --</option>
-      </select>
-    </div>
-
-    <div class="grupo-campo">
-      <label>2. Selecione o Dia que deseja consultar:</label>
-      <input type="date" id="selecaoDataHistorico" onchange="buscarHistoricoSemGps()">
-    </div>
-
-    <div id="grupoCadastrarSenha" class="caixa-senha-verde" style="display: none;">
-      <div class="grupo-campo" style="margin-bottom: 5px;">
-        <label style="color: #2e7d32;">🆕 Crie sua senha de acesso (1º Acesso):</label>
-        <input type="password" id="novaSenhaHistorico" placeholder="Mínimo de 4 números" inputmode="numeric">
-      </div>
-      <button class="btn-principal btn-salvar-senha" onclick="ejecutarPrimeiroCadastroSenha()">
-        💾 SALVAR E CONFIRMAR MINHA SENHA
-      </button>
-    </div>
-
-    <div id="grupoValidarSenha" class="caixa-senha-laranja" style="display: none;">
-      <div class="grupo-campo" style="margin-bottom: 0;">
-        <label style="color: #e65100;">🔑 Digite sua Senha de Acesso:</label>
-        <input type="password" id="senhaHistorico" placeholder="Informe sua senha cadastrada" inputmode="numeric" oninput="buscarHistoricoSemGps()">
-      </div>
+      <label>Data de Consulta:</label>
+      <input type="date" id="selecaoDataHistorico" style="text-align:left; letter-spacing:normal;" onchange="buscarHistoricoSessao()">
     </div>
 
     <div class="titulo-historico" id="tituloNomeHistorico">📋 Registros do Dia:</div>
     <div id="linhaTempoHistorico">
       <p style="text-align: center; color: #777; font-size: 14px; padding: 15px 0;">
-        👋 Selecione seu nome para verificar o histórico.
+        ⏳ Carregando histórico...
       </p>
     </div>
   </div>
 
-  <!-- RODAPÉ -->
+  <!-- ABA 3: NOTIFICAÇÃO / LEMBRETE -->
+  <div id="conteudoTab3" class="conteudo-aba">
+    <div class="titulo-historico">🔔 Alertas e Lembretes de Ponto</div>
+    
+    <div class="card-lembrete-box">
+      <h4>⏰ Sistema de Alarme Ativo</h4>
+      <p>O aplicativo emitirá um sinal sonoro e notificação <b>5 minutos antes</b> de cada um dos seguintes horários principais de batida:</p>
+      
+      <div class="lista-horarios-lembrete">
+        <span class="tag-horario">🔔 06:55 (Para 07:00)</span>
+        <span class="tag-horario">🔔 10:55 (Para 11:00)</span>
+        <span class="tag-horario">🔔 12:55 (Para 13:00)</span>
+        <span class="tag-horario">🔔 14:55 (Para 15:00)</span>
+        <span class="tag-horario">🔔 16:55 (Para 17:00)</span>
+        <span class="tag-horario">🔔 19:55 (Para 20:00)</span>
+      </div>
+    </div>
+
+    <button class="btn-principal" style="margin-top:20px; background:#0288d1;" onclick="solicitarPermissaoNotificacoes()">
+      🔔 ATIVAR / TESTAR NOTIFICAÇÕES
+    </button>
+  </div>
+
   <div class="bloco-rodape-banner">
     <div class="rotulo-rodape">📢 Informativos e ofertas da semana:</div>
     <div class="container-banner-propaganda">
@@ -491,9 +287,61 @@
     </div>
   </div>
 
+  <!-- BARRA DE NAVEGAÇÃO INFERIOR -->
+  <div class="barra-navegacao-inferior">
+    <div id="navTab2" class="item-nav-inferior" onclick="alternarAbas(2)">
+      <span class="icone-nav">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"></circle>
+          <polyline points="12 7 12 12 15 15"></polyline>
+        </svg>
+      </span>
+      <span>Histórico de Pontos</span>
+    </div>
+
+    <div id="navTab1" class="item-nav-inferior ativo" onclick="alternarAbas(1)">
+      <span class="icone-nav">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
+          <path d="M14 13.12c0 2.38-.5 4.65-.9 5.88"/>
+          <path d="M17.29 21.02c.12-.6.41-2.3.41-4.02 0-3.1-1.2-5.7-3.7-7.2"/>
+          <path d="M2 12A10 10 0 0 1 19.3 5.3"/>
+          <path d="M7 20.7a10 10 0 0 1-5-8.7c0-2.3.8-4.4 2.1-6.1"/>
+          <path d="M12 2a10 10 0 0 1 8.5 4.7"/>
+          <path d="M12 6a6 6 0 0 0-6 6c0 4.1 1.2 7.7 2.3 9.7"/>
+          <path d="M18 12a6 6 0 0 0-1.8-4.3"/>
+        </svg>
+      </span>
+      <span>Registrar Ponto</span>
+    </div>
+
+    <div id="navTab3" class="item-nav-inferior" onclick="alternarAbas(3)">
+      <span class="icone-nav">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </span>
+      <span>Notificação/Lembrete</span>
+    </div>
+  </div>
+
   <div class="botao-suporte-fixo" onclick="abrirModalSuporte()">?</div>
 
-  <!-- MODAL DE COMPROVANTE -->
+  <!-- MODAIS -->
+  <div id="janelaModalSucesso" class="camada-modal">
+    <div class="card-sucesso-animado">
+      <div class="icone-check-animado">✓</div>
+      <h3>Ponto Registrado!</h3>
+      <p>Obrigado por registrar seu ponto.<br>Tenha um excelente trabalho!</p>
+      <div class="info-ponto-resumo">
+        <span id="sucessoOperacao">--</span> • <span id="sucessoHora">--</span>
+      </div>
+    </div>
+  </div>
+
   <div id="janelaComprovante" class="camada-modal">
     <div class="conteudo-modal">
       <div id="areaImpressaoRecibo" class="recibo-impressao">
@@ -513,8 +361,7 @@
         </div>
         <div class="recibo-divisor"></div>
         <div class="recibo-rodape">
-          Aplicativo: Ponto Interno SR v0.10<br>
-          Registro efetuado via Geofencing GPS<br>
+          Aplicativo: Ponto Interno SR v1.5<br>
           Preserve este comprovante.
         </div>
       </div>
@@ -529,9 +376,10 @@
     <div class="conteudo-modal" style="background:#fff; border-top: 4px solid #c62828;">
       <h3 style="color:#c62828; margin-bottom:10px;">ℹ️ Ajuda do Sistema</h3>
       <p style="font-size:14px; line-height:1.4; color:#333;">
-        • Digite seu PIN/Matrícula para carregar seus dados.<br>
-        • O ponto exige GPS ativo perto da filial.<br>
-        • Caso esteja sem sinal de internet, o ponto será gravado e enviado automaticamente quando reestabelecido.
+        • Digite sua senha de acesso para entrar.<br>
+        • Use a barra inferior para navegar entre Registrar Ponto, Histórico e Lembretes.<br>
+        • A câmera e o GPS serão ativados no momento do registro.<br>
+        • Clique na foto de perfil para atualizar sua imagem.
       </p>
       <button class="btn-modal btn-fechar-modal" style="width:100%; margin-top:15px;" onclick="fecharModalSuporte()">ENTENDI</button>
     </div>
@@ -544,7 +392,6 @@
     const stringHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
     document.getElementById('selecaoDataHistorico').value = stringHoje;
 
-    // SISTEMA OFFLINE - INDEXEDDB
     let dbOffline;
     const requestDb = indexedDB.open("PontoOfflineSRDB", 1);
     requestDb.onupgradeneeded = (e) => {
@@ -555,7 +402,6 @@
     };
     requestDb.onsuccess = (e) => { dbOffline = e.target.result; sincronizarPontosOffline(); };
 
-    // MONITOR DE REDE
     window.addEventListener('online', () => {
       document.getElementById('alertaOffline').style.display = 'none';
       sincronizarPontosOffline();
@@ -566,15 +412,17 @@
     if (!navigator.onLine) document.getElementById('alertaOffline').style.display = 'block';
 
     function alternarAbas(numeroAba) {
-      document.getElementById('abaTab1').classList.remove('ativa');
-      document.getElementById('abaTab2').classList.remove('ativa');
+      document.getElementById('navTab1').classList.remove('ativo');
+      document.getElementById('navTab2').classList.remove('ativo');
+      document.getElementById('navTab3').classList.remove('ativo');
       document.getElementById('conteudoTab1').classList.remove('ativa');
       document.getElementById('conteudoTab2').classList.remove('ativa');
-      document.getElementById(`abaTab${numeroAba}`).classList.add('ativa');
+      document.getElementById('conteudoTab3').classList.remove('ativa');
+
+      document.getElementById(`navTab${numeroAba}`).classList.add('ativo');
       document.getElementById(`conteudoTab${numeroAba}`).classList.add('ativa');
-      document.getElementById('senhaHistorico').value = "";
-      document.getElementById('novaSenhaHistorico').value = "";
-      gerenciarInterfaceSenhaOuBusca();
+      
+      if (numeroAba === 2) buscarHistoricoSessao();
     }
 
     function abrirModalSuporte() { document.getElementById('janelaModalSuporte').classList.add('aberto'); }
@@ -582,6 +430,7 @@
 
     let cacheDadosBatidasHoje = {};
     let itemReciboAtual = null;
+    let operacaoSelecionadaManual = "";
 
     function abrirComprovante(tipoChave) {
       const item = cacheDadosBatidasHoje[tipoChave];
@@ -600,30 +449,6 @@
       document.getElementById('janelaComprovante').classList.add('aberto');
     }
 
-    function compartilharComprovanteComoImagem() {
-      const alvoDiv = document.getElementById('areaImpressaoRecibo');
-      const botaoDisparo = document.getElementById('btnCapturarCompartilhar');
-      botaoDisparo.innerText = "GERANDO...";
-      botaoDisparo.disabled = true;
-      html2canvas(alvoDiv, { scale: 2, backgroundColor: "#fffde7" }).then(canvas => {
-        canvas.toBlob(blob => {
-          if (!blob) { botaoDisparo.innerText = "ENVIAR COMPROVANTE"; botaoDisparo.disabled = false; return; }
-          const arquivoImagem = new File([blob], `ponto-${itemReciboAtual.horario.replace(/:/g, "")}.png`, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [arquivoImagem] })) {
-            navigator.share({ files: [arquivoImagem], title: 'Recibo' })
-            .then(() => { botaoDisparo.innerText = "ENVIAR COMPROVANTE"; botaoDisparo.disabled = false; })
-            .catch(() => { botaoDisparo.innerText = "ENVIAR COMPROVANTE"; botaoDisparo.disabled = false; });
-          } else {
-            const imgDataUrl = canvas.toDataURL("image/png");
-            const novaJanela = window.open();
-            novaJanela.document.write(`<img src="${imgDataUrl}" style="max-width:100%;">`);
-            botaoDisparo.innerText = "ENVIAR COMPROVANTE";
-            botaoDisparo.disabled = false;
-          }
-        }, 'image/png');
-      });
-    }
-
     function fecharComprovante() { document.getElementById('janelaComprovante').classList.remove('aberto'); }
 
     const firebaseConfig = {
@@ -640,9 +465,8 @@
 
     database.ref('config_banner/url').on('value', snapshot => {
       if (snapshot.exists()) {
-        const novaUrl = snapshot.val();
         const imgElement = document.getElementById('imagemBannerDinamico');
-        if (imgElement) imgElement.src = novaUrl;
+        if (imgElement) imgElement.src = snapshot.val();
       }
     });
 
@@ -658,152 +482,226 @@
     let streamCamera = null;
     let latAtual = null, lonAtual = null;
 
+    const mapaBotoes = {
+      "Entrada Expediente": "quadro_Entrada",
+      "Saida Almoço": "quadro_SaidaAlmoco",
+      "Retorno Almoço": "quadro_RetornoAlmoco",
+      "Saida Fim": "quadro_SaidaFim"
+    };
+
     function carregarDadosDoServidor() {
+      const cache = localStorage.getItem('cache_funcionarios');
+      if (cache) {
+        funcionariosMemoria = JSON.parse(cache);
+        verificarSessaoSalva();
+      }
+
       database.ref('config_funcionarios').once('value', snapshot => {
         if(snapshot.exists()) {
           funcionariosMemoria = snapshot.val();
           localStorage.setItem('cache_funcionarios', JSON.stringify(funcionariosMemoria));
-          preencherComboHistorico();
-          document.getElementById('statusCarregamentoInicial').style.display = 'none';
-        }
-      }).catch(() => {
-        const cache = localStorage.getItem('cache_funcionarios');
-        if (cache) {
-          funcionariosMemoria = JSON.parse(cache);
-          preencherComboHistorico();
-          document.getElementById('statusCarregamentoInicial').innerText = "⚡ Modo Offline Ativo (Cache)";
+          if (!colaboradorAtual) verificarSessaoSalva();
         }
       });
     }
 
-    function preencherComboHistorico() {
-      const comboHistorico = document.getElementById('selecaoNomeHistorico');
-      comboHistorico.innerHTML = '<option value="">-- Escolha seu Nome --</option>';
-      Object.keys(funcionariosMemoria).sort().forEach(nome => {
-        comboHistorico.innerHTML += `<option value="${nome}">${nome}</option>`;
-      });
+    function verificarEnterLogin(e) {
+      if (e.key === 'Enter') {
+        realizarLoginSessaoFixa();
+      }
     }
 
-    // AUTENTICAÇÃO POR PIN E CARREGAMENTO DA FOTO/LOJA/SETOR
-    function autenticarPorPin() {
-      const pinDigitado = document.getElementById('inputPinAcesso').value.trim();
-      const cartao = document.getElementById('cartaoFuncionario');
+    function realizarLoginSessaoFixa() {
+      const senhaInput = document.getElementById('inputLoginSenha').value.trim();
 
-      if (pinDigitado.length < 4) {
-        cartao.style.display = 'none';
-        fecharCameraApenas();
-        colaboradorAtual = null;
-        return;
+      if (!senhaInput) { 
+        alert("Por favor, digite sua senha."); 
+        return; 
       }
 
       let encontrado = null;
-      let nomeEncontrado = "";
 
       Object.keys(funcionariosMemoria).forEach(nome => {
-        const f = funcionariosMemoria[nome];
-        if (String(f.pin || f.senha) === pinDigitado) {
-          encontrado = f;
-          nomeEncontrado = nome;
+        const fDados = funcionariosMemoria[nome];
+        const senhaCadastrada = String(fDados.senha || fDados.pin || "").trim();
+        if (senhaCadastrada === senhaInput) {
+          encontrado = { nome: nome, ...fDados };
         }
       });
 
       if (encontrado) {
-        colaboradorAtual = { nome: nomeEncontrado, ...encontrado };
-        document.getElementById('nomeFuncionario').innerText = nomeEncontrado;
-        document.getElementById('lojaFuncionario').innerText = encontrado.loja;
-        document.getElementById('setorFuncionario').innerText = encontrado.setor;
-        document.getElementById('fotoFuncionario').src = encontrado.foto || "logo.jpg";
-        cartao.style.display = 'flex';
-        
-        verificarLocalizacaoEValida();
+        localStorage.setItem('sessao_colaborador_nome', encontrado.nome);
+        colaboradorAtual = encontrado;
+        document.getElementById('inputLoginSenha').value = "";
+        iniciarInterfaceSessaoAtiva();
       } else {
-        cartao.style.display = 'none';
-        fecharCameraApenas();
+        alert("❌ Senha incorreta ou não encontrada! Tente novamente.");
+      }
+    }
+
+    function verificarSessaoSalva() {
+      const nomeSalvo = localStorage.getItem('sessao_colaborador_nome');
+      if (nomeSalvo && funcionariosMemoria[nomeSalvo]) {
+        colaboradorAtual = { nome: nomeSalvo, ...funcionariosMemoria[nomeSalvo] };
+        iniciarInterfaceSessaoAtiva();
+      } else {
+        exibirTelaLogin();
+      }
+    }
+
+    function exibirTelaLogin() {
+      document.getElementById('blocoLoginInicial').style.display = 'block';
+      document.getElementById('cartaoFuncionario').style.display = 'none';
+      document.getElementById('grupoTipoBatida').style.display = 'none';
+      fecharCameraApenas();
+    }
+
+    function iniciarInterfaceSessaoAtiva() {
+      document.getElementById('blocoLoginInicial').style.display = 'none';
+      
+      document.getElementById('nomeFuncionario').innerText = colaboradorAtual.nome;
+      document.getElementById('lojaFuncionario').innerText = colaboradorAtual.loja;
+      document.getElementById('setorFuncionario').innerText = colaboradorAtual.setor;
+      document.getElementById('fotoFuncionario').src = colaboradorAtual.foto || "logo.jpg";
+      document.getElementById('cartaoFuncionario').style.display = 'flex';
+      document.getElementById('grupoTipoBatida').style.display = 'block';
+
+      atualizarVisibilidadeBotoesHoje();
+    }
+
+    function encerrarSessao() {
+      if (confirm("Deseja sair do perfil e trocar de conta neste aparelho?")) {
+        localStorage.removeItem('sessao_colaborador_nome');
         colaboradorAtual = null;
+        exibirTelaLogin();
       }
     }
 
-    function gerenciarInterfaceSenhaOuBusca() {
-      const nomeColaborador = document.getElementById('selecaoNomeHistorico').value;
-      const blocoValidar = document.getElementById('grupoValidarSenha');
-      const blocoCadastrar = document.getElementById('grupoCadastrarSenha');
-      const líneaTempo = document.getElementById('linhaTempoHistorico');
+    function atualizarFotoPerfilColaborador(event) {
+      const file = event.target.files[0];
+      if (!file || !colaboradorAtual) return;
 
-      if (!nomeColaborador) {
-        blocoValidar.style.display = 'none'; blocoCadastrar.style.display = 'none';
-        líneaTempo.innerHTML = `<p style="text-align: center; color: #777; font-size: 14px; padding: 15px 0;">⚠️ Selecione seu nome e informe a data para prosseguir.</p>`;
-        return;
-      }
-      const fDados = funcionariosMemoria[nomeColaborador];
-      const possuiSenha = fDados && fDados.senha !== undefined && String(fDados.senha).trim() !== "";
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Foto = e.target.result;
+        document.getElementById('fotoFuncionario').src = base64Foto;
+        colaboradorAtual.foto = base64Foto;
 
-      if (possuiSenha) {
-        blocoCadastrar.style.display = 'none'; blocoValidar.style.display = 'block';
-        buscarHistoricoSemGps();
-      } else {
-        blocoValidar.style.display = 'none'; blocoCadastrar.style.display = 'block';
-        líneaTempo.innerHTML = `<p style="text-align: center; color: #2e7d32; font-weight: bold; font-size: 14px; padding: 15px 0;">👋 Detectamos seu primeiro acesso!<br>Cadastre sua senha de proteção acima.</p>`;
-      }
+        database.ref(`config_funcionarios/${colaboradorAtual.nome}/foto`).set(base64Foto);
+        
+        if (funcionariosMemoria[colaboradorAtual.nome]) {
+          funcionariosMemoria[colaboradorAtual.nome].foto = base64Foto;
+          localStorage.setItem('cache_funcionarios', JSON.stringify(funcionariosMemoria));
+        }
+      };
+      reader.readAsDataURL(file);
     }
 
-    function ejecutarPrimeiroCadastroSenha() {
-      const nomeColaborador = document.getElementById('selecaoNomeHistorico').value;
-      const novaSenha = document.getElementById('novaSenhaHistorico').value.trim();
-      if (novaSenha.length < 4) { alert("A senha deve ter no mínimo 4 dígitos."); return; }
-      database.ref(`config_funcionarios/${nomeColaborador}/senha`).set(novaSenha).then(() => {
-        funcionariosMemoria[nomeColaborador].senha = novaSenha;
-        alert("Senha salva com sucesso!");
-        gerenciarInterfaceSenhaOuBusca();
+    function atualizarVisibilidadeBotoesHoje() {
+      if (!colaboradorAtual) return;
+
+      const nomeClean = colaboradorAtual.nome.trim().toUpperCase();
+      const chaveBusca = `${stringHoje}_${nomeClean}`;
+
+      Object.values(mapaBotoes).forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'flex';
       });
+      document.getElementById('mensagemExpedienteConcluido').style.display = 'none';
+      document.getElementById('rotuloOpcaoPonto').style.display = 'block';
+
+      database.ref('pontos_registrados')
+        .orderByChild('colaborador_data')
+        .equalTo(chaveBusca)
+        .once('value', snapshot => {
+          let ocultosCount = 0;
+
+          if (snapshot.exists()) {
+            snapshot.forEach(child => {
+              const tipoFeito = child.val().tipo;
+              const idBotao = mapaBotoes[tipoFeito];
+              if (idBotao && document.getElementById(idBotao)) {
+                document.getElementById(idBotao).style.display = 'none';
+                ocultosCount++;
+              }
+            });
+          }
+
+          if (ocultosCount >= 4) {
+            document.getElementById('mensagemExpedienteConcluido').style.display = 'block';
+            document.getElementById('rotuloOpcaoPonto').style.display = 'none';
+          }
+        });
     }
 
-    function buscarHistoricoSemGps() {
-      const nomeColaborador = document.getElementById('selecaoNomeHistorico').value;
-      const senhaDigitada = document.getElementById('senhaHistorico').value;
+    function selecionarOperacaoManual(tipo, idElemento) {
+      if (!colaboradorAtual) return;
+      operacaoSelecionadaManual = tipo;
+      
+      document.querySelectorAll('.quadrinho-opcao').forEach(el => el.classList.remove('selecionado'));
+      document.getElementById(idElemento).classList.add('selecionado');
+
+      verificarLocalizacaoEValida();
+    }
+
+    function buscarHistoricoSessao() {
+      if (!colaboradorAtual) return;
+
       const dataSelecionada = document.getElementById('selecaoDataHistorico').value;
       const líneaTempo = document.getElementById('linhaTempoHistorico');
       
-      if(!nomeColaborador) return;
-      const fDados = funcionariosMemoria[nomeColaborador];
-      if(!senhaDigitada || senhaDigitada !== String(fDados.senha)) {
-        líneaTempo.innerHTML = `<p style="text-align: center; color: #d32f2f; font-weight: bold; font-size: 14px; padding: 15px 0;">🔒 Senha incorreta ou pendente.</p>`;
-        return;
-      }
-      if(!dataSelecionada) return;
+      if (!dataSelecionada) return;
+
       const partes = dataSelecionada.split("-");
-      document.getElementById('tituloNomeHistorico').innerHTML = `📋 Registros de: ${nomeColaborador.split(' ')[0]} em ${partes[2]}/${partes[1]}/${partes[0]}`;
+      document.getElementById('tituloNomeHistorico').innerHTML = `📋 Registros de ${colaboradorAtual.nome.split(' ')[0]} em ${partes[2]}/${partes[1]}/${partes[0]}`;
 
-      database.ref('pontos_registrados').orderByChild('dataChave').equalTo(dataSelecionada).once('value', snapshot => {
-        let mapeamento = { "Entrada Expediente": "--:--", "Saida Almoço": "--:--", "Retorno Almoço": "--:--", "Saida Fim": "--:--" };
-        let batidas = [];
-        cacheDadosBatidasHoje = {};
+      const chaveBuscaDireta = `${dataSelecionada}_${colaboradorAtual.nome.trim().toUpperCase()}`;
 
-        if(snapshot.exists()) {
-          snapshot.forEach(child => {
-            const reg = child.val();
-            if(reg.colaborador.toUpperCase() === nomeColaborador.toUpperCase()) {
+      database.ref('pontos_registrados')
+        .orderByChild('colaborador_data')
+        .equalTo(chaveBuscaDireta)
+        .once('value', snapshot => {
+          let mapeamento = { 
+            "Entrada Expediente": "--:--", 
+            "Saida Almoço": "--:--", 
+            "Retorno Almoço": "--:--", 
+            "Saida Fim": "--:--" 
+          };
+          let batidas = [];
+          cacheDadosBatidasHoje = {};
+
+          if (snapshot.exists()) {
+            snapshot.forEach(child => {
+              const reg = child.val();
               batidas.push(reg.tipo);
               mapeamento[reg.tipo] = reg.horario.substring(0, 5);
               cacheDadosBatidasHoje[reg.tipo] = reg;
-            }
+            });
+          }
+
+          const ordens = ["Entrada Expediente", "Saida Almoço", "Retorno Almoço", "Saida Fim"];
+          const rotulos = { 
+            "Entrada Expediente": "Entrada Expediente", 
+            "Saida Almoço": "Saída para Almoço", 
+            "Retorno Almoço": "Retorno do Almoço", 
+            "Saida Fim": "Saída Fim de Expediente" 
+          };
+          
+          let html = "";
+          ordens.forEach(t => {
+            const ok = batidas.includes(t);
+            html += `
+              <div class="${ok ? 'item-timeline realizado' : 'item-timeline'}">
+                <span>${rotulos[t]}</span>
+                <div class="direita-timeline">
+                  <span class="hora-ponto">${ok ? mapeamento[t] : 'Pendente'}</span>
+                  ${ok ? `<button class="btn-comprovante" onclick="abrirComprovante('${t}')">📄 Recibo</button>` : ''}
+                </div>
+              </div>`;
           });
-        }
-        const ordens = ["Entrada Expediente", "Saida Almoço", "Retorno Almoço", "Saida Fim"];
-        const rotulos = { "Entrada Expediente": "Entrada Expediente", "Saida Almoço": "Saída para Almoço", "Retorno Almoço": "Retorno do Almoço", "Saida Fim": "Saída Fim de Expediente" };
-        let html = "";
-        ordens.forEach(t => {
-          const ok = batidas.includes(t);
-          html += `
-            <div class="${ok ? 'item-timeline realizado' : 'item-timeline'}">
-              <span>${rotulos[t]}</span>
-              <div class="direita-timeline">
-                <span class="hora-ponto">${ok ? mapeamento[t] : 'Pendente'}</span>
-                ${ok ? `<button class="btn-comprovante" onclick="abrirComprovante('${t}')">📄 Recibo</button>` : ''}
-              </div>
-            </div>`;
+          
+          líneaTempo.innerHTML = html;
         });
-        líneaTempo.innerHTML = html;
-      });
     }
 
     function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
@@ -815,12 +713,12 @@
     }
 
     function verificarLocalizacaoEValida() {
-      if(!colaboradorAtual) { fecharCameraApenas(); return; }
+      if(!colaboradorAtual || !operacaoSelecionadaManual) return;
 
       const statusBox = document.getElementById('caixaStatusGps');
       statusBox.style.display = 'block';
       statusBox.className = "status-gps gps-erro";
-      statusBox.innerHTML = "📡 Obtendo localização precisa do GPS...";
+      statusBox.innerHTML = "📡 Obtendo localização do GPS...";
 
       navigator.geolocation.getCurrentPosition(pos => {
         latAtual = pos.coords.latitude; lonAtual = pos.coords.longitude;
@@ -832,8 +730,7 @@
         if(!alvo || dist <= 10000) {
           statusBox.className = "status-gps gps-sucesso";
           statusBox.innerHTML = `✅ Perímetro Confirmado!`;
-          document.getElementById('grupoTipoBatida').style.display = 'block';
-          analisarBatidasDoDia(colaboradorAtual.nome);
+          iniciarCameraEValida();
         } else {
           statusBox.className = "status-gps gps-erro";
           statusBox.innerHTML = `⚠️ Fora do perímetro da loja! (${Math.round(dist)}m)`;
@@ -842,123 +739,78 @@
       }, () => { statusBox.innerHTML = "❌ Ative o GPS de Alta Precisão."; }, { enableHighAccuracy: true });
     }
 
-    // FUNÇÃO OTIMIZADA PARA IDENTIFICAR A BATIDA RAPIDAMENTE
-    function analisarBatidasDoDia(nomeColaborador) {
-      const comboTipo = document.getElementById('selecaoTipo');
+    function iniciarCameraEValida() {
       const blocoValidacao = document.getElementById('blocoValidacao');
-      const btnRegistrar = document.getElementById('btnRegistrarPonto');
-      const dataChaveHoje = stringHoje;
+      blocoValidacao.style.display = 'block';
 
-      comboTipo.innerHTML = `<option value="">Analisando...</option>`;
-
-      database.ref('pontos_registrados')
-        .orderByChild('dataChave')
-        .equalTo(dataChaveHoje)
-        .once('value')
-        .then(snapshot => {
-          let batidas = [];
-          if (snapshot.exists()) {
-            snapshot.forEach(c => {
-              const reg = c.val();
-              if (reg.colaborador && reg.colaborador.trim().toUpperCase() === nomeColaborador.trim().toUpperCase()) {
-                batidas.push(reg.tipo);
-              }
-            });
-          }
-
-          let proximaBatida = "";
-          let completo = false;
-
-          if (!batidas.includes("Entrada Expediente")) {
-            proximaBatida = "Entrada Expediente";
-          } else if (!batidas.includes("Saida Almoço")) {
-            proximaBatida = "Saida Almoço";
-          } else if (!batidas.includes("Retorno Almoço")) {
-            proximaBatida = "Retorno Almoço";
-          } else if (!batidas.includes("Saida Fim")) {
-            proximaBatida = "Saida Fim";
-          } else {
-            completo = true;
-          }
-
-          if (completo) {
-            comboTipo.innerHTML = `<option value="">Expediente Concluído!</option>`;
-            blocoValidacao.style.display = 'none';
-          } else {
-            const nomesFormatados = {
-              "Entrada Expediente": "Entrada Expediente",
-              "Saida Almoço": "Saída para Almoço",
-              "Retorno Almoço": "Retorno do Almoço",
-              "Saida Fim": "Saída Fim de Expediente"
-            };
-
-            comboTipo.innerHTML = `<option value="${proximaBatida}">${nomesFormatados[proximaBatida]}</option>`;
-            blocoValidacao.style.display = 'block';
-            btnRegistrar.disabled = false;
-
-            if (!streamCamera) {
-              navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => {
-                streamCamera = s; 
-                document.getElementById('video').srcObject = s;
-              }).catch(err => {
-                console.error("Erro ao abrir câmera:", err);
-              });
-            }
-          }
-        })
-        .catch(err => {
-          console.error("Erro na busca de batidas:", err);
-          comboTipo.innerHTML = `<option value="Entrada Expediente">Entrada Expediente</option>`;
-          blocoValidacao.style.display = 'block';
-          btnRegistrar.disabled = false;
-        });
+      if (!streamCamera) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => {
+          streamCamera = s; 
+          document.getElementById('video').srcObject = s;
+        }).catch(err => console.error("Erro Câmera:", err));
+      }
     }
 
     function fecharCameraApenas() {
       document.getElementById('blocoValidacao').style.display = 'none';
-      document.getElementById('grupoTipoBatida').style.display = 'none';
       if(streamCamera) { streamCamera.getTracks().forEach(t => t.stop()); streamCamera = null; }
     }
 
-    // REGISTRO DE PONTO COM CAPTURA PROPORCIONAL CORRIGIDA
-    function registrarPontoFinal() {
-      if (!colaboradorAtual) return;
+    function exibirAnimacaoSucesso(tipo, horario) {
+      document.getElementById('sucessoOperacao').innerText = tipo;
+      document.getElementById('sucessoHora').innerText = horario;
 
-      const tipo = document.getElementById('selecaoTipo').value;
+      const modalSucesso = document.getElementById('janelaModalSucesso');
+      modalSucesso.classList.add('aberto');
+
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      }
+
+      setTimeout(() => { location.reload(); }, 2500);
+    }
+
+    function registrarPontoFinal() {
+      if (!colaboradorAtual || !operacaoSelecionadaManual) return;
+
+      const btn = document.getElementById('btnRegistrarPonto');
+      btn.disabled = true;
+      btn.innerText = "⏳ REGISTRANDO...";
+
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
 
       let foto = "";
       try {
-        // Pega a resolução real do fluxo do vídeo para não achatar/esticar
         const larguraReal = video.videoWidth || 480;
         const alturaReal = video.videoHeight || 640;
         canvas.width = larguraReal;
         canvas.height = alturaReal;
 
-        // Desenha a imagem espelhada corretamente mantendo a proporção natural
         ctx.translate(larguraReal, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, larguraReal, alturaReal);
 
         foto = canvas.toDataURL('image/jpeg', 0.7);
-      } catch(e) { 
-        foto = ""; 
-      }
+      } catch(e) { foto = ""; }
 
       const agora = new Date();
       const dForm = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')}/${agora.getFullYear()}`;
       const hForm = agora.toTimeString().split(' ')[0];
 
+      const nomeClean = colaboradorAtual.nome.trim().toUpperCase();
+      const chaveComposta = `${stringHoje}_${nomeClean}`;
+
       const registro = {
-        colaborador: colaboradorAtual.nome, 
+        colaborador: colaboradorAtual.nome.trim(), 
+        colaborador_data: chaveComposta,
         loja: colaboradorAtual.loja, 
         setor: colaboradorAtual.setor,
         data: dForm, 
         dataChave: stringHoje, 
         horario: hForm, 
-        tipo: tipo, 
+        tipo: operacaoSelecionadaManual, 
         fotoSelfie: foto, 
         latitude: latAtual, 
         longitude: lonAtual
@@ -966,23 +818,19 @@
 
       if (navigator.onLine) {
         database.ref('pontos_registrados').push(registro).then(() => {
-          alert("✅ PONTO REGISTRADO COM SUCESSO!");
-          location.reload();
+          exibirAnimacaoSucesso(operacaoSelecionadaManual, hForm.substring(0, 5));
         });
       } else {
-        salvarOffline(registro);
+        salvarOffline(registro, operacaoSelecionadaManual, hForm.substring(0, 5));
       }
     }
 
-    function salvarOffline(registro) {
+    function salvarOffline(registro, tipo, hor) {
       if (!dbOffline) return;
       const tx = dbOffline.transaction("pontos_pendentes", "readwrite");
       const store = tx.objectStore("pontos_pendentes");
       store.add(registro);
-      tx.oncomplete = () => {
-        alert("⚠️ Ponto gravado OFFLINE no dispositivo com sucesso! Será sincronizado assim que a conexão retornar.");
-        location.reload();
-      };
+      tx.oncomplete = () => { exibirAnimacaoSucesso(tipo, hor); };
     }
 
     function sincronizarPontosOffline() {
@@ -1004,14 +852,67 @@
       };
     }
 
+    function solicitarPermissaoNotificacoes() {
+      if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            tocarSomAlarme();
+            new Notification("São Raimundo - Registro de Ponto", {
+              body: "Lembretes de ponto e alarme sonoro ativados com sucesso!",
+              icon: "logo.jpg"
+            });
+          } else {
+            alert("Ative as permissões de notificação no seu navegador para receber os alertas.");
+          }
+        });
+      } else {
+        alert("Este navegador não suporta notificações de sistema.");
+      }
+    }
+
+    function tocarSomAlarme() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        setTimeout(() => { osc.stop(); }, 1200);
+      } catch(e) {
+        console.log("Áudio não permitido sem interação prévia.");
+      }
+    }
+
+    const horariosLembrete = ["06:55", "10:55", "12:55", "14:55", "16:55", "19:55"];
+    let ultimoMinutoAlertado = "";
+
+    setInterval(() => {
+      const ag = new Date();
+      const horaMinuto = `${String(ag.getHours()).padStart(2, '0')}:${String(ag.getMinutes()).padStart(2, '0')}`;
+      
+      if (horariosLembrete.includes(horaMinuto) && ultimoMinutoAlertado !== horaMinuto) {
+        ultimoMinutoAlertado = horaMinuto;
+        tocarSomAlarme();
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("⏰ Hora de Bater o Ponto!", {
+            body: "Faltam 5 minutos para o horário oficial de registro do expediente.",
+            icon: "logo.jpg"
+          });
+        }
+      }
+    }, 10000);
+
     carregarDadosDoServidor();
 
-    // REGISTRO DO SERVICE WORKER (PWA)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker registrado com sucesso!', reg))
-          .catch(err => console.log('Erro ao registrar Service Worker:', err));
+          .then(reg => console.log('SW ok', reg))
+          .catch(err => console.log('Erro SW', err));
       });
     }
   </script>
