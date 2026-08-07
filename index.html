@@ -727,7 +727,7 @@
         let dist = 0;
         if(alvo) dist = calcularDistanciaMetros(latAtual, lonAtual, alvo.lat, alvo.lon);
 
-        if(!alvo || dist <= 10000) {
+        if(!alvo || dist <= 100) {
           statusBox.className = "status-gps gps-sucesso";
           statusBox.innerHTML = `✅ Perímetro Confirmado!`;
           iniciarCameraEValida();
